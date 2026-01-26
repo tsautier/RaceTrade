@@ -1,0 +1,1124 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+using RaceTrade;
+using System.Collections.Concurrent;
+using RaceTrader;
+
+/// <summary>
+/// Helper class for racing operations with caching and performance optimizations.
+/// COMPLETELY REFACTORED with all critical fixes.
+/// </summary>
+public static class RaceHelper
+{
+    // Thread-safe caches
+    private static readonly ConcurrentDictionary<string, Dictionary<string, (List<string> GeneralRules, List<MappedTag> MappedTags)>> SiteBasedCache = new();
+    private static readonly ConcurrentDictionary<string, Dictionary<string, string>> CbftpToIrcSectionCache = new();
+    private static readonly ConcurrentDictionary<string, bool> InProgressReleases = new();
+    private static readonly List<JObject> allSiteConfigs = new List<JObject>();
+    private static readonly object configLock = new();
+    private static readonly RulesEngine rulesEngine = new RulesEngine();
+
+    // Global blacklist (set from MainApp)
+    private static List<string> globalBlacklist = new List<string>();
+    private static readonly object blacklistLock = new();
+
+    /// <summary>
+    /// Sets the global blacklist patterns from MainApp.
+    /// </summary>
+    public static void SetGlobalBlacklist(List<string> patterns)
+    {
+        lock (blacklistLock)
+        {
+            globalBlacklist = patterns ?? new List<string>();
+        }
+    }
+
+    /// <summary>
+    /// Checks if a release matches any global blacklist pattern.
+    /// </summary>
+    private static bool IsGloballyBlacklisted(string releaseName, out string matchedPattern)
+    {
+        matchedPattern = null;
+
+        lock (blacklistLock)
+        {
+            if (!globalBlacklist.Any())
+                return false;
+
+            foreach (var pattern in globalBlacklist)
+            {
+                try
+                {
+                    string regexPattern;
+
+                    if (pattern.Contains("*") || pattern.Contains("?"))
+                    {
+                        regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+                    }
+                    else
+                    {
+                        regexPattern = pattern;
+                    }
+
+                    if (Regex.IsMatch(releaseName, regexPattern, RegexOptions.IgnoreCase))
+                    {
+                        matchedPattern = pattern;
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogManager.Error($"Invalid global blacklist pattern '{pattern}': {ex.Message}");
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Loads all site configurations from disk.
+    /// Now properly clears caches before reloading.
+    /// </summary>
+    public static void LoadAllSiteConfigs()
+    {
+        lock (configLock)
+        {
+            // Clear all caches
+            allSiteConfigs.Clear();
+            SiteBasedCache.Clear();
+            CbftpToIrcSectionCache.Clear();
+
+            var directory = "sites";
+
+            if (!Directory.Exists(directory))
+            {
+                Console.WriteLine($"Directory '{directory}' does not exist.");
+                return;
+            }
+
+            foreach (var filePath in Directory.GetFiles(directory, "*.json"))
+            {
+                var fileName = Path.GetFileName(filePath);
+
+                // Skip default site
+                if (fileName.Equals("new_site.json", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (MainApp.DebugEnabled)
+                    {
+                        LogManager.Debug($"Skipping default site configuration: {fileName}");
+                    }
+                    continue;
+                }
+
+                try
+                {
+                    var json = File.ReadAllText(filePath);
+                    var siteConfig = JObject.Parse(json);
+
+                    string siteName = siteConfig["site_settings"]?["sitename"]?.ToString() ?? "Unknown Site";
+                    bool disableSite = siteConfig["site_settings"]?["disable_site"]?.ToObject<bool>() ?? true;
+
+                    if (disableSite)
+                    {
+                        LogManager.Warning($"Site [{siteName}] is disabled. Skipping.");
+                        continue;
+                    }
+
+                    allSiteConfigs.Add(siteConfig);
+
+                    // Build section cache for this site
+                    BuildSectionCache(siteConfig, siteName);
+
+                    if (MainApp.DebugEnabled)
+                    {
+                        LogManager.Debug($"Loaded site configuration: [{siteName}]");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogManager.Error($"Failed to load site config '{fileName}': {ex.Message}");
+                }
+            }
+
+            LogManager.Success($"Successfully loaded {allSiteConfigs.Count} site configuration(s).");
+        }
+    }
+
+    /// <summary>
+    /// Builds a fast O(1) lookup cache for CBFTP -> IRC section mappings.
+    /// PERFORMANCE FIX: Eliminates O(n²) lookups.
+    /// </summary>
+    private static void BuildSectionCache(JObject siteConfig, string siteName)
+    {
+        var cache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        var sections = siteConfig["sections"] as JArray;
+        if (sections != null)
+        {
+            foreach (var section in sections)
+            {
+                var ircName = section["irc_name"]?.ToString();
+                if (string.IsNullOrEmpty(ircName)) continue;
+
+                var tags = section["tags"] as JArray;
+                if (tags != null)
+                {
+                    foreach (var tag in tags)
+                    {
+                        var cbftpSection = tag["map_cbftp_section"]?.ToString();
+                        if (!string.IsNullOrEmpty(cbftpSection))
+                        {
+                            // Map CBFTP section -> IRC section
+                            cache[cbftpSection] = ircName;
+                        }
+                    }
+                }
+            }
+        }
+
+        CbftpToIrcSectionCache[siteName] = cache;
+
+        if (MainApp.DebugEnabled)
+        {
+            LogManager.Debug($"Built section cache for '{siteName}': {cache.Count} mapping(s)");
+        }
+    }
+
+
+    /// <summary>
+    /// Filters allowed sites for a release.
+    /// FIXED: Returns FilterResult with proper status codes.
+    /// FIXED: Checks database for duplicates.
+    /// FIXED: Uses cached lookups for performance.
+    /// FIXED: For Global PreBots, checks original IRC section instead of reverse mapping.
+    /// </summary>
+    public static async Task<FilterResult> FilterAllowedSites(
+        Dictionary<string, string> raceSections,
+        Dictionary<string, string> mappings,
+        List<string> blacklist,
+        string cbftpSection,
+        string releaseName,
+        string message,
+        string sectionPrefix,
+        string sectionSuffix,
+        Action<string, System.Drawing.Color> appendOutput,
+        string currentSiteName,
+        string originalIrcSection = null)
+    {
+        if (IsGloballyBlacklisted(releaseName, out string matchedPattern))
+        {
+            LogManager.Warning($"Release '{releaseName}' globally blacklisted by pattern '{matchedPattern}'");
+            return FilterResult.GloballyBlacklisted(releaseName, matchedPattern);
+        }
+
+        bool alreadyProcessed = await SQLiteHelper.IsReleaseProcessedAsync(releaseName);
+        if (alreadyProcessed)
+        {
+            LogManager.Warning($"Release '{releaseName}' already in database");
+            return FilterResult.Duplicate(releaseName);
+        }
+
+        if (!InProgressReleases.TryAdd(releaseName, true))
+        {
+            LogManager.Warning($"Release '{releaseName}' is already being processed");
+            return FilterResult.Duplicate(releaseName);
+        }
+
+        try
+        {
+            if (allSiteConfigs == null || !allSiteConfigs.Any())
+                return FilterResult.Error(releaseName, "No site configurations loaded");
+
+            var allowedSites = new List<string>();
+
+            foreach (var siteConfig in allSiteConfigs)
+            {
+                string siteName = siteConfig["site_settings"]?["sitename"]?.ToString();
+                bool disableSite = siteConfig["site_settings"]?["disable_site"]?.ToObject<bool>() ?? true;
+
+                if (string.IsNullOrWhiteSpace(siteName) || disableSite)
+                {
+                    LogManager.Debug($"Skipping site [{siteName}]: disabled or unnamed.");
+                    continue;
+                }
+
+                try
+                {
+                    // Skip if not in race_sites of source (except self)
+                    // if (!string.Equals(siteName, currentSiteName, StringComparison.OrdinalIgnoreCase))
+                    // {
+                    //     var sourceSiteConfig = allSiteConfigs.FirstOrDefault(cfg =>
+                    //         string.Equals(cfg["site_settings"]?["sitename"]?.ToString(), currentSiteName, StringComparison.OrdinalIgnoreCase));
+                    //
+                    //     var raceSites = sourceSiteConfig?["race_sites"]?.ToObject<List<string>>() ?? new List<string>();
+                    //     if (raceSites.Any() && !raceSites.Contains(siteName, StringComparer.OrdinalIgnoreCase))
+                    //     {
+                    //         LogManager.Debug($"Skipping [{siteName}]: not in [{currentSiteName}] race_sites list.");
+                    //         continue;
+                    //     }
+                    // }
+
+                    // For Global PreBots, check the ORIGINAL IRC section
+                    string ircSectionToCheck;
+
+                    if (!string.IsNullOrEmpty(originalIrcSection))
+                    {
+                        // Global PreBot mode: check if site has the ORIGINAL IRC section enabled
+                        ircSectionToCheck = originalIrcSection;
+                        LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}]: Global PreBot mode - checking original IRC section [{LogColors.Green(ircSectionToCheck)}] for release: [{LogColors.Orange(releaseName)}]");
+                    }
+                    else
+                    {
+                        // Regular SiteBot mode: use cached reverse mapping
+                        if (CbftpToIrcSectionCache.TryGetValue(siteName, out var siteCache) &&
+                            siteCache.TryGetValue(cbftpSection, out string mappedIrcSection))
+                        {
+                            ircSectionToCheck = mappedIrcSection;
+                            LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}]: SiteBot mode - CBFTP [{cbftpSection}] maps to IRC [{LogColors.Green(ircSectionToCheck)}] for release: [{LogColors.Orange(releaseName)}]");
+                        }
+                        else
+                        {
+                            LogManager.Debug($"[{siteName}]: No IRC section mapping found for CBFTP [{cbftpSection}], skipping");
+                            continue;
+                        }
+                    }
+
+                    // Check if IRC section is enabled
+                    var raceSectionsEnabled = siteConfig["race_sections_enabled"]?.ToObject<List<string>>() ?? new List<string>();
+
+                    if (MainApp.DebugEnabled)
+                    {
+                        LogManager.Debug($"[{siteName}]: race_sections_enabled = [{string.Join(", ", raceSectionsEnabled)}]");
+                        LogManager.Debug($"[{siteName}]: Checking if '{ircSectionToCheck}' is in race_sections_enabled...");
+                    }
+
+                    if (!IsAllowedSection(ircSectionToCheck, siteConfig))
+                    {
+                        LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}]: IRC section [{LogColors.Green(ircSectionToCheck)}] NOT enabled in Race Sections, skipping");
+                        continue;
+                    }
+
+                    LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}]: IRC section [{LogColors.Green(ircSectionToCheck)}] is enabled ✓");
+
+
+                    // Check max pretime for THIS site
+                    int? maxPretimeSeconds = null;
+
+                    // Priority 1: Section-level pretime
+                    var configSection = siteConfig["sections"]?.FirstOrDefault(s =>
+                        string.Equals((string)s["irc_name"], ircSectionToCheck, StringComparison.OrdinalIgnoreCase));
+
+                    if (configSection?["pretime"]?.Value<int?>() is int sectionPretime && sectionPretime > 0)
+                    {
+                        maxPretimeSeconds = sectionPretime;
+                    }
+                    // Priority 2: Site-level max_pre_time
+                    else if (siteConfig["site_settings"]?["max_pre_time"]?.Value<int?>() is int sitePretime && sitePretime > 0)
+                    {
+                        maxPretimeSeconds = sitePretime;
+                    }
+
+                    // If max pretime is configured, check it
+                    if (maxPretimeSeconds.HasValue)
+                    {
+                        var (allowed, pretimeSeconds, reason) = await PreBotManager.CheckMaxPretimeAsync(
+                            releaseName,
+                            maxPretimeSeconds);
+
+                        if (!allowed)
+                        {
+                            string pretimeSource = configSection?["pretime"]?.Value<int?>() is int ? $"section [{ircSectionToCheck}]" : "site";
+                            LogManager.LogCBFTP(
+                                CBFTPEventType.Info,
+                                $"[{LogColors.Magenta(siteName)}] Pretime check: BLOCKED - {pretimeSeconds}s exceeds {pretimeSource} max {maxPretimeSeconds}s");
+                            continue;
+                        }
+
+                        if (pretimeSeconds >= 0)
+                        {
+                            string pretimeSource = configSection?["pretime"]?.Value<int?>() is int ? $"section [{ircSectionToCheck}]" : "site";
+                            LogManager.LogCBFTP(
+                                CBFTPEventType.Info,
+                                $"[{LogColors.Magenta(siteName)}] Pretime check: PASSED - {pretimeSeconds}s < {pretimeSource} max {maxPretimeSeconds}s");
+                        }
+                        else
+                        {
+                            LogManager.LogCBFTP(
+                                CBFTPEventType.Info,
+                                $"[{LogColors.Magenta(siteName)}] Pretime check: No pretime found, ALLOWING");
+                        }
+                    }
+
+
+                    // Check IMDB/TVMaze for THIS site
+                    if (configSection != null)
+                    {
+                        // IMDB Check
+                        var imdb = configSection["imdb"] as JObject;
+                        if (imdb?["enabled"]?.Value<bool>() == true)
+                        {
+                            LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}] [IMDB] Checking filters");
+
+                            if (!await ValidateIMDB(releaseName, imdb, siteName))
+                            {
+                                LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}] [IMDB] Filtered");
+                                continue;
+                            }
+
+                            LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}] [IMDB] Passed ✓");
+                        }
+
+                        // TVMaze Check
+                        var tvmaze = configSection["tvmaze"] as JObject;
+                        if (tvmaze?["enabled"]?.Value<bool>() == true)
+                        {
+                            LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}] [TVMaze] Checking filters");
+
+                            if (!await ValidateTVMaze(releaseName, tvmaze, siteName))
+                            {
+                                LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}] [TVMaze] Filtered");
+                                continue;
+                            }
+
+                            LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}] [TVMaze] Passed ✓");
+                        }
+                    }
+
+                    // load rules for THIS site using the CBFTP section
+                    rulesEngine.LoadRulesForIrcSection(siteConfig, ircSectionToCheck, cbftpSection);
+
+                    // Extract metadata using helpers (TV or Movie)
+                    string codec = null, sourceType = null, resolution = null, range = null;
+                    string group = null, repeatTag = null;
+                    bool isInternal = false, isMulti = false;
+
+                    if (TVMazeHelper.IsTVShow(releaseName))
+                    {
+                        // TV Show - extract metadata
+                        codec = TVMazeHelper.ExtractCodec(releaseName);
+                        sourceType = TVMazeHelper.ExtractSource(releaseName);
+                        resolution = TVMazeHelper.ExtractResolution(releaseName);
+                        range = TVMazeHelper.ExtractRange(releaseName);
+                        group = TVMazeHelper.ExtractGroup(releaseName);
+                        repeatTag = TVMazeHelper.ExtractRepeatTag(releaseName);
+                        isInternal = TVMazeHelper.IsInternal(releaseName);
+                        isMulti = TVMazeHelper.IsMulti(releaseName);
+                    }
+                    else
+                    {
+                        // Movie - extract metadata
+                        codec = IMDBHelper.ExtractCodec(releaseName);
+                        sourceType = IMDBHelper.ExtractSource(releaseName);
+                        resolution = IMDBHelper.ExtractResolution(releaseName);
+                        range = IMDBHelper.ExtractRange(releaseName);
+                        group = IMDBHelper.ExtractGroup(releaseName);
+                        repeatTag = IMDBHelper.ExtractRepeatTag(releaseName);
+                        isInternal = IMDBHelper.IsInternal(releaseName);
+                        isMulti = IMDBHelper.IsMulti(releaseName);
+                    }
+
+                    var parsedAttributes = ParseReleaseName(releaseName);
+                    var input = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "release", releaseName },
+                    { "section", ircSectionToCheck }
+                };
+
+                    // Add parsed year from ParseReleaseName
+                    if (parsedAttributes.TryGetValue("year", out var year)) input["year"] = year;
+
+                    // Use helper-extracted metadata (overrides ParseReleaseName)
+                    if (!string.IsNullOrEmpty(group)) input["group"] = group;
+                    if (!string.IsNullOrEmpty(resolution)) input["resolution"] = resolution;
+                    if (!string.IsNullOrEmpty(resolution)) input["quality"] = resolution; // alias
+                    if (!string.IsNullOrEmpty(sourceType)) input["source"] = sourceType;
+                    if (!string.IsNullOrEmpty(codec)) input["codec"] = codec;
+                    if (!string.IsNullOrEmpty(range)) input["range"] = range;
+                    if (!string.IsNullOrEmpty(range)) input["hdr"] = range; // alias
+                    if (!string.IsNullOrEmpty(repeatTag)) input["repeat"] = repeatTag;
+                    if (!string.IsNullOrEmpty(repeatTag)) input["proper"] = repeatTag; // alias
+                    input["internal"] = isInternal.ToString().ToLower();
+                    input["multi"] = isMulti.ToString().ToLower();
+
+                    var evaluationResult = rulesEngine.Evaluate(input, cbftpSection);
+
+                    LogManager.LogCBFTP(CBFTPEventType.Info, $"[{LogColors.Magenta(siteName)}] Rule evaluation: [{LogColors.Yellow(evaluationResult)}] for release: [{LogColors.Orange(releaseName)}]");
+
+                    if (string.Equals(evaluationResult, "DROP", StringComparison.OrdinalIgnoreCase))
+                    {
+                        LogManager.Warning($"[{siteName}] dropped by rules.");
+                        continue;
+                    }
+
+                    if (blacklist != null && blacklist.Any(bl =>
+                        Regex.IsMatch(releaseName, Regex.Escape(bl), RegexOptions.IgnoreCase)))
+                    {
+                        LogManager.Warning($"[{siteName}] blacklisted for [{LogColors.Orange(releaseName)}]");
+                        continue;
+                    }
+
+                    allowedSites.Add(siteName);
+
+                }
+                catch (Exception ex)
+                {
+                    LogManager.Error($"Exception processing site [{LogColors.Magenta(siteName)}]: {ex.Message}");
+                }
+            }
+
+            // CHECK AFTER ALL SITES HAVE BEEN PROCESSED
+            if (!allowedSites.Any())
+            {
+                return FilterResult.NoSites(releaseName, cbftpSection, "All sites were filtered out");
+            }
+
+            if (allowedSites.Count < 2)
+            {
+                return FilterResult.InsufficientSites(releaseName, cbftpSection, allowedSites.Count, allowedSites);
+            }
+
+            LogManager.LogCBFTP(CBFTPEventType.Info, $"{allowedSites.Count} site(s) allowed for release [{LogColors.Orange(releaseName)}]: [{LogColors.Magenta(string.Join(", ", allowedSites))}]");
+            return FilterResult.Success(releaseName, cbftpSection, allowedSites);
+        }
+        catch (Exception ex)
+        {
+            LogManager.Error($"Exception in FilterAllowedSites: {ex.Message}");
+            return FilterResult.Error(releaseName, ex.Message);
+        }
+        finally
+        {
+            InProgressReleases.TryRemove(releaseName, out _);
+        }
+    }
+
+
+    /// <summary>
+    /// Maps an IRC section to a CBFTP section based on triggers and rules.
+    /// </summary>
+    public static string GetMappedCbftpSection(
+        string ircSection,
+        string releaseName,
+        JObject siteConfig,
+        string sectionPrefix,
+        string sectionSuffix,
+        Action<string, System.Drawing.Color> appendOutput)
+    {
+        try
+        {
+            if (MainApp.DebugEnabled)
+            {
+                LogManager.Debug($"Mapping IRC section [{ircSection}] for release [{releaseName}]");
+            }
+
+            // Strip prefix/suffix
+            string strippedSection = ircSection.Trim();
+            if (!string.IsNullOrEmpty(sectionPrefix) && strippedSection.StartsWith(sectionPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                strippedSection = strippedSection.Substring(sectionPrefix.Length);
+            }
+            if (!string.IsNullOrEmpty(sectionSuffix) && strippedSection.EndsWith(sectionSuffix, StringComparison.OrdinalIgnoreCase))
+            {
+                strippedSection = strippedSection.Substring(0, strippedSection.Length - sectionSuffix.Length);
+            }
+
+            // For Global PreBots, check merged config for simple mappings
+            string prebotName = siteConfig["site_settings"]?["pre_announce"]?.ToString();
+            if (!string.IsNullOrEmpty(prebotName) && prebotName.StartsWith("Global PreBot", StringComparison.OrdinalIgnoreCase))
+            {
+                if (MainApp.DebugEnabled)
+                {
+                    LogManager.Debug($"Global PreBot detected - checking merged config for mappings");
+                }
+
+                // Find section in merged config
+                var section = siteConfig["sections"]?.FirstOrDefault(s =>
+                    string.Equals((string)s["irc_name"], strippedSection, StringComparison.OrdinalIgnoreCase));
+
+                if (section != null)
+                {
+                    // Get first tag's mapped CBFTP section
+                    var tags = section["tags"] as JArray;
+                    if (tags != null && tags.Any())
+                    {
+                        var firstTag = tags[0];
+                        string cbftpSection = firstTag["map_cbftp_section"]?.ToString();
+
+                        if (!string.IsNullOrEmpty(cbftpSection))
+                        {
+                            if (MainApp.DebugEnabled)
+                            {
+                                LogManager.Debug($"PreBot: Mapped IRC [{strippedSection}] → CBFTP [{cbftpSection}]");
+                            }
+                            return cbftpSection;
+                        }
+                    }
+                }
+
+                // ❌ NO FALLBACK! Section not configured = don't race it!
+                if (MainApp.DebugEnabled)
+                {
+                    LogManager.Warning($"PreBot: IRC section [{strippedSection}] not configured in any site, skipping");
+                }
+                return null;
+            }
+
+            // Find IRC section in config (for regular sites)
+            var regularSection = siteConfig["sections"]?.FirstOrDefault(s =>
+                string.Equals((string)s["irc_name"], strippedSection, StringComparison.OrdinalIgnoreCase));
+
+            if (regularSection == null)
+            {
+                if (MainApp.DebugEnabled)
+                {
+                    LogManager.Error($"IRC section [{strippedSection}] not found in configuration");
+                }
+                return null;
+            }
+
+            // Get tags
+            var regularTags = regularSection["tags"] as JArray;
+            if (regularTags == null || !regularTags.Any())
+            {
+                if (MainApp.DebugEnabled)
+                {
+                    LogManager.Info($"No tags found, using IRC section [{strippedSection}] as CBFTP section");
+                }
+                return strippedSection;
+            }
+
+            string fallbackCbftpSection = null;
+
+            // Process tags and triggers
+            foreach (var tag in regularTags)
+            {
+                string triggerRegex = tag["trigger_regex"]?.ToString();
+                string cbftpSection = tag["map_cbftp_section"]?.ToString();
+
+                if (string.IsNullOrEmpty(cbftpSection))
+                {
+                    continue;
+                }
+
+                // Check trigger regex
+                if (!string.IsNullOrEmpty(triggerRegex))
+                {
+                    bool isCaseInsensitive = triggerRegex.EndsWith("/i");
+                    string regexPattern = triggerRegex.Trim('/').TrimEnd('i').Trim('/');
+
+                    try
+                    {
+                        RegexOptions options = isCaseInsensitive ? RegexOptions.IgnoreCase : RegexOptions.None;
+
+                        if (!Regex.IsMatch(releaseName, regexPattern, options))
+                        {
+                            if (MainApp.DebugEnabled)
+                            {
+                                LogManager.Debug($"Trigger '{regexPattern}' did NOT match, skipping [{cbftpSection}]");
+                            }
+                            continue;
+                        }
+
+                        if (MainApp.DebugEnabled)
+                        {
+                            LogManager.Success($"Trigger '{regexPattern}' matched! Using CBFTP section [{cbftpSection}]");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogManager.Error($"Invalid regex '{triggerRegex}': {ex.Message}");
+                        continue;
+                    }
+                }
+
+                // Strict match check
+                if (string.Equals(cbftpSection, strippedSection, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (MainApp.DebugEnabled)
+                    {
+                        LogManager.Success($"Strict section match: [{strippedSection}] -> [{cbftpSection}]");
+                    }
+                    return cbftpSection;
+                }
+
+                // Parse release name to extract attributes
+                var parsedAttributes = ParseReleaseName(releaseName);
+
+                // Evaluate rules with README keys
+                var input = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "release", releaseName },
+                { "section", strippedSection }
+            };
+
+                // Add parsed attributes (README keys only)
+                if (parsedAttributes.TryGetValue("year", out var year))
+                    input["year"] = year;
+
+                if (parsedAttributes.TryGetValue("group", out var group))
+                    input["group"] = group;
+
+                if (parsedAttributes.TryGetValue("resolution", out var resolution))
+                    input["quality"] = resolution;
+
+                if (parsedAttributes.TryGetValue("source", out var source))
+                    input["source"] = source;
+
+                var evaluationResult = rulesEngine.Evaluate(input, cbftpSection);
+
+                if (string.Equals(evaluationResult, "ALLOW", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (MainApp.DebugEnabled)
+                    {
+                        LogManager.Success($"CBFTP section [{cbftpSection}] allowed by rules");
+                    }
+                    return cbftpSection;
+                }
+
+                if (!string.Equals(evaluationResult, "DROP", StringComparison.OrdinalIgnoreCase) && fallbackCbftpSection == null)
+                {
+                    fallbackCbftpSection = cbftpSection;
+                }
+            }
+
+            // Use fallback if available
+            //if (!string.IsNullOrEmpty(fallbackCbftpSection))
+            //{
+            //    if (MainApp.DebugEnabled)
+            //    {
+            //        LogManager.Success($"Using fallback CBFTP section [{fallbackCbftpSection}]");
+            //    }
+            //    return fallbackCbftpSection;
+            //}
+
+            if (MainApp.DebugEnabled)
+            {
+                LogManager.Warning($"No valid CBFTP section found for [{releaseName}]");
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            LogManager.Error($"Exception in GetMappedCbftpSection: {ex.Message}");
+            return null;
+        }
+    }
+
+
+    /// <summary>
+    /// Extracts the group name from a release name.
+    /// Format: Some.Release-GROUP
+    /// </summary>
+    public static string ExtractGroupFromRelease(string releaseName)
+    {
+        if (string.IsNullOrWhiteSpace(releaseName))
+            return string.Empty;
+
+        var match = Regex.Match(releaseName, @"-([A-Z0-9_]+)$", RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value : string.Empty;
+    }
+
+
+    /// <summary>
+    /// Checks if an IRC section is in the allowed list.
+    /// </summary>
+    public static bool IsAllowedSection(string section, JObject siteConfig)
+    {
+        var enabledSections = siteConfig["race_sections_enabled"]?.ToObject<List<string>>() ?? new List<string>();
+        return enabledSections.Any(s => string.Equals(s, section, StringComparison.OrdinalIgnoreCase));
+    }
+
+
+    /// <summary>
+    /// Parses a release name to extract attributes like year, resolution, source, codec, etc.
+    /// Expanded version based on TRD.js release name parser.
+    /// </summary>
+    public static Dictionary<string, string> ParseReleaseName(string releaseName)
+    {
+        var parsed = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            // Year
+            var yearMatch = Regex.Match(releaseName, @"(19\d{2}|20\d{2})");
+            if (yearMatch.Success)
+                parsed["year"] = yearMatch.Groups[1].Value;
+
+            // Resolution (expanded)
+            var resolutionMatch = Regex.Match(releaseName, @"[\s._-](720P|1080P|1280P|1440P|1920P|2160P|2300P|2700P|2880P)[\s._-]", RegexOptions.IgnoreCase);
+            if (resolutionMatch.Success)
+                parsed["resolution"] = resolutionMatch.Groups[1].Value.ToUpper();
+
+            // Source (expanded)
+            if (Regex.IsMatch(releaseName, @"[\s._-](((720p|1080p)\.(PURE\.)?M?BLURAY)|COMPLETE(\.PURE)?\.M?BLURAY)", RegexOptions.IgnoreCase))
+            {
+                parsed["source"] = "BLURAY";
+            }
+            else if (Regex.IsMatch(releaseName, @"[\s._-]((2160p\.UHD\.M?BLURAY)|COMPLETE(\.UHD)?\.M?BLURAY)", RegexOptions.IgnoreCase))
+            {
+                parsed["source"] = "UHD.BLURAY";
+            }
+            else
+            {
+                var sdMatch = Regex.Match(releaseName, @"[\s._-](DVDRIP|BDRIP)", RegexOptions.IgnoreCase);
+                if (sdMatch.Success)
+                {
+                    parsed["source"] = sdMatch.Groups[1].Value.ToUpper();
+                }
+                else
+                {
+                    var sourceMatch = Regex.Match(releaseName, @"[\s._-]([AU]?HDTV|AUHDTV|PDTV|DSR|WEBRIP|WEB)[\s._-]", RegexOptions.IgnoreCase);
+                    if (sourceMatch.Success)
+                        parsed["source"] = sourceMatch.Groups[1].Value.ToUpper();
+                }
+            }
+
+            // Codec
+            var codecMatch = Regex.Match(releaseName, @"[\s._-]([xh]26[45]|xvid|VP[89])[\s._-]", RegexOptions.IgnoreCase);
+            if (codecMatch.Success)
+                parsed["codec"] = codecMatch.Groups[1].Value.ToUpper();
+
+            // Range (HDR, DV, HLG)
+            var rangeMatch = Regex.Match(releaseName, @"[\s._-](DV\.HDR|HDR|DV|HLG)[\s._-]", RegexOptions.IgnoreCase);
+            if (rangeMatch.Success)
+                parsed["range"] = rangeMatch.Groups[1].Value.ToUpper();
+
+            // Group
+            var groupMatch = Regex.Match(releaseName, @"-([A-Z0-9_]+)$", RegexOptions.IgnoreCase);
+            if (groupMatch.Success)
+                parsed["group"] = groupMatch.Groups[1].Value;
+
+            // Internal detection
+            if (Regex.IsMatch(releaseName, @"[\s._-](INTERNAL|INT)[\s._-]", RegexOptions.IgnoreCase) ||
+                (parsed.ContainsKey("group") && parsed["group"].ToUpper().EndsWith("_INT")))
+            {
+                parsed["internal"] = "true";
+            }
+
+            // Multi-language detection
+            if (releaseName.ToUpper().Contains("MULTI"))
+            {
+                parsed["multi"] = "true";
+            }
+
+            // Language detection (simplified - add more if needed)
+            var languageMatch = Regex.Match(releaseName, @"[\s._-](GERMAN|FRENCH|SPANISH|ITALIAN|DUTCH|POLISH|RUSSIAN|JAPANESE|KOREAN|CHINESE|SWEDISH|DANISH|NORWEGIAN|FINNISH)[\s._-]", RegexOptions.IgnoreCase);
+            if (languageMatch.Success)
+                parsed["language"] = languageMatch.Groups[1].Value.ToUpper();
+
+            // PROPER/REPACK/RERIP detection
+            var repeatMatch = Regex.Match(releaseName, @"[\s._-](REAL\.PROPER|PROPER|RERIP|REPACK)[\s._-]", RegexOptions.IgnoreCase);
+            if (repeatMatch.Success)
+                parsed["repeat"] = repeatMatch.Groups[1].Value.ToUpper();
+
+            // TV episode (multiple formats)
+            // Format 1: S01E01-E02
+            var episodeMatch1 = Regex.Match(releaseName, @"[\s._-](S\d+E(\d+)-?E(\d+))[\s._-]", RegexOptions.IgnoreCase);
+            if (episodeMatch1.Success)
+            {
+                parsed["season_episode"] = episodeMatch1.Groups[1].Value;
+                parsed["episode"] = episodeMatch1.Groups[2].Value + episodeMatch1.Groups[3].Value;
+                parsed["type"] = "tv";
+            }
+            else
+            {
+                // Format 2: S01E01 or Episode.01
+                var episodeMatch2 = Regex.Match(releaseName, @"[\s._-]((?:S\d+)?(?:Episode|E|Part)\.?(\d+))[\s._-]", RegexOptions.IgnoreCase);
+                if (episodeMatch2.Success)
+                {
+                    parsed["episode"] = episodeMatch2.Groups[2].Value;
+                    parsed["type"] = "tv";
+                }
+                else
+                {
+                    // Format 3: 1x01
+                    var episodeMatch3 = Regex.Match(releaseName, @"[\s._-](\d+)x(\d+)[\s._-]", RegexOptions.IgnoreCase);
+                    if (episodeMatch3.Success)
+                    {
+                        parsed["season"] = episodeMatch3.Groups[1].Value;
+                        parsed["episode"] = episodeMatch3.Groups[2].Value;
+                        parsed["type"] = "tv";
+                    }
+                    else
+                    {
+                        // Format 4: Date-based (2024.12.23)
+                        var episodeMatch4 = Regex.Match(releaseName, @"[\s._-](\d{4})\.(\d{2}\.\d{2})[\s._-]", RegexOptions.IgnoreCase);
+                        if (episodeMatch4.Success)
+                        {
+                            parsed["season"] = episodeMatch4.Groups[1].Value;
+                            parsed["episode"] = episodeMatch4.Groups[2].Value;
+                            parsed["type"] = "tv";
+                        }
+                        else
+                        {
+                            parsed["type"] = "movie";
+                        }
+                    }
+                }
+            }
+
+            // Extract season if not already set (fallback)
+            if (!parsed.ContainsKey("season"))
+            {
+                var seasonMatch = Regex.Match(releaseName, @"[\s._]S(\d+)[\s._E]", RegexOptions.IgnoreCase);
+                if (seasonMatch.Success)
+                    parsed["season"] = seasonMatch.Groups[1].Value;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (MainApp.DebugEnabled)
+            {
+                LogManager.Warning($"Error parsing release name '{releaseName}': {ex.Message}");
+            }
+        }
+
+        return parsed;
+    }
+
+    /// <summary>
+    /// Gets detailed site information for a CBFTP section (for logging purposes).
+    /// Uses cached data, no file I/O.
+    /// </summary>
+    public static (List<string> AllowedSites, List<string> SkippedSites) GetSiteDetailsForSection(string cbftpSection)
+    {
+        var allowedSites = new List<string>();
+        var allSites = new List<string>();
+
+        lock (configLock)
+        {
+            foreach (var siteConfig in allSiteConfigs)
+            {
+                string siteName = siteConfig["site_settings"]?["sitename"]?.ToString();
+                if (string.IsNullOrEmpty(siteName))
+                    continue;
+
+                allSites.Add(siteName);
+
+                // Use cached lookup
+                if (CbftpToIrcSectionCache.TryGetValue(siteName, out var cache) &&
+                    cache.TryGetValue(cbftpSection, out string ircSection))
+                {
+                    // Check if enabled
+                    var raceSectionsEnabled = siteConfig["race_sections_enabled"]?.ToObject<List<string>>() ?? new List<string>();
+                    if (raceSectionsEnabled.Contains(ircSection, StringComparer.OrdinalIgnoreCase))
+                    {
+                        allowedSites.Add(siteName);
+                    }
+                }
+            }
+        }
+
+        var skippedSites = allSites.Except(allowedSites, StringComparer.OrdinalIgnoreCase).ToList();
+        return (allowedSites, skippedSites);
+    }
+
+
+    /// <summary>
+    /// Validates release against IMDB filters
+    /// </summary>
+    private static async Task<bool> ValidateIMDB(string releaseName, JObject config, string siteName)
+    {
+        try
+        {
+            var releaseInfo = await IMDBHelper.EnrichReleaseInfo(releaseName);
+
+            if (releaseInfo?.Movie == null)
+            {
+                bool fallback = config["fallback_on_error"]?.Value<bool>() ?? true;
+                if (!fallback)
+                {
+                    LogManager.Warning($"[{siteName}] [IMDB] ❌ No data found, blocking");
+                }
+                return fallback;
+            }
+
+            var movie = releaseInfo.Movie;
+            LogManager.Info($"[{siteName}] [IMDB] {movie.Title} ({movie.Year}) - {movie.ImdbRating}/10 ({movie.ImdbVotes:N0} votes)");
+
+            double minRating = config["min_rating"]?.Value<double>() ?? 0;
+            if (minRating > 0 && movie.ImdbRating.HasValue && movie.ImdbRating.Value < minRating)
+            {
+                LogManager.Warning($"[{siteName}] [IMDB] ❌ Rating {movie.ImdbRating.Value} < {minRating}");
+                return false;
+            }
+
+            int minVotes = config["min_votes"]?.Value<int>() ?? 0;
+            if (minVotes > 0 && movie.ImdbVotes.HasValue && movie.ImdbVotes.Value < minVotes)
+            {
+                LogManager.Warning($"[{siteName}] [IMDB] ❌ Votes {movie.ImdbVotes.Value:N0} < {minVotes:N0}");
+                return false;
+            }
+
+            if (config["only_english"]?.Value<bool>() == true)
+            {
+                if (movie.Languages == null || !movie.Languages.Any(l => l.Equals("English", StringComparison.OrdinalIgnoreCase)))
+                {
+                    LogManager.Warning($"[{siteName}] [IMDB] ❌ Not English ({movie.Language})");
+                    return false;
+                }
+            }
+
+            if (config["only_us_country"]?.Value<bool>() == true)
+            {
+                if (movie.Countries == null || !movie.Countries.Any(c => c.ToLower().Contains("united states")))
+                {
+                    LogManager.Warning($"[{siteName}] [IMDB] ❌ Not US ({movie.Country})");
+                    return false;
+                }
+            }
+
+            var allowedGenres = config["allowed_genres"]?.ToObject<List<string>>() ?? new List<string>();
+            if (allowedGenres.Any() && movie.Genres != null)
+            {
+                if (!movie.Genres.Any(g => allowedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
+                {
+                    LogManager.Warning($"[{siteName}] [IMDB] ❌ Genre not allowed: {string.Join(", ", movie.Genres)}");
+                    return false;
+                }
+            }
+
+            var blockedGenres = config["blocked_genres"]?.ToObject<List<string>>() ?? new List<string>();
+            if (blockedGenres.Any() && movie.Genres != null)
+            {
+                if (movie.Genres.Any(g => blockedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
+                {
+                    LogManager.Warning($"[{siteName}] [IMDB] ❌ Genre blocked: {string.Join(", ", movie.Genres)}");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            LogManager.Error($"[{siteName}] [IMDB] ERROR: {ex.Message}");
+            bool fallback = config["fallback_on_error"]?.Value<bool>() ?? true;
+            return fallback;
+        }
+    }
+
+    /// <summary>
+    /// Validates release against TVMaze filters
+    /// </summary>
+    private static async Task<bool> ValidateTVMaze(string releaseName, JObject config, string siteName)
+    {
+        try
+        {
+            var releaseInfo = await TVMazeHelper.EnrichReleaseInfo(releaseName);
+
+            if (releaseInfo?.Show == null)
+            {
+                bool fallback = config["fallback_on_error"]?.Value<bool>() ?? true;
+                if (!fallback)
+                {
+                    LogManager.Warning($"[{siteName}] [TVMaze] ❌ No data found, blocking");
+                }
+                return fallback;
+            }
+
+            var show = releaseInfo.Show;
+            var rating = show.Rating?.Average?.ToString("F1") ?? "N/A";
+            LogManager.Info($"[{siteName}] [TVMaze] {show.Name} - {show.Status} - Rating: {rating}");
+
+            if (config["skip_ended_shows"]?.Value<bool>() == true && show.Status == "Ended")
+            {
+                LogManager.Warning($"[{siteName}] [TVMaze] ❌ Show has ended");
+                return false;
+            }
+
+            double minRating = config["min_rating"]?.Value<double>() ?? 0;
+            if (minRating > 0 && show.Rating?.Average != null && show.Rating.Average < minRating)
+            {
+                LogManager.Warning($"[{siteName}] [TVMaze] ❌ Rating {show.Rating.Average:F1} < {minRating}");
+                return false;
+            }
+
+            var allowedGenres = config["allowed_genres"]?.ToObject<List<string>>() ?? new List<string>();
+            if (allowedGenres.Any() && show.Genres != null)
+            {
+                if (!show.Genres.Any(g => allowedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
+                {
+                    LogManager.Warning($"[{siteName}] [TVMaze] ❌ Genre not allowed: {string.Join(", ", show.Genres)}");
+                    return false;
+                }
+            }
+
+            var blockedGenres = config["blocked_genres"]?.ToObject<List<string>>() ?? new List<string>();
+            if (blockedGenres.Any() && show.Genres != null)
+            {
+                if (show.Genres.Any(g => blockedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
+                {
+                    LogManager.Warning($"[{siteName}] [TVMaze] ❌ Genre blocked: {string.Join(", ", show.Genres)}");
+                    return false;
+                }
+            }
+
+            var allowedNetworks = config["allowed_networks"]?.ToObject<List<string>>() ?? new List<string>();
+            if (allowedNetworks.Any())
+            {
+                var network = show.Network?.Name ?? show.WebChannel?.Name ?? "";
+                if (!allowedNetworks.Contains(network, StringComparer.OrdinalIgnoreCase))
+                {
+                    LogManager.Warning($"[{siteName}] [TVMaze] ❌ Network '{network}' not allowed");
+                    return false;
+                }
+            }
+
+            var allowedShowTypes = config["allowed_show_types"]?.ToObject<List<string>>() ?? new List<string>();
+            if (allowedShowTypes.Any())
+            {
+                var showType = show.Type ?? "";
+                if (!allowedShowTypes.Contains(showType, StringComparer.OrdinalIgnoreCase))
+                {
+                    LogManager.Warning($"[{siteName}] [TVMaze] ❌ Show type '{showType}' not allowed");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            LogManager.Error($"[{siteName}] [TVMaze] ERROR: {ex.Message}");
+            bool fallback = config["fallback_on_error"]?.Value<bool>() ?? true;
+            return fallback;
+        }
+    }
+    /// <summary>
+    /// Clears all caches. Call this when reloading configurations.
+    /// </summary>
+    public static void ClearCaches()
+    {
+        lock (configLock)
+        {
+            allSiteConfigs.Clear();
+            SiteBasedCache.Clear();
+            CbftpToIrcSectionCache.Clear();
+            InProgressReleases.Clear();
+        }
+
+        lock (blacklistLock)
+        {
+            globalBlacklist.Clear();
+        }
+
+        LogManager.Info("All caches cleared");
+    }
+}
+
+/// <summary>
+/// Represents a mapped tag with precompiled regex for performance.
+/// </summary>
+public class MappedTag
+{
+    public string CbftpSection { get; set; }
+    public Regex CompiledRegex { get; set; }
+    public List<string> CbftpRules { get; set; }
+}
