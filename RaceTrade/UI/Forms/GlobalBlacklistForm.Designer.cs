@@ -45,7 +45,7 @@ namespace RaceTrader
             // 
             // titleLabel
             // 
-            this.titleLabel.Font = new System.Drawing.Font("Consolas", 15F, System.Drawing.FontStyle.Bold);
+            this.titleLabel.Font = new System.Drawing.Font("Cascadia Mono", 15F, System.Drawing.FontStyle.Bold);
             this.titleLabel.ForeColor = System.Drawing.Color.White;
             this.titleLabel.Location = new System.Drawing.Point(18, 9);
             this.titleLabel.Name = "titleLabel";
@@ -58,7 +58,7 @@ namespace RaceTrader
             this.patternsGroupBox.Controls.Add(this.clearButton);
             this.patternsGroupBox.Controls.Add(this.removeButton);
             this.patternsGroupBox.Controls.Add(this.patternsListBox);
-            this.patternsGroupBox.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Bold);
+            this.patternsGroupBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F, System.Drawing.FontStyle.Bold);
             this.patternsGroupBox.ForeColor = System.Drawing.Color.White;
             this.patternsGroupBox.Location = new System.Drawing.Point(20, 60);
             this.patternsGroupBox.Name = "patternsGroupBox";
@@ -72,7 +72,7 @@ namespace RaceTrader
             this.clearButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.clearButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
             this.clearButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.clearButton.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.clearButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.clearButton.ForeColor = System.Drawing.Color.White;
             this.clearButton.Location = new System.Drawing.Point(175, 230);
             this.clearButton.Name = "clearButton";
@@ -87,7 +87,7 @@ namespace RaceTrader
             this.removeButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.removeButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
             this.removeButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.removeButton.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.removeButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.removeButton.ForeColor = System.Drawing.Color.White;
             this.removeButton.Location = new System.Drawing.Point(15, 230);
             this.removeButton.Name = "removeButton";
@@ -99,8 +99,8 @@ namespace RaceTrader
             // 
             // patternsListBox
             // 
-            this.patternsListBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
-            this.patternsListBox.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.patternsListBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
+            this.patternsListBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.patternsListBox.ForeColor = System.Drawing.Color.White;
             this.patternsListBox.FormattingEnabled = true;
             this.patternsListBox.ItemHeight = 17;
@@ -111,7 +111,7 @@ namespace RaceTrader
             // 
             // patternLabel
             // 
-            this.patternLabel.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.patternLabel.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.patternLabel.ForeColor = System.Drawing.Color.White;
             this.patternLabel.Location = new System.Drawing.Point(20, 355);
             this.patternLabel.Name = "patternLabel";
@@ -121,8 +121,8 @@ namespace RaceTrader
             // 
             // patternTextBox
             // 
-            this.patternTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
-            this.patternTextBox.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.patternTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
+            this.patternTextBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.patternTextBox.ForeColor = System.Drawing.Color.White;
             this.patternTextBox.Location = new System.Drawing.Point(20, 378);
             this.patternTextBox.Name = "patternTextBox";
@@ -135,7 +135,7 @@ namespace RaceTrader
             this.addButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.addButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
             this.addButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.addButton.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.addButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.addButton.ForeColor = System.Drawing.Color.White;
             this.addButton.Location = new System.Drawing.Point(430, 375);
             this.addButton.Name = "addButton";
@@ -147,7 +147,7 @@ namespace RaceTrader
             // 
             // hintLabel
             // 
-            this.hintLabel.Font = new System.Drawing.Font("Consolas", 7F, System.Drawing.FontStyle.Italic);
+            this.hintLabel.Font = new System.Drawing.Font("Cascadia Mono", 7F, System.Drawing.FontStyle.Italic);
             this.hintLabel.ForeColor = System.Drawing.Color.Gray;
             this.hintLabel.Location = new System.Drawing.Point(20, 407);
             this.hintLabel.Name = "hintLabel";
@@ -158,7 +158,7 @@ namespace RaceTrader
             // 
             // enabledCheckBox
             // 
-            this.enabledCheckBox.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.enabledCheckBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.enabledCheckBox.ForeColor = System.Drawing.Color.White;
             this.enabledCheckBox.Location = new System.Drawing.Point(20, 450);
             this.enabledCheckBox.Name = "enabledCheckBox";
@@ -170,10 +170,10 @@ namespace RaceTrader
             // 
             // closeButton
             // 
-            this.closeButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
+            this.closeButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(72)))), ((int)(((byte)(80)))), ((int)(((byte)(98)))));
             this.closeButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
             this.closeButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.closeButton.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.closeButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.closeButton.ForeColor = System.Drawing.Color.White;
             this.closeButton.Location = new System.Drawing.Point(480, 445);
             this.closeButton.Name = "closeButton";
@@ -187,7 +187,7 @@ namespace RaceTrader
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.ClientSize = new System.Drawing.Size(600, 490);
             this.Controls.Add(this.closeButton);
             this.Controls.Add(this.enabledCheckBox);
@@ -197,7 +197,7 @@ namespace RaceTrader
             this.Controls.Add(this.patternLabel);
             this.Controls.Add(this.patternsGroupBox);
             this.Controls.Add(this.titleLabel);
-            this.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;

@@ -48,6 +48,7 @@ namespace RaceTrade
         public CbftpAddSiteForm(CbftpSiteFormMode mode, CbftpServer preselectedServer, string initialSiteName = null)
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
             _mode = mode;
             _preselectedServer = preselectedServer;

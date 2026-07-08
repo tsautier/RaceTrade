@@ -119,7 +119,7 @@ namespace RaceTrade
                 StartPosition = FormStartPosition.CenterParent,
                 MaximizeBox = false,
                 MinimizeBox = false,
-                BackColor = Color.FromArgb(45, 45, 48)
+                BackColor = Color.FromArgb(22, 26, 36)
             };
 
             Label label = new Label
@@ -138,7 +138,7 @@ namespace RaceTrade
                 Top = 50,
                 Width = 400,
                 Text = defaultValue,
-                BackColor = Color.FromArgb(30, 30, 30),
+                BackColor = Color.FromArgb(13, 16, 24),
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 9)
             };
@@ -150,7 +150,7 @@ namespace RaceTrade
                 Width = 80,
                 Top = 85,
                 DialogResult = DialogResult.OK,
-                BackColor = Color.FromArgb(0, 122, 204),
+                BackColor = Color.FromArgb(0, 168, 255),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 9)
@@ -164,7 +164,7 @@ namespace RaceTrade
                 Width = 80,
                 Top = 85,
                 DialogResult = DialogResult.Cancel,
-                BackColor = Color.FromArgb(62, 62, 66),
+                BackColor = Color.FromArgb(37, 42, 54),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 9)
@@ -198,7 +198,7 @@ namespace RaceTrade
                 StartPosition = FormStartPosition.CenterParent,
                 MaximizeBox = true,
                 MinimizeBox = false,
-                BackColor = Color.FromArgb(45, 45, 48)
+                BackColor = Color.FromArgb(22, 26, 36)
             };
 
             Label label = new Label
@@ -220,9 +220,9 @@ namespace RaceTrade
                 Text = defaultValue,
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
-                BackColor = Color.FromArgb(30, 30, 30),
+                BackColor = Color.FromArgb(13, 16, 24),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 9)
+                Font = new Font("Cascadia Mono", 9)
             };
 
             Button confirmButton = new Button
@@ -232,7 +232,7 @@ namespace RaceTrade
                 Width = 80,
                 Top = 275,
                 DialogResult = DialogResult.OK,
-                BackColor = Color.FromArgb(0, 122, 204),
+                BackColor = Color.FromArgb(0, 168, 255),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat
             };
@@ -245,7 +245,7 @@ namespace RaceTrade
                 Width = 80,
                 Top = 275,
                 DialogResult = DialogResult.Cancel,
-                BackColor = Color.FromArgb(62, 62, 66),
+                BackColor = Color.FromArgb(37, 42, 54),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat
             };
@@ -362,7 +362,7 @@ namespace RaceTrade
             this.StartPosition = FormStartPosition.CenterScreen;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.BackColor = Color.FromArgb(45, 45, 48);
+            this.BackColor = Color.FromArgb(22, 26, 36);
 
             statusLabel = new Label
             {
@@ -391,7 +391,7 @@ namespace RaceTrade
                 Top = 105,
                 Width = 100,
                 Height = 30,
-                BackColor = Color.FromArgb(62, 62, 66),
+                BackColor = Color.FromArgb(37, 42, 54),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat
             };
@@ -406,6 +406,8 @@ namespace RaceTrade
             this.Controls.Add(statusLabel);
             this.Controls.Add(progressBar);
             this.Controls.Add(cancelButton);
+
+            ThemeManager.EnableDarkTitleBar(this);
         }
 
         public void UpdateProgress(int value, string status = null)

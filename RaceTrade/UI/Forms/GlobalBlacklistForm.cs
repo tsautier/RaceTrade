@@ -12,6 +12,7 @@ namespace RaceTrader
         public GlobalBlacklistForm()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
             // Do NOT call mainApp-related logic here.
             // Designer will use this constructor.

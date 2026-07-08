@@ -23,7 +23,7 @@ namespace RaceTrade
             // 
             // mainTabControl
             // 
-            this.mainTabControl.BackColor = System.Drawing.Color.FromArgb(60, 60, 64);
+            this.mainTabControl.BackColor = System.Drawing.Color.FromArgb(35, 40, 52);
             this.mainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTabControl.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.mainTabControl.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -38,7 +38,7 @@ namespace RaceTrade
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(40, 40, 40);
+            this.BackColor = System.Drawing.Color.FromArgb(18, 22, 31);
             this.ClientSize = new System.Drawing.Size(900, 600);
             this.Controls.Add(this.mainTabControl);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);

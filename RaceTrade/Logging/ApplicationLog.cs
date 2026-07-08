@@ -31,6 +31,7 @@ namespace RaceTrade
         public ApplicationLog()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
             // --- defaults for toolbar controls ---
             searchBox.Text = "Search logs...";

@@ -53,9 +53,31 @@ namespace RaceTrade
 
 
         private HelpForm helpForm;
+        private RaceTrader.FtpClientForm _ftpClientForm;
         private IrcLog logOutput;
         private TabbedIrcLog tabbedIrcLog;
         private CBFTPIntegrationLog cbftpLog;
+
+        /// <summary>
+        /// Toggles a singleton child window: shows and focuses it if hidden/closed,
+        /// hides it if currently visible. Never spawns duplicates.
+        /// </summary>
+        private void ToggleWindow<T>(ref T instance, Func<T> factory) where T : Form
+        {
+            if (instance != null && !instance.IsDisposed && instance.Visible)
+            {
+                instance.Hide();
+                return;
+            }
+            if (instance == null || instance.IsDisposed)
+            {
+                instance = factory();
+                instance.Owner = this;
+            }
+            instance.Show();
+            instance.BringToFront();
+            instance.Activate();
+        }
 
         // split race vs chat IRC clients
         private readonly Dictionary<string, IRCClient> raceIrcClients = new Dictionary<string, IRCClient>();
@@ -158,6 +180,8 @@ namespace RaceTrade
                 _hasCenteredMainForm = true;
             }
 
+            ApplyNebulaTheme();
+
             LoadApplicationSettings();
             UpdateTraderButton();
             InitializeLogForms();
@@ -173,6 +197,110 @@ namespace RaceTrade
             else
                 // keep their saved free positions
                 LoadLogWindowLayout(); 
+        }
+
+        private void ApplyNebulaTheme()
+        {
+            try
+            {
+                StyleDashboard();
+            }
+            catch
+            {
+                try { ThemeManager.ApplyTheme(this); } catch { }
+            }
+        }
+
+        private void StyleDashboard()
+        {
+            // Base dark theme for the whole window.
+            ThemeManager.ApplyTheme(this);
+
+            // Surfaces: the whole right content area is one gradient panel; the
+            // header text and cards sit directly on it.
+            ThemeManager.StyleSidebar(sidebarPanel);
+            ThemeManager.PaintBackgroundGradient(contentPanel);
+
+            // Brand + headings (futuristic display font).
+            titleLabel.Font = new Font(ThemeManager.Fonts.DisplayFamily, 15F, FontStyle.Bold);
+            titleLabel.ForeColor = ThemeManager.Colors.Foreground;
+            label1.Font = ThemeManager.Fonts.Subtitle;
+            pageTitleLabel.Font = new Font(ThemeManager.Fonts.DisplayFamily, 18F, FontStyle.Bold);
+            navMenuLabel.Font = new Font(ThemeManager.Fonts.UiFamily, 7.5F, FontStyle.Bold);
+            secureLabel.Font = new Font(ThemeManager.Fonts.UiFamily, 8F, FontStyle.Bold);
+            statusTitleLabel.Font = new Font(ThemeManager.Fonts.UiFamily, 8F, FontStyle.Bold);
+            lblDockLogs.Font = new Font(ThemeManager.Fonts.UiFamily, 8.5F, FontStyle.Bold);
+
+            // Logo diamond.
+            ThemeManager.SetDoubleBuffered(logoPanel);
+            logoPanel.Paint += (s, e) =>
+            {
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                var pts = new[] { new Point(12, 0), new Point(24, 12), new Point(12, 24), new Point(0, 12) };
+                using (var br = new System.Drawing.Drawing2D.LinearGradientBrush(
+                    new Rectangle(0, 0, 24, 24), ThemeManager.Colors.AccentCyan, ThemeManager.Colors.Accent, 45f))
+                    e.Graphics.FillPolygon(br, pts);
+            };
+
+            // Rounded card surfaces.
+            foreach (var card in new[] { statusCard, cardCbftp, cardSites, cardPrebots, cardLogs, cardTools })
+                ThemeManager.StyleCard(card);
+
+            // Card titles.
+            foreach (var lbl in new[] { cardCbftpTitle, cardSitesTitle, cardPrebotsTitle, cardLogsTitle, cardToolsTitle })
+                lbl.Font = new Font(ThemeManager.Fonts.UiFamily, 9F, FontStyle.Bold);
+
+            // Card action buttons (rounded + UI font).
+            foreach (var b in new[] {
+                Add_Cbftp_button, Add_Ccbftp_Sections, Add_cbftp_site, Cbftp_Edit_Site, Sync_From_Cbftp_Button,
+                add_sites_button, Edit_sites_button,
+                Add_PreBot_button, Prebot_edit_button, buttonImportPredb,
+                ToggleCBFTPLog, ToggleIRCLog, ToggleApplicationLog, ToggleRaceLog,
+                button2, blacklist_add })
+                ThemeManager.StyleActionButton(b);
+
+            // Exit stays red, but rounded like the rest.
+            ThemeManager.StyleActionButton(exitButton);
+            ThemeManager.StyleDangerButton(exitButton);
+
+            // Big trader Start/Stop button.
+            Enable_Disable_Racer_button.Font = new Font(ThemeManager.Fonts.UiFamily, 11F, FontStyle.Bold);
+
+            // Re-home the KnightRider scanner into the status card.
+            if (traderScanner != null)
+            {
+                traderScanner.Parent = statusCard;
+                traderScanner.Size = new Size(172, 16);
+                traderScanner.Location = new Point(16, 98);
+            }
+
+            // Left-rail nav buttons with icon glyphs.
+            ThemeManager.StyleNavButton(navDashboard, true, NavGlyph("home"));
+            ThemeManager.StyleNavButton(Ftp_button, false, NavGlyph("sync"));
+            ThemeManager.StyleNavButton(OpenTabbedIRC, false, NavGlyph("chat"));
+            ThemeManager.StyleNavButton(Pre_button, false, NavGlyph("flag"));
+            ThemeManager.StyleNavButton(button1, false, NavGlyph("settings"));
+            ThemeManager.StyleNavButton(Help_button, false, NavGlyph("help"));
+
+            UpdateTraderButton();
+            UpdateLogButtonStates();
+            LoadConfigIntoDropdown();
+        }
+
+        private static string NavGlyph(string key)
+        {
+            int code;
+            switch (key)
+            {
+                case "home": code = 0xE80F; break;
+                case "sync": code = 0xE895; break;
+                case "chat": code = 0xE8BD; break;
+                case "flag": code = 0xE7C1; break;
+                case "settings": code = 0xE713; break;
+                case "help": code = 0xE897; break;
+                default: return null;
+            }
+            return ((char)code).ToString();
         }
 
         private void Form1_Move(object sender, EventArgs e)
@@ -226,12 +354,12 @@ namespace RaceTrade
 
             int x = o.Value<int?>("x") ?? f.Left;
             int y = o.Value<int?>("y") ?? f.Top;
-            int w = o.Value<int?>("w") ?? f.Width;
-            int h = o.Value<int?>("h") ?? f.Height;
             bool vis = o.Value<bool?>("visible") ?? f.Visible;
 
             f.StartPosition = FormStartPosition.Manual;
-            f.Bounds = new Rectangle(x, y, Math.Max(200, w), Math.Max(120, h));
+            // Keep every log window a uniform (designer) size — restore only the
+            // saved POSITION, so all four logs always match in size.
+            f.Location = new Point(x, y);
 
             if (vis) f.Show();
             else f.Hide();
@@ -328,7 +456,8 @@ namespace RaceTrade
             if (raceLog == null || raceLog.IsDisposed)
             {
                 raceLog = new RaceLog { Owner = this };
-                raceLog.Show();
+                var rh = raceLog.Handle;
+                raceLog.Hide();
             }
             else
             {
@@ -356,7 +485,8 @@ namespace RaceTrade
             if (cbftpLog == null || cbftpLog.IsDisposed)
             {
                 cbftpLog = new CBFTPIntegrationLog { Owner = this };
-                cbftpLog.Show();
+                var ch = cbftpLog.Handle;
+                cbftpLog.Hide();
             }
             else
             {
@@ -426,12 +556,12 @@ namespace RaceTrade
             {
                 if (applicationLog.Visible)
                 {
-                    ToggleApplicationLog.BackColor = Color.LightGray;
+                    ToggleApplicationLog.BackColor = ThemeManager.Colors.ToggleOn;
                     ToggleApplicationLog.Text = "App";
                 }
                 else
                 {
-                    ToggleApplicationLog.BackColor = Color.DarkGray;
+                    ToggleApplicationLog.BackColor = ThemeManager.Colors.ToggleOff;
                     ToggleApplicationLog.Text = "App (Off)";
                 }
             }
@@ -441,12 +571,12 @@ namespace RaceTrade
             {
                 if (cbftpLog.Visible)
                 {
-                    ToggleCBFTPLog.BackColor = Color.LightGray;
+                    ToggleCBFTPLog.BackColor = ThemeManager.Colors.ToggleOn;
                     ToggleCBFTPLog.Text = "Cbftp Log";
                 }
                 else
                 {
-                    ToggleCBFTPLog.BackColor = Color.DarkGray;
+                    ToggleCBFTPLog.BackColor = ThemeManager.Colors.ToggleOff;
                     ToggleCBFTPLog.Text = "Cbftp (Off)";
                 }
             }
@@ -456,12 +586,12 @@ namespace RaceTrade
             {
                 if (logOutput.Visible)
                 {
-                    ToggleIRCLog.BackColor = Color.LightGray;
+                    ToggleIRCLog.BackColor = ThemeManager.Colors.ToggleOn;
                     ToggleIRCLog.Text = "IRC Log";
                 }
                 else
                 {
-                    ToggleIRCLog.BackColor = Color.DarkGray;
+                    ToggleIRCLog.BackColor = ThemeManager.Colors.ToggleOff;
                     ToggleIRCLog.Text = "IRC (Off)";
                 }
             }
@@ -492,13 +622,13 @@ namespace RaceTrade
                 if (applicationLog.Visible)
                 {
                     applicationLog.Hide();
-                    ToggleApplicationLog.BackColor = Color.DarkGray;
+                    ToggleApplicationLog.BackColor = ThemeManager.Colors.ToggleOff;
                     ToggleApplicationLog.Text = "App (Off)";
                 }
                 else
                 {
                     applicationLog.Show();
-                    ToggleApplicationLog.BackColor = Color.LightGray;
+                    ToggleApplicationLog.BackColor = ThemeManager.Colors.ToggleOn;
                     ToggleApplicationLog.Text = "App";
                 }
             }
@@ -511,13 +641,13 @@ namespace RaceTrade
                 if (cbftpLog.Visible)
                 {
                     cbftpLog.Hide();
-                    ToggleCBFTPLog.BackColor = Color.DarkGray;
+                    ToggleCBFTPLog.BackColor = ThemeManager.Colors.ToggleOff;
                     ToggleCBFTPLog.Text = "Cbftp (Off)";
                 }
                 else
                 {
                     cbftpLog.Show();
-                    ToggleCBFTPLog.BackColor = Color.LightGray;
+                    ToggleCBFTPLog.BackColor = ThemeManager.Colors.ToggleOn;
                     ToggleCBFTPLog.Text = "Cbftp Log";
                 }
             }
@@ -530,13 +660,13 @@ namespace RaceTrade
                 if (logOutput.Visible)
                 {
                     logOutput.Hide();
-                    ToggleIRCLog.BackColor = Color.DarkGray;
+                    ToggleIRCLog.BackColor = ThemeManager.Colors.ToggleOff;
                     ToggleIRCLog.Text = "IRC (Off)";
                 }
                 else
                 {
                     logOutput.Show();
-                    ToggleIRCLog.BackColor = Color.LightGray;
+                    ToggleIRCLog.BackColor = ThemeManager.Colors.ToggleOn;
                     ToggleIRCLog.Text = "IRC Log";
                 }
             }
@@ -891,13 +1021,13 @@ namespace RaceTrade
                 if (raceLog.Visible)
                 {
                     raceLog.Hide();
-                    ToggleRaceLog.BackColor = Color.DarkGray;
+                    ToggleRaceLog.BackColor = ThemeManager.Colors.ToggleOff;
                     ToggleRaceLog.Text = "Race (Off)";
                 }
                 else
                 {
                     raceLog.Show();
-                    ToggleRaceLog.BackColor = Color.LightGray;
+                    ToggleRaceLog.BackColor = ThemeManager.Colors.ToggleOn;
                     ToggleRaceLog.Text = "Race Log";
                 }
             }
@@ -1114,16 +1244,16 @@ namespace RaceTrade
         {
             if (logOutput != null && !logOutput.IsDisposed)
             {
-                logOutput.BackColor = Color.Black;
-                logOutput.ForeColor = Color.White;
+                logOutput.BackColor = ThemeManager.Colors.BackgroundDarkest;
+                logOutput.ForeColor = ThemeManager.Colors.Foreground;
                 logOutput.Invalidate();
                 logOutput.Refresh();
             }
 
             if (applicationLog != null && !applicationLog.IsDisposed)
             {
-                applicationLog.BackColor = Color.Black;
-                applicationLog.ForeColor = Color.White;
+                applicationLog.BackColor = ThemeManager.Colors.BackgroundDarkest;
+                applicationLog.ForeColor = ThemeManager.Colors.Foreground;
                 applicationLog.Invalidate();
                 applicationLog.Refresh();
             }
@@ -1285,14 +1415,16 @@ namespace RaceTrade
             if (isTraderRunning)
             {
                 Enable_Disable_Racer_button.Text = "Stop";
-                Enable_Disable_Racer_button.BackColor = Color.Red;
+                Enable_Disable_Racer_button.BackColor = ThemeManager.Colors.Danger;
+                Enable_Disable_Racer_button.ForeColor = Color.White;
                 Enable_Disable_Racer_button.Image = null; // Remove GIF
                 if (traderScanner != null) traderScanner.Visible = true;
             }
             else
             {
                 Enable_Disable_Racer_button.Text = "Start";
-                Enable_Disable_Racer_button.BackColor = Color.Green;
+                Enable_Disable_Racer_button.BackColor = ThemeManager.Colors.Success;
+                Enable_Disable_Racer_button.ForeColor = ThemeManager.Colors.BackgroundDarkest;
                 Enable_Disable_Racer_button.Image = null; // Remove GIF
                 if (traderScanner != null) traderScanner.Visible = false;
             }
@@ -2270,15 +2402,7 @@ namespace RaceTrade
 
             try
             {
-                // Create help form if it doesn't exist or was disposed
-                if (helpForm == null || helpForm.IsDisposed)
-                {
-                    helpForm = new HelpForm();
-                }
-
-                // Show and bring to front
-                helpForm.Show();
-                helpForm.BringToFront();
+                ToggleWindow(ref helpForm, () => new HelpForm());
             }
             catch (Exception ex)
             {
@@ -2524,6 +2648,13 @@ namespace RaceTrade
                 return;
             }
 
+            // Toggle: if the chat window is already open, hide it (preserves connections).
+            if (tabbedIrcLog != null && !tabbedIrcLog.IsDisposed && tabbedIrcLog.Visible)
+            {
+                tabbedIrcLog.Hide();
+                return;
+            }
+
             // Ensure the tabbed IRC window exists
             if (tabbedIrcLog == null || tabbedIrcLog.IsDisposed)
             {
@@ -2730,16 +2861,7 @@ namespace RaceTrade
         {
             try
             {
-                if (preSpreadForm == null || preSpreadForm.IsDisposed)
-                {
-                    preSpreadForm = new PreSpreadForm();
-                    preSpreadForm.Show();
-                }
-                else
-                {
-                    preSpreadForm.BringToFront();
-                    preSpreadForm.Focus();
-                }
+                ToggleWindow(ref preSpreadForm, () => new PreSpreadForm());
             }
             catch (Exception ex)
             {
@@ -2879,8 +3001,7 @@ namespace RaceTrade
         {
             try
             {
-                var ftpClientForm = new RaceTrader.FtpClientForm();
-                ftpClientForm.Show(); // Non-blocking
+                ToggleWindow(ref _ftpClientForm, () => new RaceTrader.FtpClientForm());
             }
             catch (Exception ex)
             {

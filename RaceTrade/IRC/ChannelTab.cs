@@ -23,6 +23,7 @@ namespace RaceTrade
         public ChannelTab()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
             // adjust item height here instead of in designer
             userListBox.ItemHeight = TextRenderer
                 .MeasureText("Xg", userListBox.Font).Height + 2;
@@ -90,13 +91,13 @@ namespace RaceTrade
 
                     ContextMenuStrip contextMenu = new ContextMenuStrip
                     {
-                        BackColor = Color.FromArgb(45, 45, 48),
+                        BackColor = Color.FromArgb(22, 26, 36),
                         ForeColor = Color.White
                     };
 
                     ToolStripMenuItem keyExchangeItem = new ToolStripMenuItem("FiSH Key Exchange")
                     {
-                        BackColor = Color.FromArgb(45, 45, 48),
+                        BackColor = Color.FromArgb(22, 26, 36),
                         ForeColor = Color.White
                     };
                     keyExchangeItem.Click += (s, ev) =>
@@ -107,7 +108,7 @@ namespace RaceTrade
 
                     ToolStripMenuItem pmItem = new ToolStripMenuItem("Send Private Message")
                     {
-                        BackColor = Color.FromArgb(45, 45, 48),
+                        BackColor = Color.FromArgb(22, 26, 36),
                         ForeColor = Color.White
                     };
                     pmItem.Click += (s, ev) =>
@@ -299,13 +300,13 @@ namespace RaceTrade
 
             var menu = new ContextMenuStrip
             {
-                BackColor = Color.FromArgb(45, 45, 48),
+                BackColor = Color.FromArgb(22, 26, 36),
                 ForeColor = Color.White
             };
 
             var copyItem = new ToolStripMenuItem("Copy")
             {
-                BackColor = Color.FromArgb(45, 45, 48),
+                BackColor = Color.FromArgb(22, 26, 36),
                 ForeColor = Color.White,
                 Enabled = !string.IsNullOrEmpty(outputBox.SelectedText)
             };
@@ -317,7 +318,7 @@ namespace RaceTrade
 
             var copyAllItem = new ToolStripMenuItem("Copy All")
             {
-                BackColor = Color.FromArgb(45, 45, 48),
+                BackColor = Color.FromArgb(22, 26, 36),
                 ForeColor = Color.White,
                 Enabled = !string.IsNullOrEmpty(outputBox.Text)
             };

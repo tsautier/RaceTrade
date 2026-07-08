@@ -21,6 +21,7 @@ namespace RaceTrade
         public PreBot(string filePath = null)
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
             {
@@ -405,7 +406,7 @@ namespace RaceTrade
                 FormBorderStyle = FormBorderStyle.FixedDialog,
                 MaximizeBox = false,
                 MinimizeBox = false,
-                BackColor = Color.FromArgb(45, 45, 48)
+                BackColor = Color.FromArgb(22, 26, 36)
             };
 
             var resultRichTextBox = new RichTextBox
@@ -413,9 +414,9 @@ namespace RaceTrade
                 Location = new Point(15, 15),
                 Size = new Size(500, 350),
                 ReadOnly = true,
-                Font = new Font("Consolas", 10),
+                Font = new Font("Cascadia Mono", 10),
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.FromArgb(30, 30, 30),
+                BackColor = Color.FromArgb(13, 16, 24),
                 ForeColor = Color.White
             };
 
@@ -518,7 +519,7 @@ namespace RaceTrade
                 Location = new Point(230, 380),
                 Width = 100,
                 Height = 30,
-                BackColor = Color.FromArgb(62, 62, 66),
+                BackColor = Color.FromArgb(37, 42, 54),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 9)

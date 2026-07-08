@@ -22,7 +22,9 @@ public static class RaceHelper
     private static readonly ConcurrentDictionary<string, bool> InProgressReleases = new();
     private static readonly List<JObject> allSiteConfigs = new List<JObject>();
     private static readonly object configLock = new();
-    private static readonly RulesEngine rulesEngine = new RulesEngine();
+    // NOTE: RulesEngine holds per-evaluation state (_sectionRules/_tagRules), so it is
+    // NOT shared statically anymore — each racing path creates its own instance and
+    // loads rules immediately before evaluating (avoids stale rules + concurrency races).
 
     // Global blacklist (set from MainApp)
     private static List<string> globalBlacklist = new List<string>();
@@ -237,6 +239,9 @@ public static class RaceHelper
                 return FilterResult.Error(releaseName, "No site configurations loaded");
 
             var allowedSites = new List<string>();
+
+            // Per-call engine: rules are (re)loaded per site immediately before Evaluate.
+            var rulesEngine = new RulesEngine();
 
             foreach (var siteConfig in allSiteConfigs)
             {
@@ -594,6 +599,11 @@ public static class RaceHelper
             }
 
             string fallbackCbftpSection = null;
+
+            // Per-call engine, loaded for THIS site's IRC section so the rule-based
+            // tag disambiguation below evaluates against the correct (fresh) rules.
+            var rulesEngine = new RulesEngine();
+            rulesEngine.LoadRulesForIrcSection(siteConfig, strippedSection, strippedSection);
 
             // Process tags and triggers
             foreach (var tag in regularTags)

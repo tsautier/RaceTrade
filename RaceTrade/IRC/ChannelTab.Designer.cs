@@ -41,7 +41,7 @@ namespace RaceTrade
             this.outputBox.BackColor = System.Drawing.Color.White;
             this.outputBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.outputBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.outputBox.Font = new System.Drawing.Font("Consolas", 9F);
+            this.outputBox.Font = new System.Drawing.Font("Cascadia Mono", 9F);
             this.outputBox.ForeColor = System.Drawing.Color.Black;
             this.outputBox.Location = new System.Drawing.Point(0, 0);
             this.outputBox.Margin = new System.Windows.Forms.Padding(0);
@@ -54,11 +54,11 @@ namespace RaceTrade
             // 
             // userListBox
             // 
-            this.userListBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
+            this.userListBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(20)))), ((int)(((byte)(28)))));
             this.userListBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.userListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.userListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.userListBox.Font = new System.Drawing.Font("Consolas", 9F);
+            this.userListBox.Font = new System.Drawing.Font("Cascadia Mono", 9F);
             this.userListBox.ForeColor = System.Drawing.Color.White;
             this.userListBox.FormattingEnabled = true;
             this.userListBox.IntegralHeight = false;
@@ -73,10 +73,10 @@ namespace RaceTrade
             // 
             // inputBox
             // 
-            this.inputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
+            this.inputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(20)))), ((int)(((byte)(28)))));
             this.inputBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.inputBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.inputBox.Font = new System.Drawing.Font("Consolas", 9F);
+            this.inputBox.Font = new System.Drawing.Font("Cascadia Mono", 9F);
             this.inputBox.ForeColor = System.Drawing.Color.White;
             this.inputBox.Location = new System.Drawing.Point(5, 5);
             this.inputBox.Name = "inputBox";
@@ -86,11 +86,11 @@ namespace RaceTrade
             // 
             // sendButton
             // 
-            this.sendButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(70)))), ((int)(((byte)(75)))));
+            this.sendButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(50)))), ((int)(((byte)(64)))));
             this.sendButton.Dock = System.Windows.Forms.DockStyle.Right;
-            this.sendButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(63)))), ((int)(((byte)(63)))), ((int)(((byte)(70)))));
+            this.sendButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(62)))));
             this.sendButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.sendButton.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.sendButton.Font = new System.Drawing.Font("Cascadia Mono", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.sendButton.ForeColor = System.Drawing.Color.White;
             this.sendButton.Location = new System.Drawing.Point(920, 5);
             this.sendButton.Name = "sendButton";
@@ -102,7 +102,7 @@ namespace RaceTrade
             // 
             // mainPanel
             // 
-            this.mainPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(60)))));
+            this.mainPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(35)))), ((int)(((byte)(46)))));
             this.mainPanel.Controls.Add(this.outputBox);
             this.mainPanel.Controls.Add(this.userListPanel);
             this.mainPanel.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -113,7 +113,7 @@ namespace RaceTrade
             // 
             // userListPanel
             // 
-            this.userListPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
+            this.userListPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(20)))), ((int)(((byte)(28)))));
             this.userListPanel.Controls.Add(this.userListBox);
             this.userListPanel.Dock = System.Windows.Forms.DockStyle.Right;
             this.userListPanel.Location = new System.Drawing.Point(840, 0);
@@ -123,7 +123,7 @@ namespace RaceTrade
             // 
             // inputPanel
             // 
-            this.inputPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(60)))));
+            this.inputPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(35)))), ((int)(((byte)(46)))));
             this.inputPanel.Controls.Add(this.inputBox);
             this.inputPanel.Controls.Add(this.sendButton);
             this.inputPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -137,10 +137,10 @@ namespace RaceTrade
             // ChannelTab
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(18)))), ((int)(((byte)(22)))), ((int)(((byte)(31)))));
             this.Controls.Add(this.mainPanel);
             this.Controls.Add(this.inputPanel);
-            this.Font = new System.Drawing.Font("Consolas", 9F);
+            this.Font = new System.Drawing.Font("Cascadia Mono", 9F);
             this.ForeColor = System.Drawing.Color.White;
             this.Margin = new System.Windows.Forms.Padding(0);
             this.Name = "ChannelTab";

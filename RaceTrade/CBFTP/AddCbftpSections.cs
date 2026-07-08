@@ -15,6 +15,7 @@ namespace RaceTrade
         public AddCbftpSection()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
             EnsureSectionFileExists();
             LoadCbftpSections();
         }

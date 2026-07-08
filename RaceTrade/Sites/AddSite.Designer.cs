@@ -344,7 +344,7 @@
             // label39
             // 
             this.label39.AutoSize = true;
-            this.label39.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.label39.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label39.Location = new System.Drawing.Point(850, 585);
             this.label39.Name = "label39";
             this.label39.Size = new System.Drawing.Size(637, 255);
@@ -385,7 +385,7 @@
             // 
             this.Test_pre_regex_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.Test_pre_regex_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.Test_pre_regex_button.Font = new System.Drawing.Font("Consolas", 6.25F);
+            this.Test_pre_regex_button.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
             this.Test_pre_regex_button.Location = new System.Drawing.Point(59, 147);
             this.Test_pre_regex_button.Name = "Test_pre_regex_button";
             this.Test_pre_regex_button.Size = new System.Drawing.Size(66, 24);
@@ -620,7 +620,7 @@
             // label35
             // 
             this.label35.AutoSize = true;
-            this.label35.Font = new System.Drawing.Font("Consolas", 6.25F);
+            this.label35.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
             this.label35.Location = new System.Drawing.Point(194, 176);
             this.label35.Name = "label35";
             this.label35.Size = new System.Drawing.Size(403, 13);
@@ -630,7 +630,7 @@
             // label34
             // 
             this.label34.AutoSize = true;
-            this.label34.Font = new System.Drawing.Font("Consolas", 6.25F);
+            this.label34.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
             this.label34.Location = new System.Drawing.Point(194, 133);
             this.label34.Name = "label34";
             this.label34.Size = new System.Drawing.Size(217, 13);
@@ -657,7 +657,7 @@
             // label30
             // 
             this.label30.AutoSize = true;
-            this.label30.Font = new System.Drawing.Font("Consolas", 6.25F);
+            this.label30.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
             this.label30.Location = new System.Drawing.Point(194, 90);
             this.label30.Name = "label30";
             this.label30.Size = new System.Drawing.Size(409, 13);
@@ -877,7 +877,7 @@
             // label28
             // 
             this.label28.AutoSize = true;
-            this.label28.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.label28.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label28.Location = new System.Drawing.Point(300, 261);
             this.label28.Name = "label28";
             this.label28.Size = new System.Drawing.Size(343, 15);
@@ -887,7 +887,7 @@
             // label18
             // 
             this.label18.AutoSize = true;
-            this.label18.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.label18.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label18.Location = new System.Drawing.Point(301, 396);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(322, 15);
@@ -915,7 +915,7 @@
             // 
             this.remove_affil_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.remove_affil_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.remove_affil_button.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.remove_affil_button.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.remove_affil_button.Location = new System.Drawing.Point(225, 474);
             this.remove_affil_button.Name = "remove_affil_button";
             this.remove_affil_button.Size = new System.Drawing.Size(70, 24);
@@ -927,7 +927,7 @@
             // 
             this.AddTagRuleButton.BackColor = System.Drawing.Color.SteelBlue;
             this.AddTagRuleButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.AddTagRuleButton.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.AddTagRuleButton.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.AddTagRuleButton.Location = new System.Drawing.Point(610, 370);
             this.AddTagRuleButton.Name = "AddTagRuleButton";
             this.AddTagRuleButton.Size = new System.Drawing.Size(45, 24);
@@ -939,7 +939,7 @@
             // 
             this.add_affil_button.BackColor = System.Drawing.Color.SteelBlue;
             this.add_affil_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.add_affil_button.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.add_affil_button.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.add_affil_button.Location = new System.Drawing.Point(158, 474);
             this.add_affil_button.Name = "add_affil_button";
             this.add_affil_button.Size = new System.Drawing.Size(59, 24);
@@ -951,7 +951,7 @@
             // 
             this.RemoveTagRuleButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.RemoveTagRuleButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.RemoveTagRuleButton.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.RemoveTagRuleButton.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.RemoveTagRuleButton.Location = new System.Drawing.Point(661, 370);
             this.RemoveTagRuleButton.Name = "RemoveTagRuleButton";
             this.RemoveTagRuleButton.Size = new System.Drawing.Size(60, 24);
@@ -962,7 +962,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.label6.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label6.Location = new System.Drawing.Point(156, 260);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(49, 15);
@@ -989,7 +989,7 @@
             // 
             this.btnDisableRaceSection.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.btnDisableRaceSection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDisableRaceSection.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.btnDisableRaceSection.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.btnDisableRaceSection.Location = new System.Drawing.Point(77, 474);
             this.btnDisableRaceSection.Name = "btnDisableRaceSection";
             this.btnDisableRaceSection.Size = new System.Drawing.Size(70, 24);
@@ -1010,7 +1010,7 @@
             this.TVMazeSettingsButton.DialogResult = System.Windows.Forms.DialogResult.Abort;
             this.TVMazeSettingsButton.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.TVMazeSettingsButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.TVMazeSettingsButton.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.TVMazeSettingsButton.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.TVMazeSettingsButton.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
             this.TVMazeSettingsButton.Location = new System.Drawing.Point(11, 506);
             this.TVMazeSettingsButton.Name = "TVMazeSettingsButton";
@@ -1024,7 +1024,7 @@
             // 
             this.btnEnableRaceSection.BackColor = System.Drawing.Color.SteelBlue;
             this.btnEnableRaceSection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnEnableRaceSection.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.btnEnableRaceSection.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.btnEnableRaceSection.Location = new System.Drawing.Point(11, 474);
             this.btnEnableRaceSection.Name = "btnEnableRaceSection";
             this.btnEnableRaceSection.Size = new System.Drawing.Size(59, 24);
@@ -1036,7 +1036,7 @@
             // 
             this.btnSaveRegexRules.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.btnSaveRegexRules.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSaveRegexRules.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.btnSaveRegexRules.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.btnSaveRegexRules.Location = new System.Drawing.Point(676, 203);
             this.btnSaveRegexRules.Name = "btnSaveRegexRules";
             this.btnSaveRegexRules.Size = new System.Drawing.Size(45, 25);
@@ -1048,7 +1048,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.label13.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label13.Location = new System.Drawing.Point(219, 20);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(105, 15);
@@ -1059,7 +1059,7 @@
             // 
             this.btnUnmap.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.btnUnmap.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnUnmap.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.btnUnmap.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.btnUnmap.Location = new System.Drawing.Point(151, 112);
             this.btnUnmap.Name = "btnUnmap";
             this.btnUnmap.Size = new System.Drawing.Size(65, 24);
@@ -1072,7 +1072,7 @@
             // 
             this.btnMap.BackColor = System.Drawing.Color.SteelBlue;
             this.btnMap.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnMap.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.btnMap.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.btnMap.Location = new System.Drawing.Point(151, 77);
             this.btnMap.Name = "btnMap";
             this.btnMap.Size = new System.Drawing.Size(65, 24);
@@ -1115,7 +1115,7 @@
             // label26
             // 
             this.label26.AutoSize = true;
-            this.label26.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.label26.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label26.Location = new System.Drawing.Point(367, 20);
             this.label26.Name = "label26";
             this.label26.Size = new System.Drawing.Size(147, 15);
@@ -1126,7 +1126,7 @@
             // 
             this.btnRemoveGlobalRule.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.btnRemoveGlobalRule.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRemoveGlobalRule.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.btnRemoveGlobalRule.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.btnRemoveGlobalRule.Location = new System.Drawing.Point(661, 506);
             this.btnRemoveGlobalRule.Name = "btnRemoveGlobalRule";
             this.btnRemoveGlobalRule.Size = new System.Drawing.Size(60, 24);
@@ -1137,7 +1137,7 @@
             // label27
             // 
             this.label27.AutoSize = true;
-            this.label27.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.label27.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label27.Location = new System.Drawing.Point(367, 184);
             this.label27.Name = "label27";
             this.label27.Size = new System.Drawing.Size(168, 15);
@@ -1147,7 +1147,7 @@
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.label17.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label17.Location = new System.Drawing.Point(6, 20);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(91, 15);
@@ -1158,7 +1158,7 @@
             // 
             this.btnRemoveIrcSection.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.btnRemoveIrcSection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRemoveIrcSection.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.btnRemoveIrcSection.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.btnRemoveIrcSection.Location = new System.Drawing.Point(82, 233);
             this.btnRemoveIrcSection.Name = "btnRemoveIrcSection";
             this.btnRemoveIrcSection.Size = new System.Drawing.Size(63, 24);
@@ -1171,7 +1171,7 @@
             // 
             this.btnAddIrcSection.BackColor = System.Drawing.Color.SteelBlue;
             this.btnAddIrcSection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAddIrcSection.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.btnAddIrcSection.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.btnAddIrcSection.Location = new System.Drawing.Point(8, 233);
             this.btnAddIrcSection.Name = "btnAddIrcSection";
             this.btnAddIrcSection.Size = new System.Drawing.Size(68, 24);
@@ -1184,7 +1184,7 @@
             // 
             this.btnAddGlobalRule.BackColor = System.Drawing.Color.SteelBlue;
             this.btnAddGlobalRule.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAddGlobalRule.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.btnAddGlobalRule.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.btnAddGlobalRule.Location = new System.Drawing.Point(610, 506);
             this.btnAddGlobalRule.Name = "btnAddGlobalRule";
             this.btnAddGlobalRule.Size = new System.Drawing.Size(45, 24);
@@ -1194,7 +1194,7 @@
             // 
             // ListBox2
             // 
-            this.ListBox2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.ListBox2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.ListBox2.FormattingEnabled = true;
             this.ListBox2.ItemHeight = 17;
             this.ListBox2.Location = new System.Drawing.Point(10, 277);
@@ -1204,7 +1204,7 @@
             // 
             // label16
             // 
-            this.label16.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.label16.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label16.Location = new System.Drawing.Point(8, 260);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(145, 23);
@@ -1275,7 +1275,7 @@
             // 
             this.Test_regex_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.Test_regex_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.Test_regex_button.Font = new System.Drawing.Font("Consolas", 6.25F);
+            this.Test_regex_button.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
             this.Test_regex_button.Location = new System.Drawing.Point(60, 204);
             this.Test_regex_button.Name = "Test_regex_button";
             this.Test_regex_button.Size = new System.Drawing.Size(66, 24);
@@ -1412,7 +1412,7 @@
             // 
             this.Remove_channel_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.Remove_channel_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.Remove_channel_button.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.Remove_channel_button.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.Remove_channel_button.Location = new System.Drawing.Point(123, 223);
             this.Remove_channel_button.Name = "Remove_channel_button";
             this.Remove_channel_button.Size = new System.Drawing.Size(126, 29);
@@ -1424,7 +1424,7 @@
             // 
             this.Add_channel_button.BackColor = System.Drawing.Color.SteelBlue;
             this.Add_channel_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.Add_channel_button.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.Add_channel_button.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.Add_channel_button.Location = new System.Drawing.Point(9, 223);
             this.Add_channel_button.Name = "Add_channel_button";
             this.Add_channel_button.Size = new System.Drawing.Size(108, 29);
@@ -1464,7 +1464,7 @@
             // 
             this.button1.BackColor = System.Drawing.SystemColors.ButtonShadow;
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button1.Font = new System.Drawing.Font("Consolas", 7.25F);
+            this.button1.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.button1.Location = new System.Drawing.Point(158, 506);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(137, 24);
@@ -1483,13 +1483,13 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.ClientSize = new System.Drawing.Size(1521, 944);
             this.Controls.Add(this.LoadEditSites_Combobox);
             this.Controls.Add(this.label41);
             this.Controls.Add(this.groupBox3);
-            this.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Font = new System.Drawing.Font("Cascadia Mono", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ForeColor = System.Drawing.Color.Black;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));

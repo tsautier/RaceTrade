@@ -34,6 +34,7 @@ namespace RaceTrade
         public AddSite(string siteFileName)
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
 
             // In constructor, after InitializeComponent():
@@ -109,7 +110,7 @@ namespace RaceTrade
             remove_affil_button.Click += remove_affil_button_Click;
             btnEnableRaceSection.Click += btnEnableRaceSection_Click;
             btnDisableRaceSection.Click += btnDisableRaceSection_Click;
-            listBox_affils_sites.BackColor = Color.FromArgb(45, 45, 48);
+            listBox_affils_sites.BackColor = Color.FromArgb(22, 26, 36);
             listBox_affils_sites.ForeColor = Color.White;
             ListBox2.SelectedIndexChanged += ListBox2_SelectedIndexChanged;
             ListBox2.DrawMode = DrawMode.OwnerDrawFixed;
@@ -766,19 +767,19 @@ namespace RaceTrade
             if ((e.State & DrawItemState.Selected) == DrawItemState.Selected)
             {
                 // Selected item
-                backgroundColor = Color.FromArgb(0, 122, 204); // Blue
+                backgroundColor = Color.FromArgb(0, 168, 255); // Blue
                 textColor = Color.White;
             }
             else if (sectionItem.IsEnabled)
             {
                 // Enabled (normal)
-                backgroundColor = Color.FromArgb(45, 45, 48); // Dark background
+                backgroundColor = Color.FromArgb(22, 26, 36); // Dark background
                 textColor = Color.White;
             }
             else
             {
                 // Disabled (greyed out)
-                backgroundColor = Color.FromArgb(45, 45, 48);
+                backgroundColor = Color.FromArgb(22, 26, 36);
                 textColor = Color.Gray;
             }
 
@@ -1642,6 +1643,42 @@ namespace RaceTrade
             UpdateListBox5(selectedIrcSection); // Refresh mapped section list
         }
 
+        /// <summary>
+        /// Persists the channel/blowfish-key listbox into currentSite.SiteSettings
+        /// (encrypting each key). Called by EVERY save path so channel keys are never
+        /// dropped by a save that didn't come from the main "Save site" button.
+        /// </summary>
+        private void ApplyChannelListToSiteSettings()
+        {
+            if (currentSite?.SiteSettings == null || ListboxChannels == null)
+                return;
+
+            int channelIndex = 1;
+            foreach (ChannelInfo channelInfo in ListboxChannels.Items)
+            {
+                var channelProp = currentSite.SiteSettings.GetType().GetProperty($"Chan{channelIndex}");
+                var keyProp = currentSite.SiteSettings.GetType().GetProperty($"BlowfishKey{channelIndex}");
+                if (channelProp != null && keyProp != null)
+                {
+                    channelProp.SetValue(currentSite.SiteSettings, channelInfo.Channel);
+                    keyProp.SetValue(currentSite.SiteSettings, SecureConfig.Encrypt(channelInfo.BlowfishKey));
+                }
+                channelIndex++;
+                if (channelIndex > 20) break;
+            }
+
+            for (int i = channelIndex; i <= 20; i++)
+            {
+                var channelProp = currentSite.SiteSettings.GetType().GetProperty($"Chan{i}");
+                var keyProp = currentSite.SiteSettings.GetType().GetProperty($"BlowfishKey{i}");
+                if (channelProp != null && keyProp != null)
+                {
+                    channelProp.SetValue(currentSite.SiteSettings, "");
+                    keyProp.SetValue(currentSite.SiteSettings, "");
+                }
+            }
+        }
+
         private void SaveSiteConfiguration()
         {
             try
@@ -1651,6 +1688,10 @@ namespace RaceTrade
                     MessageBox.Show("No site configuration loaded to save.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+
+                // Always fold the current channel/blowfish-key list into the config
+                // so no save path drops the keys.
+                ApplyChannelListToSiteSettings();
 
                 if (File.Exists(currentSiteFilePath))
                 {

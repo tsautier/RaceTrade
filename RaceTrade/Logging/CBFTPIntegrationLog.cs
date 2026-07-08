@@ -32,6 +32,7 @@ namespace RaceTrade
         public CBFTPIntegrationLog()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
             this.FormClosing += CBFTPIntegrationLog_FormClosing;
 
             searchBox.Text = "Search logs...";

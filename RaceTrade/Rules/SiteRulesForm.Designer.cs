@@ -32,7 +32,7 @@ namespace RaceTrade
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = Color.FromArgb(30, 30, 30);
+            this.BackColor = Color.FromArgb(13, 16, 24);
             this.ClientSize = new System.Drawing.Size(700, 450);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.ForeColor = Color.White;
@@ -45,10 +45,10 @@ namespace RaceTrade
             // 
             // rulesRichTextBox
             // 
-            this.rulesRichTextBox.BackColor = Color.FromArgb(25, 25, 25);
+            this.rulesRichTextBox.BackColor = Color.FromArgb(11, 14, 21);
             this.rulesRichTextBox.ForeColor = Color.White;
             this.rulesRichTextBox.BorderStyle = BorderStyle.None;
-            this.rulesRichTextBox.Font = new Font("Consolas", 9F);
+            this.rulesRichTextBox.Font = new Font("Cascadia Mono", 9F);
             this.rulesRichTextBox.Location = new Point(10, 10);
             this.rulesRichTextBox.Name = "rulesRichTextBox";
             this.rulesRichTextBox.ReadOnly = true;
@@ -65,10 +65,10 @@ namespace RaceTrade
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new Size(80, 28);
             this.btnClose.Location = new Point(this.ClientSize.Width - 90, this.ClientSize.Height - 36);
-            this.btnClose.BackColor = Color.FromArgb(62, 62, 66);
+            this.btnClose.BackColor = Color.FromArgb(37, 42, 54);
             this.btnClose.ForeColor = Color.White;
             this.btnClose.FlatStyle = FlatStyle.Flat;
-            this.btnClose.FlatAppearance.BorderColor = Color.FromArgb(63, 63, 70);
+            this.btnClose.FlatAppearance.BorderColor = Color.FromArgb(42, 48, 62);
             this.btnClose.TabIndex = 1;
             this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
 

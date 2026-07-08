@@ -64,7 +64,7 @@ namespace RaceTrader
             this.generalGroupBox.Controls.Add(this.debugCheckBox);
             this.generalGroupBox.Controls.Add(this.appNameTextBox);
             this.generalGroupBox.Controls.Add(this.appNameLabel);
-            this.generalGroupBox.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Bold);
+            this.generalGroupBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F, System.Drawing.FontStyle.Bold);
             this.generalGroupBox.ForeColor = System.Drawing.Color.White;
             this.generalGroupBox.Location = new System.Drawing.Point(20, 60);
             this.generalGroupBox.Name = "generalGroupBox";
@@ -77,7 +77,7 @@ namespace RaceTrader
             // 
             this.insecureSslCheckBox.AutoSize = true;
             this.insecureSslCheckBox.BackColor = System.Drawing.Color.Transparent;
-            this.insecureSslCheckBox.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.insecureSslCheckBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.insecureSslCheckBox.ForeColor = System.Drawing.Color.White;
             this.insecureSslCheckBox.Location = new System.Drawing.Point(15, 110);
             this.insecureSslCheckBox.Name = "insecureSslCheckBox";
@@ -89,7 +89,7 @@ namespace RaceTrader
             // debugCheckBox
             // 
             this.debugCheckBox.BackColor = System.Drawing.Color.Transparent;
-            this.debugCheckBox.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.debugCheckBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.debugCheckBox.ForeColor = System.Drawing.Color.White;
             this.debugCheckBox.Location = new System.Drawing.Point(15, 85);
             this.debugCheckBox.Name = "debugCheckBox";
@@ -100,8 +100,8 @@ namespace RaceTrader
             // 
             // appNameTextBox
             // 
-            this.appNameTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
-            this.appNameTextBox.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.appNameTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
+            this.appNameTextBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.appNameTextBox.ForeColor = System.Drawing.Color.White;
             this.appNameTextBox.Location = new System.Drawing.Point(15, 50);
             this.appNameTextBox.Name = "appNameTextBox";
@@ -112,7 +112,7 @@ namespace RaceTrader
             // appNameLabel
             // 
             this.appNameLabel.BackColor = System.Drawing.Color.Transparent;
-            this.appNameLabel.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.appNameLabel.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.appNameLabel.ForeColor = System.Drawing.Color.White;
             this.appNameLabel.Location = new System.Drawing.Point(15, 25);
             this.appNameLabel.Name = "appNameLabel";
@@ -125,7 +125,7 @@ namespace RaceTrader
             this.apiGroupBox.Controls.Add(this.testButton);
             this.apiGroupBox.Controls.Add(this.getLinkLabel);
             this.apiGroupBox.Controls.Add(this.omdbLabel);
-            this.apiGroupBox.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Bold);
+            this.apiGroupBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F, System.Drawing.FontStyle.Bold);
             this.apiGroupBox.ForeColor = System.Drawing.Color.White;
             this.apiGroupBox.Location = new System.Drawing.Point(20, 215);
             this.apiGroupBox.Name = "apiGroupBox";
@@ -136,10 +136,10 @@ namespace RaceTrader
             // 
             // testButton
             // 
-            this.testButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
+            this.testButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(72)))), ((int)(((byte)(80)))), ((int)(((byte)(98)))));
             this.testButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
             this.testButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.testButton.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.testButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.testButton.ForeColor = System.Drawing.Color.White;
             this.testButton.Location = new System.Drawing.Point(26, 43);
             this.testButton.Name = "testButton";
@@ -159,7 +159,7 @@ namespace RaceTrader
             // omdbLabel
             // 
             this.omdbLabel.BackColor = System.Drawing.Color.Transparent;
-            this.omdbLabel.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.omdbLabel.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.omdbLabel.ForeColor = System.Drawing.Color.White;
             this.omdbLabel.Location = new System.Drawing.Point(23, 20);
             this.omdbLabel.Name = "omdbLabel";
@@ -170,7 +170,7 @@ namespace RaceTrader
             // statusLabel
             // 
             this.statusLabel.BackColor = System.Drawing.Color.Transparent;
-            this.statusLabel.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.statusLabel.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.statusLabel.ForeColor = System.Drawing.Color.Yellow;
             this.statusLabel.Location = new System.Drawing.Point(20, 378);
             this.statusLabel.Name = "statusLabel";
@@ -182,7 +182,7 @@ namespace RaceTrader
             this.cancelButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.cancelButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
             this.cancelButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.cancelButton.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.cancelButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.cancelButton.ForeColor = System.Drawing.Color.White;
             this.cancelButton.Location = new System.Drawing.Point(294, 511);
             this.cancelButton.Name = "cancelButton";
@@ -197,7 +197,7 @@ namespace RaceTrader
             this.saveButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.saveButton.FlatAppearance.BorderColor = System.Drawing.Color.Black;
             this.saveButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.saveButton.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.saveButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.saveButton.ForeColor = System.Drawing.Color.White;
             this.saveButton.Location = new System.Drawing.Point(400, 511);
             this.saveButton.Name = "saveButton";
@@ -210,7 +210,7 @@ namespace RaceTrader
             // titleLabel
             // 
             this.titleLabel.BackColor = System.Drawing.Color.Transparent;
-            this.titleLabel.Font = new System.Drawing.Font("Consolas", 15F, System.Drawing.FontStyle.Bold);
+            this.titleLabel.Font = new System.Drawing.Font("Cascadia Mono", 15F, System.Drawing.FontStyle.Bold);
             this.titleLabel.ForeColor = System.Drawing.Color.White;
             this.titleLabel.Location = new System.Drawing.Point(18, 9);
             this.titleLabel.Name = "titleLabel";
@@ -295,7 +295,7 @@ namespace RaceTrader
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.ClientSize = new System.Drawing.Size(520, 548);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.titleLabel);
@@ -304,7 +304,7 @@ namespace RaceTrader
             this.Controls.Add(this.statusLabel);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.saveButton);
-            this.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;

@@ -24,6 +24,7 @@ namespace RaceTrade
         public TabbedIrcLog()
         {
             InitializeComponent();          // created in Designer file
+            RaceTrade.ThemeManager.ApplyTheme(this);
             this.FormClosing += TabbedIrcLog_FormClosing;
         }
 
@@ -50,8 +51,8 @@ namespace RaceTrade
 
 
                     Color backColor = (e.State == DrawItemState.Selected)
-        ? Color.FromArgb(90, 90, 100)   // ← lighter, stands out more
-        : Color.FromArgb(45, 45, 48); ;
+        ? Color.FromArgb(58, 65, 82)   // ← lighter, stands out more
+        : Color.FromArgb(22, 26, 36); ;
 
             using (SolidBrush brush = new SolidBrush(backColor))
             {
@@ -152,13 +153,13 @@ namespace RaceTrade
 
                         var menu = new ContextMenuStrip
                         {
-                            BackColor = Color.FromArgb(45, 45, 48),
+                            BackColor = Color.FromArgb(22, 26, 36),
                             ForeColor = Color.White
                         };
 
                         var setKeyItem = new ToolStripMenuItem("Set Blowfish key (UTF-8)")
                         {
-                            BackColor = Color.FromArgb(45, 45, 48),
+                            BackColor = Color.FromArgb(22, 26, 36),
                             ForeColor = Color.White
                         };
 
@@ -194,13 +195,13 @@ namespace RaceTrade
 
             TabPage siteTab = new TabPage(siteName)
             {
-                BackColor = Color.FromArgb(30, 30, 30)
+                BackColor = Color.FromArgb(13, 16, 24)
             };
 
             TabControl channelTabControl = new TabControl
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(45, 45, 48),
+                BackColor = Color.FromArgb(22, 26, 36),
                 Font = new Font("Segoe UI", 9),
                 DrawMode = TabDrawMode.OwnerDrawFixed,
                 Padding = new Point(15, 3),
@@ -244,7 +245,7 @@ namespace RaceTrade
 
             var tabPage = new TabPage(channelName)
             {
-                BackColor = Color.FromArgb(30, 30, 30),
+                BackColor = Color.FromArgb(13, 16, 24),
                 Padding = new Padding(0)   // <<< remove default 3px padding
             };
 
@@ -479,7 +480,7 @@ namespace RaceTrade
                 form.MinimizeBox = false;
                 form.MaximizeBox = false;
                 form.ClientSize = new Size(350, 110);
-                form.BackColor = Color.FromArgb(40, 40, 40);
+                form.BackColor = Color.FromArgb(18, 22, 31);
 
                 var label = new Label
                 {
@@ -493,7 +494,7 @@ namespace RaceTrade
                 {
                     Location = new Point(10, 35),
                     Width = 320,
-                    BackColor = Color.FromArgb(30, 30, 30),
+                    BackColor = Color.FromArgb(13, 16, 24),
                     ForeColor = Color.White
                 };
 

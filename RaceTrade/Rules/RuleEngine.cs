@@ -220,7 +220,38 @@ public class RulesEngine
         }
 
         // --------------------------------------------------------------------------------
-        // 1) GLOBAL DROP rules (highest priority)
+        // 0) EXCEPT rules (highest priority): an explicit carve-out that forces ALLOW,
+        //    overriding any DROP that would otherwise match. ("drop these, EXCEPT when...")
+        //    Evaluated global-first, then tag-specific for this CBFTP section.
+        // --------------------------------------------------------------------------------
+        foreach (var rule in _sectionRules.Where(r =>
+                     string.Equals(r.Action, ACTION_EXCEPT, StringComparison.OrdinalIgnoreCase)))
+        {
+            if (EvaluateRule(input, rule))
+            {
+                if (MainApp.DebugEnabled)
+                    LogManager.Success($"[EXCEPT] Global EXCEPT rule matched: {rule.Key} {rule.Operator} {rule.Value}. Forcing ALLOW.");
+                return ACTION_ALLOW;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(cbftpSection) &&
+            _tagRules.TryGetValue(cbftpSection, out var exceptTagRules))
+        {
+            foreach (var rule in exceptTagRules.Where(r =>
+                         string.Equals(r.Action, ACTION_EXCEPT, StringComparison.OrdinalIgnoreCase)))
+            {
+                if (EvaluateRule(input, rule))
+                {
+                    if (MainApp.DebugEnabled)
+                        LogManager.Success($"[EXCEPT] CBFTP EXCEPT rule matched: {rule.Key} {rule.Operator} {rule.Value}. Forcing ALLOW.");
+                    return ACTION_ALLOW;
+                }
+            }
+        }
+
+        // --------------------------------------------------------------------------------
+        // 1) GLOBAL DROP rules
         // --------------------------------------------------------------------------------
         foreach (var rule in _sectionRules.Where(r =>
                      string.Equals(r.Action, ACTION_DROP, StringComparison.OrdinalIgnoreCase)))
@@ -266,7 +297,7 @@ public class RulesEngine
                 }
             }
 
-            // Except handeling, not implemented yet
+            // EXCEPT rules are handled up-front (step 0) as allow-overrides.
         }
 
         // --------------------------------------------------------------------------------

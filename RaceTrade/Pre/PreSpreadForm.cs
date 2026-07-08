@@ -25,7 +25,55 @@ namespace RaceTrade
         public PreSpreadForm()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
+            StylePreForm();
             LoadConfiguration();
+        }
+
+        /// <summary>
+        /// Dashboard-matching visual polish for the Pre window (UI only): elevated
+        /// card-style group boxes, rounded action buttons, accent titles and a
+        /// subtle gradient background. No layout or logic changes.
+        /// </summary>
+        private void StylePreForm()
+        {
+            try
+            {
+                this.BackColor = ThemeManager.Colors.Background;
+
+                // Group boxes read as elevated cards with cyan titles.
+                foreach (var gb in new[] { groupBoxCbftpServers, groupBoxSitesConfig,
+                                           groupBoxDistribution, groupBoxCompletionLog })
+                {
+                    if (gb == null) continue;
+                    gb.BackColor = ThemeManager.Colors.Surface2;
+                    gb.ForeColor = ThemeManager.Colors.AccentCyan;
+                    gb.Font = new System.Drawing.Font(ThemeManager.Fonts.UiFamily, 9.5F,
+                                                      System.Drawing.FontStyle.Bold);
+                }
+                if (panelSiteConfig != null)
+                    panelSiteConfig.BackColor = ThemeManager.Colors.Surface2;
+
+                // Rounded action buttons.
+                foreach (var b in new[] {
+                    btnAddCbftpServer, btnEditCbftpServer, btnRemoveCbftpServer, btnFetchAllSites,
+                    btnSaveSiteConfig, btnSendPre, btnRefreshReleases, btnDistribute,
+                    btnCheckCompletion, btnDeleteRelease, btnClearLog, btnSaveConfig })
+                {
+                    if (b != null) ThemeManager.StyleActionButton(b);
+                }
+
+                // Close button keeps a danger accent.
+                if (btnClose != null)
+                {
+                    ThemeManager.StyleActionButton(btnClose);
+                    ThemeManager.StyleDangerButton(btnClose);
+                }
+            }
+            catch
+            {
+                // Styling must never break the Pre window.
+            }
         }
 
         private void LoadConfiguration()
@@ -1075,16 +1123,27 @@ namespace RaceTrade
                 preSites.Add(site);
             }
 
+            // If nothing is explicitly checked, PRE to ALL enabled sites "in one go".
+            bool sendingToAll = !preSites.Any();
+            if (sendingToAll)
+            {
+                preSites = siteConfigs.Where(s => s.Enabled).ToList();
+            }
+
             if (!preSites.Any())
             {
-                MessageBox.Show("Please check at least one site", "No Sites",
+                MessageBox.Show("No enabled sites are configured to PRE.", "No Sites",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
+            string scope = sendingToAll
+                ? $"ALL {preSites.Count} enabled site(s)"
+                : $"{preSites.Count} selected site(s)";
+
             var result = MessageBox.Show(
-                $"Send 'SITE PRE {selectedRelease}' to {preSites.Count} site(s)?\n\n" +
-                "This cannot be undone!",
+                $"Send 'SITE PRE {selectedRelease}' to {scope}?\n\n" +
+                "Each site uses its own configured section. This cannot be undone!",
                 "Confirm PRE",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);

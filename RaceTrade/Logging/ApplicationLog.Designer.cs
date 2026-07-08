@@ -38,7 +38,7 @@ namespace RaceTrade
             // 
             // toolbar
             // 
-            this.toolbar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.toolbar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.toolbar.Controls.Add(this.searchBox);
             this.toolbar.Controls.Add(this.filterComboBox);
             this.toolbar.Controls.Add(this.autoScrollCheckBox);
@@ -52,8 +52,8 @@ namespace RaceTrade
             // 
             // searchBox
             // 
-            this.searchBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
-            this.searchBox.Font = new System.Drawing.Font("Consolas", 9F);
+            this.searchBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(13)))), ((int)(((byte)(16)))), ((int)(((byte)(24)))));
+            this.searchBox.Font = new System.Drawing.Font("Cascadia Mono", 9F);
             this.searchBox.ForeColor = System.Drawing.Color.Gray;
             this.searchBox.Location = new System.Drawing.Point(10, 10);
             this.searchBox.Name = "searchBox";
@@ -66,10 +66,10 @@ namespace RaceTrade
             // 
             // filterComboBox
             // 
-            this.filterComboBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.filterComboBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(13)))), ((int)(((byte)(16)))), ((int)(((byte)(24)))));
             this.filterComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.filterComboBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.filterComboBox.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.filterComboBox.Font = new System.Drawing.Font("Cascadia Mono", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.filterComboBox.ForeColor = System.Drawing.Color.White;
             this.filterComboBox.FormattingEnabled = true;
             this.filterComboBox.Items.AddRange(new object[] {
@@ -91,7 +91,7 @@ namespace RaceTrade
             this.autoScrollCheckBox.BackColor = System.Drawing.Color.Transparent;
             this.autoScrollCheckBox.Checked = true;
             this.autoScrollCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoScrollCheckBox.Font = new System.Drawing.Font("Consolas", 8F);
+            this.autoScrollCheckBox.Font = new System.Drawing.Font("Cascadia Mono", 8F);
             this.autoScrollCheckBox.ForeColor = System.Drawing.Color.White;
             this.autoScrollCheckBox.Location = new System.Drawing.Point(358, 12);
             this.autoScrollCheckBox.Name = "autoScrollCheckBox";
@@ -103,14 +103,14 @@ namespace RaceTrade
             // 
             // clearButton
             // 
-            this.clearButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(62)))), ((int)(((byte)(66)))));
-            this.clearButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(63)))), ((int)(((byte)(63)))), ((int)(((byte)(70)))));
+            this.clearButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(42)))), ((int)(((byte)(54)))));
+            this.clearButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(62)))));
             this.clearButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.clearButton.Font = new System.Drawing.Font("Consolas", 8F);
+            this.clearButton.Font = new System.Drawing.Font("Cascadia Mono", 8F);
             this.clearButton.ForeColor = System.Drawing.Color.White;
             this.clearButton.Location = new System.Drawing.Point(486, 8);
             this.clearButton.Name = "clearButton";
-            this.clearButton.Size = new System.Drawing.Size(70, 26);
+            this.clearButton.Size = new System.Drawing.Size(84, 26);
             this.clearButton.TabIndex = 3;
             this.clearButton.Text = "Clear";
             this.clearButton.UseVisualStyleBackColor = false;
@@ -118,14 +118,14 @@ namespace RaceTrade
             // 
             // exportButton
             // 
-            this.exportButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(62)))), ((int)(((byte)(66)))));
-            this.exportButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(63)))), ((int)(((byte)(63)))), ((int)(((byte)(70)))));
+            this.exportButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(42)))), ((int)(((byte)(54)))));
+            this.exportButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(62)))));
             this.exportButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.exportButton.Font = new System.Drawing.Font("Consolas", 8F);
+            this.exportButton.Font = new System.Drawing.Font("Cascadia Mono", 8F);
             this.exportButton.ForeColor = System.Drawing.Color.White;
-            this.exportButton.Location = new System.Drawing.Point(562, 8);
+            this.exportButton.Location = new System.Drawing.Point(578, 8);
             this.exportButton.Name = "exportButton";
-            this.exportButton.Size = new System.Drawing.Size(70, 26);
+            this.exportButton.Size = new System.Drawing.Size(84, 26);
             this.exportButton.TabIndex = 4;
             this.exportButton.Text = "Export";
             this.exportButton.UseVisualStyleBackColor = false;
@@ -133,11 +133,11 @@ namespace RaceTrade
             // 
             // logRichTextBox
             // 
-            this.logRichTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.logRichTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(13)))), ((int)(((byte)(16)))), ((int)(((byte)(24)))));
             this.logRichTextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.logRichTextBox.DetectUrls = false;
             this.logRichTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.logRichTextBox.Font = new System.Drawing.Font("Consolas", 8F);
+            this.logRichTextBox.Font = new System.Drawing.Font("Cascadia Mono", 8F);
             this.logRichTextBox.ForeColor = System.Drawing.Color.White;
             this.logRichTextBox.Location = new System.Drawing.Point(0, 40);
             this.logRichTextBox.Name = "logRichTextBox";
@@ -150,7 +150,7 @@ namespace RaceTrade
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(13)))), ((int)(((byte)(16)))), ((int)(((byte)(24)))));
             this.ClientSize = new System.Drawing.Size(900, 600);
             this.Controls.Add(this.logRichTextBox);
             this.Controls.Add(this.toolbar);

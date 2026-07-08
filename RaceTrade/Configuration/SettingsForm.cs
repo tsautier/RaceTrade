@@ -23,6 +23,7 @@ namespace RaceTrader
         public SettingsForm()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
             LoadSettings();
         }
 

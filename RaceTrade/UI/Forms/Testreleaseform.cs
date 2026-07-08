@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -29,6 +29,7 @@ namespace RaceTrader
         public TestReleaseForm()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
             LoadSites();
         }
 
@@ -40,8 +41,8 @@ namespace RaceTrader
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.BackColor = Color.FromArgb(45, 45, 48);  
-            this.Font = new Font("Consolas", 8.25f); 
+            this.BackColor = Color.FromArgb(22, 26, 36);
+            this.Font = new Font("Cascadia Mono", 8.25f);
 
             int yPos = 20;
 
@@ -50,9 +51,9 @@ namespace RaceTrader
                 Text = "Test Release Validation",
                 Location = new Point(20, yPos),
                 Size = new Size(960, 30),
-                ForeColor = Color.White,  
+                ForeColor = Color.White,
                 BackColor = Color.Transparent,
-                Font = new Font("Consolas", 12, FontStyle.Bold) 
+                Font = new Font("Cascadia Mono", 12, FontStyle.Bold)
             };
             this.Controls.Add(titleLabel);
 
@@ -65,7 +66,7 @@ namespace RaceTrader
                 Size = new Size(120, 20),
                 ForeColor = Color.White,
                 BackColor = Color.Transparent,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             this.Controls.Add(releaseLabel);
 
@@ -73,9 +74,9 @@ namespace RaceTrader
             {
                 Location = new Point(140, yPos),
                 Size = new Size(700, 25),
-                BackColor = Color.FromArgb(60, 60, 60),  
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             releaseNameTextBox.KeyPress += (s, e) => {
                 if (e.KeyChar == (char)Keys.Enter)
@@ -95,7 +96,7 @@ namespace RaceTrader
                 Size = new Size(120, 20),
                 ForeColor = Color.White,
                 BackColor = Color.Transparent,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             this.Controls.Add(siteLabel);
 
@@ -104,9 +105,9 @@ namespace RaceTrader
                 Location = new Point(140, yPos),
                 Size = new Size(250, 25),
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                BackColor = Color.FromArgb(60, 60, 60),  
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             siteComboBox.SelectedIndexChanged += SiteComboBox_SelectedIndexChanged;
             this.Controls.Add(siteComboBox);
@@ -118,7 +119,7 @@ namespace RaceTrader
                 Size = new Size(90, 20),
                 ForeColor = Color.White,
                 BackColor = Color.Transparent,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             this.Controls.Add(sectionLabel);
 
@@ -127,9 +128,9 @@ namespace RaceTrader
                 Location = new Point(510, yPos),
                 Size = new Size(250, 25),
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                BackColor = Color.FromArgb(60, 60, 60),  
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             this.Controls.Add(sectionComboBox);
 
@@ -140,14 +141,14 @@ namespace RaceTrader
             {
                 Text = "Run Full Test",
                 Location = new Point(140, yPos),
-                Size = new Size(140, 30),  
-                BackColor = Color.FromArgb(77, 166, 112), 
+                Size = new Size(140, 30),
+                BackColor = Color.FromArgb(77, 166, 112),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
-            testButton.FlatAppearance.BorderSize = 1;  
-            testButton.FlatAppearance.BorderColor = Color.Black;  
+            testButton.FlatAppearance.BorderSize = 1;
+            testButton.FlatAppearance.BorderColor = Color.Black;
             testButton.Click += TestButton_Click;
             this.Controls.Add(testButton);
 
@@ -155,14 +156,14 @@ namespace RaceTrader
             {
                 Text = "Clear",
                 Location = new Point(290, yPos),
-                Size = new Size(100, 30),  
-                BackColor = Color.FromArgb(100, 100, 100),  
+                Size = new Size(100, 30),
+                BackColor = Color.FromArgb(72, 80, 98),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
-            clearButton.FlatAppearance.BorderSize = 1;  
-            clearButton.FlatAppearance.BorderColor = Color.Black; 
+            clearButton.FlatAppearance.BorderSize = 1;
+            clearButton.FlatAppearance.BorderColor = Color.Black;
             clearButton.Click += (s, e) => {
                 releaseNameTextBox.Clear();
                 resultsTextBox.Clear();
@@ -177,7 +178,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos),
                 Size = new Size(200, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 9f, FontStyle.Bold),
+                Font = new Font("Cascadia Mono", 9f, FontStyle.Bold),
                 BackColor = Color.Transparent
             };
             this.Controls.Add(resultsLabel);
@@ -187,10 +188,10 @@ namespace RaceTrader
             resultsTextBox = new RichTextBox
             {
                 Location = new Point(20, yPos),
-                Size = new Size(950, 600),  
-                BackColor = Color.FromArgb(20, 20, 20),
+                Size = new Size(950, 600),
+                BackColor = Color.FromArgb(9, 11, 17),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f),
+                Font = new Font("Cascadia Mono", 8.25f),
                 ReadOnly = true,
                 BorderStyle = BorderStyle.FixedSingle
             };

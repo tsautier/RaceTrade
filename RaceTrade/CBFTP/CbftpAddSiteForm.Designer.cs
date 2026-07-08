@@ -255,7 +255,7 @@ namespace RaceTrade
             // 
             // cbftpServerCombo
             // 
-            this.cbftpServerCombo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cbftpServerCombo.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cbftpServerCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbftpServerCombo.ForeColor = System.Drawing.Color.White;
             this.cbftpServerCombo.Location = new System.Drawing.Point(128, 9);
@@ -308,7 +308,7 @@ namespace RaceTrade
             // 
             // txtName
             // 
-            this.txtName.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtName.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtName.ForeColor = System.Drawing.Color.White;
             this.txtName.Location = new System.Drawing.Point(110, 27);
             this.txtName.Name = "txtName";
@@ -337,7 +337,7 @@ namespace RaceTrade
             // 
             // txtAddresses
             // 
-            this.txtAddresses.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtAddresses.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtAddresses.ForeColor = System.Drawing.Color.White;
             this.txtAddresses.Location = new System.Drawing.Point(110, 57);
             this.txtAddresses.Multiline = true;
@@ -358,7 +358,7 @@ namespace RaceTrade
             // 
             // txtUser
             // 
-            this.txtUser.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtUser.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtUser.ForeColor = System.Drawing.Color.White;
             this.txtUser.Location = new System.Drawing.Point(110, 132);
             this.txtUser.Name = "txtUser";
@@ -377,7 +377,7 @@ namespace RaceTrade
             // 
             // txtPassword
             // 
-            this.txtPassword.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtPassword.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtPassword.ForeColor = System.Drawing.Color.White;
             this.txtPassword.Location = new System.Drawing.Point(110, 162);
             this.txtPassword.Name = "txtPassword";
@@ -397,7 +397,7 @@ namespace RaceTrade
             // 
             // txtBasePath
             // 
-            this.txtBasePath.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtBasePath.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtBasePath.ForeColor = System.Drawing.Color.White;
             this.txtBasePath.Location = new System.Drawing.Point(110, 192);
             this.txtBasePath.Name = "txtBasePath";
@@ -417,7 +417,7 @@ namespace RaceTrade
             // 
             // cmbPriority
             // 
-            this.cmbPriority.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbPriority.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbPriority.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbPriority.ForeColor = System.Drawing.Color.White;
             this.cmbPriority.Items.AddRange(new object[] {
@@ -443,7 +443,7 @@ namespace RaceTrade
             // 
             // cmbListFrequency
             // 
-            this.cmbListFrequency.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbListFrequency.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbListFrequency.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbListFrequency.ForeColor = System.Drawing.Color.White;
             this.cmbListFrequency.Items.AddRange(new object[] {
@@ -490,7 +490,7 @@ namespace RaceTrade
             // 
             // nudMaxLogins
             // 
-            this.nudMaxLogins.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.nudMaxLogins.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.nudMaxLogins.ForeColor = System.Drawing.Color.White;
             this.nudMaxLogins.Location = new System.Drawing.Point(135, 27);
             this.nudMaxLogins.Name = "nudMaxLogins";
@@ -514,7 +514,7 @@ namespace RaceTrade
             // 
             // nudMaxSimUp
             // 
-            this.nudMaxSimUp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.nudMaxSimUp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.nudMaxSimUp.ForeColor = System.Drawing.Color.White;
             this.nudMaxSimUp.Location = new System.Drawing.Point(135, 57);
             this.nudMaxSimUp.Name = "nudMaxSimUp";
@@ -538,7 +538,7 @@ namespace RaceTrade
             // 
             // nudMaxSimDown
             // 
-            this.nudMaxSimDown.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.nudMaxSimDown.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.nudMaxSimDown.ForeColor = System.Drawing.Color.White;
             this.nudMaxSimDown.Location = new System.Drawing.Point(135, 87);
             this.nudMaxSimDown.Name = "nudMaxSimDown";
@@ -578,7 +578,7 @@ namespace RaceTrade
             // 
             // cmbAllowDownload
             // 
-            this.cmbAllowDownload.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbAllowDownload.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbAllowDownload.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbAllowDownload.ForeColor = System.Drawing.Color.White;
             this.cmbAllowDownload.Items.AddRange(new object[] {
@@ -602,7 +602,7 @@ namespace RaceTrade
             // 
             // cmbAllowUpload
             // 
-            this.cmbAllowUpload.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbAllowUpload.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbAllowUpload.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbAllowUpload.ForeColor = System.Drawing.Color.White;
             this.cmbAllowUpload.Items.AddRange(new object[] {
@@ -659,7 +659,7 @@ namespace RaceTrade
             // 
             // cmbProxyType
             // 
-            this.cmbProxyType.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbProxyType.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbProxyType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbProxyType.ForeColor = System.Drawing.Color.White;
             this.cmbProxyType.Items.AddRange(new object[] {
@@ -683,7 +683,7 @@ namespace RaceTrade
             // 
             // txtProxyName
             // 
-            this.txtProxyName.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtProxyName.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtProxyName.ForeColor = System.Drawing.Color.White;
             this.txtProxyName.Location = new System.Drawing.Point(70, 57);
             this.txtProxyName.Name = "txtProxyName";
@@ -733,7 +733,7 @@ namespace RaceTrade
             // 
             // cmbTlsMode
             // 
-            this.cmbTlsMode.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbTlsMode.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbTlsMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbTlsMode.ForeColor = System.Drawing.Color.White;
             this.cmbTlsMode.Items.AddRange(new object[] {
@@ -757,7 +757,7 @@ namespace RaceTrade
             // 
             // cmbTransferProtocol
             // 
-            this.cmbTransferProtocol.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbTransferProtocol.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbTransferProtocol.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbTransferProtocol.ForeColor = System.Drawing.Color.White;
             this.cmbTransferProtocol.Items.AddRange(new object[] {
@@ -782,7 +782,7 @@ namespace RaceTrade
             // 
             // cmbTlsTransferPolicy
             // 
-            this.cmbTlsTransferPolicy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbTlsTransferPolicy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbTlsTransferPolicy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbTlsTransferPolicy.ForeColor = System.Drawing.Color.White;
             this.cmbTlsTransferPolicy.Items.AddRange(new object[] {
@@ -807,7 +807,7 @@ namespace RaceTrade
             // 
             // cmbTransferSourcePolicy
             // 
-            this.cmbTransferSourcePolicy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbTransferSourcePolicy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbTransferSourcePolicy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbTransferSourcePolicy.ForeColor = System.Drawing.Color.White;
             this.cmbTransferSourcePolicy.Items.AddRange(new object[] {
@@ -830,7 +830,7 @@ namespace RaceTrade
             // 
             // cmbTransferTargetPolicy
             // 
-            this.cmbTransferTargetPolicy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbTransferTargetPolicy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbTransferTargetPolicy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbTransferTargetPolicy.ForeColor = System.Drawing.Color.White;
             this.cmbTransferTargetPolicy.Items.AddRange(new object[] {
@@ -854,7 +854,7 @@ namespace RaceTrade
             // 
             // cmbListCommand
             // 
-            this.cmbListCommand.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbListCommand.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbListCommand.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbListCommand.ForeColor = System.Drawing.Color.White;
             this.cmbListCommand.Items.AddRange(new object[] {
@@ -877,7 +877,7 @@ namespace RaceTrade
             // 
             // nudMaxIdleTime
             // 
-            this.nudMaxIdleTime.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.nudMaxIdleTime.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.nudMaxIdleTime.ForeColor = System.Drawing.Color.White;
             this.nudMaxIdleTime.Location = new System.Drawing.Point(432, 60);
             this.nudMaxIdleTime.Maximum = new decimal(new int[] {
@@ -980,7 +980,7 @@ namespace RaceTrade
             // 
             // lstAffils
             // 
-            this.lstAffils.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.lstAffils.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.lstAffils.ForeColor = System.Drawing.Color.White;
             this.lstAffils.ItemHeight = 17;
             this.lstAffils.Location = new System.Drawing.Point(10, 20);
@@ -990,7 +990,7 @@ namespace RaceTrade
             // 
             // txtAffil
             // 
-            this.txtAffil.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtAffil.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtAffil.ForeColor = System.Drawing.Color.White;
             this.txtAffil.Location = new System.Drawing.Point(10, 355);
             this.txtAffil.Name = "txtAffil";
@@ -1044,7 +1044,7 @@ namespace RaceTrade
             // 
             // lvSections
             // 
-            this.lvSections.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.lvSections.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.lvSections.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.colSectionName,
             this.colSectionPath});
@@ -1081,7 +1081,7 @@ namespace RaceTrade
             // 
             // txtSectionName
             // 
-            this.txtSectionName.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtSectionName.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtSectionName.ForeColor = System.Drawing.Color.White;
             this.txtSectionName.Location = new System.Drawing.Point(64, 259);
             this.txtSectionName.Name = "txtSectionName";
@@ -1100,7 +1100,7 @@ namespace RaceTrade
             // 
             // txtSectionPath
             // 
-            this.txtSectionPath.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtSectionPath.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtSectionPath.ForeColor = System.Drawing.Color.White;
             this.txtSectionPath.Location = new System.Drawing.Point(243, 259);
             this.txtSectionPath.Name = "txtSectionPath";
@@ -1159,7 +1159,7 @@ namespace RaceTrade
             // 
             // lvSkiplist
             // 
-            this.lvSkiplist.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.lvSkiplist.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.lvSkiplist.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.colSkipAction,
             this.colSkipScope,
@@ -1202,7 +1202,7 @@ namespace RaceTrade
             // 
             // cmbSkipAction
             // 
-            this.cmbSkipAction.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbSkipAction.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbSkipAction.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbSkipAction.ForeColor = System.Drawing.Color.White;
             this.cmbSkipAction.Items.AddRange(new object[] {
@@ -1227,7 +1227,7 @@ namespace RaceTrade
             // 
             // cmbSkipScope
             // 
-            this.cmbSkipScope.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.cmbSkipScope.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.cmbSkipScope.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbSkipScope.ForeColor = System.Drawing.Color.White;
             this.cmbSkipScope.Items.AddRange(new object[] {
@@ -1280,7 +1280,7 @@ namespace RaceTrade
             // 
             // txtSkipPattern
             // 
-            this.txtSkipPattern.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.txtSkipPattern.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.txtSkipPattern.ForeColor = System.Drawing.Color.White;
             this.txtSkipPattern.Location = new System.Drawing.Point(85, 203);
             this.txtSkipPattern.Name = "txtSkipPattern";
@@ -1365,7 +1365,7 @@ namespace RaceTrade
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.ClientSize = new System.Drawing.Size(1123, 868);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.Edit_cbftp_sites);
@@ -1382,7 +1382,7 @@ namespace RaceTrade
             this.Controls.Add(this.grpSkiplist);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
-            this.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;

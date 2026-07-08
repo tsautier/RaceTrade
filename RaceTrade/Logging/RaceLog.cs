@@ -29,6 +29,7 @@ namespace RaceTrade
         public RaceLog()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
             searchBox.Text = "Search logs...";
             searchBox.ForeColor = Color.Gray;

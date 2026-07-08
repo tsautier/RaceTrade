@@ -8,6 +8,7 @@ namespace RaceTrade
         public SiteRulesForm()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
         }
 
         /// <summary>

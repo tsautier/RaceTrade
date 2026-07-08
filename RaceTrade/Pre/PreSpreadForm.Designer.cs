@@ -116,7 +116,7 @@
             this.groupBoxCbftpServers.Text = "CBFTP Servers";
 
             // listBoxCbftpServers
-            this.listBoxCbftpServers.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
+            this.listBoxCbftpServers.BackColor = System.Drawing.Color.FromArgb(13, 16, 24);
             this.listBoxCbftpServers.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.listBoxCbftpServers.ForeColor = System.Drawing.Color.White;
             this.listBoxCbftpServers.FormattingEnabled = true;
@@ -127,7 +127,7 @@
             this.listBoxCbftpServers.TabIndex = 0;
 
             // btnAddCbftpServer
-            this.btnAddCbftpServer.BackColor = System.Drawing.Color.FromArgb(0, 122, 204);
+            this.btnAddCbftpServer.BackColor = System.Drawing.Color.FromArgb(0, 168, 255);
             this.btnAddCbftpServer.FlatAppearance.BorderSize = 0;
             this.btnAddCbftpServer.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAddCbftpServer.ForeColor = System.Drawing.Color.White;
@@ -140,7 +140,7 @@
             this.btnAddCbftpServer.Click += new System.EventHandler(this.BtnAddCbftpServer_Click);
 
             // btnEditCbftpServer
-            this.btnEditCbftpServer.BackColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            this.btnEditCbftpServer.BackColor = System.Drawing.Color.FromArgb(37, 42, 54);
             this.btnEditCbftpServer.FlatAppearance.BorderSize = 0;
             this.btnEditCbftpServer.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEditCbftpServer.ForeColor = System.Drawing.Color.White;
@@ -166,7 +166,7 @@
             this.btnRemoveCbftpServer.Click += new System.EventHandler(this.BtnRemoveCbftpServer_Click);
 
             // btnFetchAllSites
-            this.btnFetchAllSites.BackColor = System.Drawing.Color.FromArgb(0, 122, 204);
+            this.btnFetchAllSites.BackColor = System.Drawing.Color.FromArgb(0, 168, 255);
             this.btnFetchAllSites.FlatAppearance.BorderSize = 0;
             this.btnFetchAllSites.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnFetchAllSites.ForeColor = System.Drawing.Color.White;
@@ -191,7 +191,7 @@
             this.groupBoxSitesConfig.Text = "Sites Configuration";
 
             // checkedListBoxSites
-            this.checkedListBoxSites.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
+            this.checkedListBoxSites.BackColor = System.Drawing.Color.FromArgb(13, 16, 24);
             this.checkedListBoxSites.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.checkedListBoxSites.ForeColor = System.Drawing.Color.White;
             this.checkedListBoxSites.FormattingEnabled = true;
@@ -203,7 +203,7 @@
             this.checkedListBoxSites.SelectedIndexChanged += new System.EventHandler(this.CheckedListBoxSites_SelectedIndexChanged);
 
             // panelSiteConfig
-            this.panelSiteConfig.BackColor = System.Drawing.Color.FromArgb(37, 37, 38);
+            this.panelSiteConfig.BackColor = System.Drawing.Color.FromArgb(17, 21, 29);
             this.panelSiteConfig.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelSiteConfig.Controls.Add(this.lblSiteName);
             this.panelSiteConfig.Controls.Add(this.txtSiteName);
@@ -230,7 +230,7 @@
             this.lblSiteName.Text = "Site Name:";
 
             // txtSiteName
-            this.txtSiteName.BackColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            this.txtSiteName.BackColor = System.Drawing.Color.FromArgb(37, 42, 54);
             this.txtSiteName.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtSiteName.ForeColor = System.Drawing.Color.White;
             this.txtSiteName.Location = new System.Drawing.Point(160, 15);
@@ -249,7 +249,7 @@
             this.lblCbftpServer.Text = "CBFTP Server:";
 
             // comboCbftpServer
-            this.comboCbftpServer.BackColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            this.comboCbftpServer.BackColor = System.Drawing.Color.FromArgb(37, 42, 54);
             this.comboCbftpServer.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboCbftpServer.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.comboCbftpServer.ForeColor = System.Drawing.Color.White;
@@ -269,7 +269,7 @@
             this.lblAffilDirectory.Text = "Affil Directory:";
 
             // txtAffilDirectory
-            this.txtAffilDirectory.BackColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            this.txtAffilDirectory.BackColor = System.Drawing.Color.FromArgb(37, 42, 54);
             this.txtAffilDirectory.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtAffilDirectory.ForeColor = System.Drawing.Color.White;
             this.txtAffilDirectory.Location = new System.Drawing.Point(160, 89);
@@ -287,7 +287,7 @@
             this.lblSection.Text = "Section:";
 
             // txtSection
-            this.txtSection.BackColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            this.txtSection.BackColor = System.Drawing.Color.FromArgb(37, 42, 54);
             this.txtSection.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtSection.ForeColor = System.Drawing.Color.White;
             this.txtSection.Location = new System.Drawing.Point(160, 126);
@@ -296,7 +296,7 @@
             this.txtSection.TabIndex = 7;
 
             // btnSaveSiteConfig
-            this.btnSaveSiteConfig.BackColor = System.Drawing.Color.FromArgb(0, 122, 204);
+            this.btnSaveSiteConfig.BackColor = System.Drawing.Color.FromArgb(0, 168, 255);
             this.btnSaveSiteConfig.FlatAppearance.BorderSize = 0;
             this.btnSaveSiteConfig.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSaveSiteConfig.ForeColor = System.Drawing.Color.White;
@@ -351,7 +351,7 @@
             this.lblSourceSite.Text = "Source Site:";
 
             // comboSourceSite
-            this.comboSourceSite.BackColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            this.comboSourceSite.BackColor = System.Drawing.Color.FromArgb(37, 42, 54);
             this.comboSourceSite.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboSourceSite.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.comboSourceSite.ForeColor = System.Drawing.Color.White;
@@ -362,7 +362,7 @@
             this.comboSourceSite.TabIndex = 1;
 
             // btnRefreshReleases
-            this.btnRefreshReleases.BackColor = System.Drawing.Color.FromArgb(0, 122, 204);
+            this.btnRefreshReleases.BackColor = System.Drawing.Color.FromArgb(0, 168, 255);
             this.btnRefreshReleases.FlatAppearance.BorderSize = 0;
             this.btnRefreshReleases.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRefreshReleases.ForeColor = System.Drawing.Color.White;
@@ -384,7 +384,7 @@
             this.lblDestSites.Text = "Destination Sites:";
 
             // checkedListBoxDestSites
-            this.checkedListBoxDestSites.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
+            this.checkedListBoxDestSites.BackColor = System.Drawing.Color.FromArgb(13, 16, 24);
             this.checkedListBoxDestSites.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.checkedListBoxDestSites.ForeColor = System.Drawing.Color.White;
             this.checkedListBoxDestSites.FormattingEnabled = true;
@@ -403,7 +403,7 @@
             this.lblReleases.Text = "Releases:";
 
             // listBoxReleases
-            this.listBoxReleases.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
+            this.listBoxReleases.BackColor = System.Drawing.Color.FromArgb(13, 16, 24);
             this.listBoxReleases.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.listBoxReleases.ForeColor = System.Drawing.Color.White;
             this.listBoxReleases.FormattingEnabled = true;
@@ -429,7 +429,7 @@
             this.btnDeleteRelease.Click += new System.EventHandler(this.BtnDeleteRelease_Click);
 
             // btnDistribute
-            this.btnDistribute.BackColor = System.Drawing.Color.FromArgb(0, 122, 204);
+            this.btnDistribute.BackColor = System.Drawing.Color.FromArgb(0, 168, 255);
             this.btnDistribute.Enabled = false;
             this.btnDistribute.FlatAppearance.BorderSize = 0;
             this.btnDistribute.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -486,10 +486,10 @@
             this.groupBoxCompletionLog.Text = "Completion Check Log";
 
             // richTextBoxCompletionLog
-            this.richTextBoxCompletionLog.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
+            this.richTextBoxCompletionLog.BackColor = System.Drawing.Color.FromArgb(13, 16, 24);
             this.richTextBoxCompletionLog.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.richTextBoxCompletionLog.ForeColor = System.Drawing.Color.White;
-            this.richTextBoxCompletionLog.Font = new System.Drawing.Font("Consolas", 9F);
+            this.richTextBoxCompletionLog.Font = new System.Drawing.Font("Cascadia Mono", 9F);
             this.richTextBoxCompletionLog.Location = new System.Drawing.Point(13, 25);
             this.richTextBoxCompletionLog.Name = "richTextBoxCompletionLog";
             this.richTextBoxCompletionLog.ReadOnly = true;
@@ -498,7 +498,7 @@
             this.richTextBoxCompletionLog.Text = "";
 
             // btnClearLog
-            this.btnClearLog.BackColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            this.btnClearLog.BackColor = System.Drawing.Color.FromArgb(37, 42, 54);
             this.btnClearLog.FlatAppearance.BorderSize = 0;
             this.btnClearLog.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnClearLog.ForeColor = System.Drawing.Color.White;
@@ -526,7 +526,7 @@
             this.lblStatus.Text = "Ready";
 
             // btnSaveConfig
-            this.btnSaveConfig.BackColor = System.Drawing.Color.FromArgb(0, 122, 204);
+            this.btnSaveConfig.BackColor = System.Drawing.Color.FromArgb(0, 168, 255);
             this.btnSaveConfig.FlatAppearance.BorderSize = 0;
             this.btnSaveConfig.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSaveConfig.ForeColor = System.Drawing.Color.White;
@@ -539,7 +539,7 @@
             this.btnSaveConfig.Click += new System.EventHandler(this.BtnSaveConfig_Click);
 
             // btnClose
-            this.btnClose.BackColor = System.Drawing.Color.FromArgb(62, 62, 66);
+            this.btnClose.BackColor = System.Drawing.Color.FromArgb(37, 42, 54);
             this.btnClose.FlatAppearance.BorderSize = 0;
             this.btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnClose.ForeColor = System.Drawing.Color.White;
@@ -554,7 +554,7 @@
             // PreSpreadForm
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(45, 45, 48);
+            this.BackColor = System.Drawing.Color.FromArgb(22, 26, 36);
             this.ClientSize = new System.Drawing.Size(1229, 1070);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnSaveConfig);

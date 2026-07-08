@@ -16,6 +16,7 @@ namespace RaceTrade
         public preBots()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
             LoadCurrentPrebot();
 

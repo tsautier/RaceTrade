@@ -78,7 +78,7 @@
             this.groupBox1.Controls.Add(this.textBoxPort);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.textBoxHost);
-            this.groupBox1.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.groupBox1.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.groupBox1.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
             this.groupBox1.Location = new System.Drawing.Point(13, 56);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
@@ -188,7 +188,7 @@
             this.groupBox3.Controls.Add(this.label7);
             this.groupBox3.Controls.Add(this.label6);
             this.groupBox3.Controls.Add(this.textBoxBotName);
-            this.groupBox3.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.groupBox3.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.groupBox3.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
             this.groupBox3.Location = new System.Drawing.Point(13, 231);
             this.groupBox3.Margin = new System.Windows.Forms.Padding(4);
@@ -203,7 +203,7 @@
             // 
             this.buttonTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.buttonTest.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonTest.Font = new System.Drawing.Font("Consolas", 6.25F);
+            this.buttonTest.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
             this.buttonTest.Location = new System.Drawing.Point(68, 255);
             this.buttonTest.Margin = new System.Windows.Forms.Padding(4);
             this.buttonTest.Name = "buttonTest";
@@ -217,7 +217,7 @@
             // 
             this.buttonExit.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.buttonExit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonExit.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.buttonExit.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.buttonExit.Location = new System.Drawing.Point(327, 289);
             this.buttonExit.Margin = new System.Windows.Forms.Padding(4);
             this.buttonExit.Name = "buttonExit";
@@ -249,7 +249,7 @@
             // 
             this.buttonDelete.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.buttonDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonDelete.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.buttonDelete.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.buttonDelete.Location = new System.Drawing.Point(93, 289);
             this.buttonDelete.Margin = new System.Windows.Forms.Padding(4);
             this.buttonDelete.Name = "buttonDelete";
@@ -264,7 +264,7 @@
             // 
             this.buttonSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonSave.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.buttonSave.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.buttonSave.Location = new System.Drawing.Point(13, 289);
             this.buttonSave.Margin = new System.Windows.Forms.Padding(4);
             this.buttonSave.Name = "buttonSave";
@@ -433,7 +433,7 @@
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Font = new System.Drawing.Font("Consolas", 8.25F);
+            this.label12.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.label12.ForeColor = System.Drawing.Color.White;
             this.label12.Location = new System.Drawing.Point(13, 23);
             this.label12.Name = "label12";
@@ -453,7 +453,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.ClientSize = new System.Drawing.Size(438, 571);
             this.Controls.Add(this.Edit_PreBot_comboBox);

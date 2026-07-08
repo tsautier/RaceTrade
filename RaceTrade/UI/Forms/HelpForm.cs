@@ -1255,6 +1255,7 @@ Version 1.0.5b - December 2025
         public HelpForm()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
         }
 
         private void InitializeComponent()
@@ -1262,8 +1263,8 @@ Version 1.0.5b - December 2025
             this.Text = "RaceTrader Help";
             this.Size = new Size(1000, 900);
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(45, 45, 48);
-            this.Font = new Font("Consolas", 8.25f);
+            this.BackColor = Color.FromArgb(22, 26, 36);
+            this.Font = new Font("Cascadia Mono", 8.25f);
             this.TopMost = true;             // Always on top
             this.ShowIcon = false;           // Remove icon
             this.ControlBox = true;          // Keep the X close button
@@ -1273,7 +1274,7 @@ Version 1.0.5b - December 2025
             {
                 Dock = DockStyle.Top,
                 Height = 70,
-                BackColor = Color.FromArgb(35, 35, 38),
+                BackColor = Color.FromArgb(16, 20, 28),
                 Padding = new Padding(10)
             };
             this.Controls.Add(topPanel);
@@ -1282,7 +1283,7 @@ Version 1.0.5b - December 2025
             titleLabel = new Label
             {
                 Text = "RaceTrader Complete Guide",
-                Font = new Font("Consolas", 12f, FontStyle.Bold),
+                Font = new Font("Cascadia Mono", 12f, FontStyle.Bold),
                 ForeColor = Color.White,
                 Location = new Point(10, 10),
                 AutoSize = true
@@ -1296,7 +1297,7 @@ Version 1.0.5b - December 2025
                 ForeColor = Color.White,
                 Location = new Point(10, 35),
                 AutoSize = true,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             topPanel.Controls.Add(searchLabel);
 
@@ -1304,9 +1305,9 @@ Version 1.0.5b - December 2025
             {
                 Location = new Point(75, 33),
                 Size = new Size(300, 22),
-                BackColor = Color.FromArgb(60, 60, 60),
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             searchBox.KeyPress += SearchBox_KeyPress;
             topPanel.Controls.Add(searchBox);
@@ -1316,10 +1317,10 @@ Version 1.0.5b - December 2025
                 Text = "Find",
                 Location = new Point(380, 31),
                 Size = new Size(60, 26),
-                BackColor = Color.FromArgb(100, 100, 100),
+                BackColor = Color.FromArgb(72, 80, 98),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             searchButton.FlatAppearance.BorderSize = 1;
             searchButton.FlatAppearance.BorderColor = Color.Black;
@@ -1335,7 +1336,7 @@ Version 1.0.5b - December 2025
                 BackColor = Color.FromArgb(168, 75, 76),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             closeButton.FlatAppearance.BorderSize = 1;
             closeButton.FlatAppearance.BorderColor = Color.Black;
@@ -1349,9 +1350,9 @@ Version 1.0.5b - December 2025
                 Location = new Point(0, 70),
                 Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 70),
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                BackColor = Color.FromArgb(30, 30, 30),
+                BackColor = Color.FromArgb(13, 16, 24),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 9f),
+                Font = new Font("Cascadia Mono", 9f),
                 ReadOnly = true,
                 BorderStyle = BorderStyle.None,
                 WordWrap = true,
@@ -1372,7 +1373,7 @@ Version 1.0.5b - December 2025
             helpTextBox.Select(0, 0);
 
             // Now apply highlights
-            HighlightPattern(@"^={5,}\s*$", Color.FromArgb(100, 149, 237)); // section separators
+            HighlightPattern(@"^={5,}\s*$", Color.FromArgb(80, 180, 255)); // section separators
             HighlightPattern(@"^-{5,}\s*$", Color.Gray);                    // dashed separators
 
             // Color section titles

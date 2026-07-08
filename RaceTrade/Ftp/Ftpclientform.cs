@@ -28,6 +28,7 @@ namespace RaceTrader
         public FtpClientForm()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
             this.listViewLeft.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewLeft_ColumnClick);
             this.listViewRight.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewRight_ColumnClick);
@@ -827,7 +828,7 @@ namespace RaceTrader
                 var upItem = new ListViewItem("..");
                 upItem.SubItems.Add("");
                 upItem.SubItems.Add("");
-                upItem.ForeColor = Color.FromArgb(0, 122, 204); // Blue for directories
+                upItem.ForeColor = Color.FromArgb(0, 168, 255); // Blue for directories
                 upItem.Tag = new FileItem { Name = "..", IsDirectory = true };
                 listView.Items.Add(upItem);
             }
@@ -857,7 +858,7 @@ namespace RaceTrader
                 if (file.IsSymlink)
                     item.ForeColor = Color.FromArgb(0, 255, 255); // Cyan for symlinks
                 else if (file.IsDirectory)
-                    item.ForeColor = Color.FromArgb(0, 122, 204); // Blue for directories
+                    item.ForeColor = Color.FromArgb(0, 168, 255); // Blue for directories
                 else
                     item.ForeColor = Color.White; // White for files
 
@@ -1641,7 +1642,7 @@ namespace RaceTrader
         private class NFOViewerPanel : Panel
         {
             public string Content { get; set; }
-            private Font font = new Font("Consolas", 10f);
+            private Font font = new Font("Cascadia Mono", 10f);
             //private Bitmap buffer;
 
             public NFOViewerPanel()
@@ -1742,7 +1743,7 @@ namespace RaceTrader
                 Text = $"View: {fileName}",
                 Size = new Size(1200, 800),
                 StartPosition = FormStartPosition.CenterScreen,
-                BackColor = Color.FromArgb(30, 30, 30),
+                BackColor = Color.FromArgb(13, 16, 24),
                 ShowIcon = false  // Remove icon
             };
 
@@ -1750,7 +1751,7 @@ namespace RaceTrader
             {
                 Dock = DockStyle.Fill,
                 SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.FromArgb(30, 30, 30)
+                BackColor = Color.FromArgb(13, 16, 24)
             };
 
             using (var ms = new System.IO.MemoryStream(imageBytes))

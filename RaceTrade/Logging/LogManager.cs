@@ -190,7 +190,7 @@ namespace RaceTrade
                 upperSection.Contains("BLURAY") || upperSection.Contains("DVDR") ||
                 upperSection.Contains("MBLURAY") || upperSection.Contains("MDVDR"))
             {
-                return Color.FromArgb(100, 149, 237); // Cornflower Blue
+                return Color.FromArgb(80, 180, 255); // Cornflower Blue
             }
 
             // TV Shows (Light Green)

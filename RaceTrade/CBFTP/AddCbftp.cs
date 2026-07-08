@@ -16,6 +16,7 @@ namespace RaceTrade
         public AddCbftp()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
             // Set RaceProfile_CheckBox as selected by default
             RaceProfile_CheckBox.Checked = true;

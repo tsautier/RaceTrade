@@ -34,7 +34,7 @@ namespace RaceTrader
         private CheckBox noComedyCheckBox;
         private CheckBox noShowCheckBox;
         private CheckBox imdbFallbackCheckBox;
-        
+
         // TVMaze tab controls
         private CheckBox tvmazeEnabledCheckBox;
         private CheckBox skipEndedShowsCheckBox;
@@ -49,7 +49,7 @@ namespace RaceTrader
         private Button cancelButton;
         private Button testIMDBButton;
         private Button testTVMazeButton;
-        
+
         private string currentSiteFile;
         private JObject currentSiteConfig;
 
@@ -95,12 +95,14 @@ namespace RaceTrader
         {
             this.currentSiteName = siteName;
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
             LoadSites();
         }
 
         public SectionSettingsForm()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
             LoadSites();
         }
 
@@ -112,8 +114,8 @@ namespace RaceTrader
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.BackColor = Color.FromArgb(45, 45, 48);  // Dark grey background
-            this.Font = new Font("Consolas", 8.25f);  // Default font
+            this.BackColor = Color.FromArgb(22, 26, 36);  // Dark grey background
+            this.Font = new Font("Cascadia Mono", 8.25f);  // Default font
 
             int yPos = 20;
 
@@ -123,9 +125,9 @@ namespace RaceTrader
                 Text = "Site:",
                 Location = new Point(20, yPos),
                 Size = new Size(100, 20),
-                ForeColor = Color.White,  
+                ForeColor = Color.White,
                 BackColor = Color.Transparent,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             this.Controls.Add(siteLabel);
 
@@ -134,9 +136,9 @@ namespace RaceTrader
                 Location = new Point(130, yPos),
                 Size = new Size(250, 25),
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                BackColor = Color.FromArgb(60, 60, 60),  
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             siteComboBox.SelectedIndexChanged += SiteComboBox_SelectedIndexChanged;
             this.Controls.Add(siteComboBox);
@@ -149,9 +151,9 @@ namespace RaceTrader
                 Text = "Section:",
                 Location = new Point(20, yPos),
                 Size = new Size(100, 20),
-                ForeColor = Color.White,  
+                ForeColor = Color.White,
                 BackColor = Color.Transparent,
-                Font = new Font("Consolas", 8.25f) 
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             this.Controls.Add(sectionLabel);
 
@@ -160,9 +162,9 @@ namespace RaceTrader
                 Location = new Point(130, yPos),
                 Size = new Size(250, 25),
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                BackColor = Color.FromArgb(60, 60, 60), 
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             sectionComboBox.SelectedIndexChanged += SectionComboBox_SelectedIndexChanged;
             this.Controls.Add(sectionComboBox);
@@ -172,8 +174,8 @@ namespace RaceTrader
                 Text = "Configure IMDb (movies) or TVMaze (TV shows) for this section",
                 Location = new Point(400, yPos + 3),
                 Size = new Size(450, 20),
-                ForeColor = Color.LightGray,  
-                Font = new Font("Consolas", 7f, FontStyle.Italic), 
+                ForeColor = Color.LightGray,
+                Font = new Font("Cascadia Mono", 7f, FontStyle.Italic),
                 BackColor = Color.Transparent
             };
             this.Controls.Add(infoLabel);
@@ -185,8 +187,8 @@ namespace RaceTrader
             {
                 Location = new Point(20, yPos),
                 Size = new Size(860, 590),
-                BackColor = Color.FromArgb(45, 45, 48),  
-                Font = new Font("Consolas", 8.25f)  
+                BackColor = Color.FromArgb(22, 26, 36),
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             this.Controls.Add(tabControl);
 
@@ -210,14 +212,14 @@ namespace RaceTrader
             {
                 Text = "Test IMDb",
                 Location = new Point(20, yPos),
-                Size = new Size(120, 30),  
-                BackColor = Color.FromArgb(100, 100, 100),  
+                Size = new Size(120, 30),
+                BackColor = Color.FromArgb(72, 80, 98),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
-            testIMDBButton.FlatAppearance.BorderSize = 1;  
-            testIMDBButton.FlatAppearance.BorderColor = Color.Black;  
+            testIMDBButton.FlatAppearance.BorderSize = 1;
+            testIMDBButton.FlatAppearance.BorderColor = Color.Black;
             testIMDBButton.Click += TestIMDBButton_Click;
             this.Controls.Add(testIMDBButton);
 
@@ -225,14 +227,14 @@ namespace RaceTrader
             {
                 Text = "Test TVMaze",
                 Location = new Point(150, yPos),
-                Size = new Size(120, 30),  
-                BackColor = Color.FromArgb(100, 100, 100),  
+                Size = new Size(120, 30),
+                BackColor = Color.FromArgb(72, 80, 98),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
-            testTVMazeButton.FlatAppearance.BorderSize = 1;  
-            testTVMazeButton.FlatAppearance.BorderColor = Color.Black;  
+            testTVMazeButton.FlatAppearance.BorderSize = 1;
+            testTVMazeButton.FlatAppearance.BorderColor = Color.Black;
             testTVMazeButton.Click += TestTVMazeButton_Click;
             this.Controls.Add(testTVMazeButton);
 
@@ -244,32 +246,32 @@ namespace RaceTrader
                 BackColor = Color.FromArgb(168, 75, 76),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             cancelButton.FlatAppearance.BorderSize = 1;
             cancelButton.FlatAppearance.BorderColor = Color.Black;
-            cancelButton.Click += CancelButton_Click; 
+            cancelButton.Click += CancelButton_Click;
             this.Controls.Add(cancelButton);
 
             saveButton = new Button
             {
                 Text = "Save Settings",
                 Location = new Point(760, yPos),
-                Size = new Size(110, 30),  
-                BackColor = Color.FromArgb(77, 166, 112), 
+                Size = new Size(110, 30),
+                BackColor = Color.FromArgb(77, 166, 112),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
-            saveButton.FlatAppearance.BorderSize = 1;  
-            saveButton.FlatAppearance.BorderColor = Color.Black;  
+            saveButton.FlatAppearance.BorderSize = 1;
+            saveButton.FlatAppearance.BorderColor = Color.Black;
             saveButton.Click += SaveButton_Click;
             this.Controls.Add(saveButton);
         }
 
         private void InitializeIMDBTab(TabPage tab)
         {
-            tab.BackColor = Color.FromArgb(45, 45, 48);  
+            tab.BackColor = Color.FromArgb(22, 26, 36);
             int yPos = 15;
 
             // Enable checkbox
@@ -279,7 +281,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos),
                 Size = new Size(360, 25),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 9f, FontStyle.Bold)  
+                Font = new Font("Cascadia Mono", 9f, FontStyle.Bold)
             };
             tab.Controls.Add(imdbEnabledCheckBox);
 
@@ -292,7 +294,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos + 3),
                 Size = new Size(130, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(ratingLabel);
 
@@ -305,9 +307,9 @@ namespace RaceTrader
                 DecimalPlaces = 1,
                 Increment = 0.1m,
                 Value = 0,
-                BackColor = Color.FromArgb(60, 60, 60),  
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(imdbMinRatingNumeric);
 
@@ -317,7 +319,7 @@ namespace RaceTrader
                 Location = new Point(250, yPos + 3),
                 Size = new Size(120, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(votesLabel);
 
@@ -329,9 +331,9 @@ namespace RaceTrader
                 Maximum = 1000000,
                 Increment = 1000,
                 Value = 0,
-                BackColor = Color.FromArgb(60, 60, 60), 
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f) 
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(imdbMinVotesNumeric);
 
@@ -341,7 +343,7 @@ namespace RaceTrader
                 Location = new Point(490, yPos + 3),
                 Size = new Size(220, 20),
                 ForeColor = Color.Gray,
-                Font = new Font("Consolas", 8f) 
+                Font = new Font("Cascadia Mono", 8f)
             };
             tab.Controls.Add(votesHint);
 
@@ -354,7 +356,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos),
                 Size = new Size(150, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 9f, FontStyle.Bold)  
+                Font = new Font("Cascadia Mono", 9f, FontStyle.Bold)
             };
             tab.Controls.Add(quickFiltersLabel);
 
@@ -368,7 +370,7 @@ namespace RaceTrader
                 Location = new Point(col1, yPos),
                 Size = new Size(200, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(onlyEnglishCheckBox);
 
@@ -378,7 +380,7 @@ namespace RaceTrader
                 Location = new Point(col2, yPos),
                 Size = new Size(180, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(onlyUSCountryCheckBox);
 
@@ -389,7 +391,7 @@ namespace RaceTrader
                 Size = new Size(220, 20),
                 ForeColor = Color.White,
                 Checked = true,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(imdbFallbackCheckBox);
 
@@ -401,7 +403,7 @@ namespace RaceTrader
                 Location = new Point(col1, yPos),
                 Size = new Size(180, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(noDocumentaryCheckBox);
 
@@ -411,7 +413,7 @@ namespace RaceTrader
                 Location = new Point(col2, yPos),
                 Size = new Size(180, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(noMusicCheckBox);
 
@@ -421,7 +423,7 @@ namespace RaceTrader
                 Location = new Point(col3, yPos),
                 Size = new Size(180, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f) 
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(noComedyCheckBox);
 
@@ -433,7 +435,7 @@ namespace RaceTrader
                 Location = new Point(col1, yPos),
                 Size = new Size(220, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(noShowCheckBox);
 
@@ -446,7 +448,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos),
                 Size = new Size(200, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 9f, FontStyle.Bold) 
+                Font = new Font("Cascadia Mono", 9f, FontStyle.Bold)
             };
             tab.Controls.Add(genresLabel);
 
@@ -459,7 +461,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos),
                 Size = new Size(300, 20),
                 ForeColor = Color.LightGray,
-                Font = new Font("Consolas", 7.25f) 
+                Font = new Font("Cascadia Mono", 7.25f)
             };
             tab.Controls.Add(allowedLabel);
 
@@ -467,11 +469,11 @@ namespace RaceTrader
             {
                 Location = new Point(20, yPos + 25),
                 Size = new Size(380, 200),
-                BackColor = Color.FromArgb(60, 60, 60), 
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
                 CheckOnClick = true,
                 BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Consolas", 8.25f) 
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             PopulateListBox(imdbAllowedGenresListBox, imdbGenres);
             tab.Controls.Add(imdbAllowedGenresListBox);
@@ -491,7 +493,7 @@ namespace RaceTrader
                 Location = new Point(430, yPos),
                 Size = new Size(300, 20),
                 ForeColor = Color.LightGray,
-                Font = new Font("Consolas", 7.25f) 
+                Font = new Font("Cascadia Mono", 7.25f)
             };
             tab.Controls.Add(blockedLabel);
 
@@ -499,11 +501,11 @@ namespace RaceTrader
             {
                 Location = new Point(430, yPos + 25),
                 Size = new Size(380, 200),
-                BackColor = Color.FromArgb(60, 60, 60),  
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
                 CheckOnClick = true,
                 BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             PopulateListBox(imdbBlockedGenresListBox, imdbGenres);
             tab.Controls.Add(imdbBlockedGenresListBox);
@@ -519,7 +521,7 @@ namespace RaceTrader
 
         private void InitializeTVMazeTab(TabPage tab)
         {
-            tab.BackColor = Color.FromArgb(45, 45, 48);
+            tab.BackColor = Color.FromArgb(22, 26, 36);
             int yPos = 15;
 
             // Enable checkbox
@@ -529,7 +531,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos),
                 Size = new Size(380, 25),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 9f, FontStyle.Bold)
+                Font = new Font("Cascadia Mono", 9f, FontStyle.Bold)
             };
             tab.Controls.Add(tvmazeEnabledCheckBox);
 
@@ -543,7 +545,7 @@ namespace RaceTrader
                 Size = new Size(250, 20),
                 ForeColor = Color.White,
                 Checked = true,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(skipEndedShowsCheckBox);
 
@@ -554,7 +556,7 @@ namespace RaceTrader
                 Size = new Size(220, 20),
                 ForeColor = Color.White,
                 Checked = true,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(tvmazeFallbackCheckBox);
 
@@ -567,7 +569,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos + 3),
                 Size = new Size(100, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(ratingLabel);
 
@@ -580,9 +582,9 @@ namespace RaceTrader
                 DecimalPlaces = 1,
                 Increment = 0.5m,
                 Value = 0,
-                BackColor = Color.FromArgb(60, 60, 60),
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(tvmazeMinRatingNumeric);
 
@@ -592,7 +594,7 @@ namespace RaceTrader
                 Location = new Point(200, yPos + 3),
                 Size = new Size(100, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(cacheLabel);
 
@@ -603,9 +605,9 @@ namespace RaceTrader
                 Minimum = 1,
                 Maximum = 30,
                 Value = 7,
-                BackColor = Color.FromArgb(60, 60, 60),
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             tab.Controls.Add(cacheDaysNumeric);
 
@@ -618,7 +620,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos),
                 Size = new Size(320, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 9f, FontStyle.Bold)
+                Font = new Font("Cascadia Mono", 9f, FontStyle.Bold)
             };
             tab.Controls.Add(showTypesLabel);
 
@@ -628,13 +630,13 @@ namespace RaceTrader
             {
                 Location = new Point(20, yPos),
                 Size = new Size(790, 65),
-                BackColor = Color.FromArgb(60, 60, 60),
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
                 CheckOnClick = true,
                 BorderStyle = BorderStyle.FixedSingle,
                 MultiColumn = true,
                 ColumnWidth = 130,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             PopulateListBox(allowedShowTypesListBox, tvmazeShowTypes);
             tab.Controls.Add(allowedShowTypesListBox);
@@ -656,7 +658,7 @@ namespace RaceTrader
                 Location = new Point(20, yPos),
                 Size = new Size(200, 20),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 9f, FontStyle.Bold)
+                Font = new Font("Cascadia Mono", 9f, FontStyle.Bold)
             };
             tab.Controls.Add(genresLabel);
 
@@ -675,7 +677,7 @@ namespace RaceTrader
                 Location = new Point(col1X, yPos),
                 Size = new Size(colWidth, 20),
                 ForeColor = Color.LightGray,
-                Font = new Font("Consolas", 7.25f)
+                Font = new Font("Cascadia Mono", 7.25f)
             };
             tab.Controls.Add(allowedLabel);
 
@@ -683,11 +685,11 @@ namespace RaceTrader
             {
                 Location = new Point(col1X, yPos + 25),
                 Size = new Size(colWidth, 200),
-                BackColor = Color.FromArgb(60, 60, 60),
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
                 CheckOnClick = true,
                 BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             PopulateListBox(tvmazeAllowedGenresListBox, tvmazeGenres);
             tab.Controls.Add(tvmazeAllowedGenresListBox);
@@ -707,7 +709,7 @@ namespace RaceTrader
                 Location = new Point(col2X, yPos),
                 Size = new Size(colWidth, 20),
                 ForeColor = Color.LightGray,
-                Font = new Font("Consolas", 7.25f)
+                Font = new Font("Cascadia Mono", 7.25f)
             };
             tab.Controls.Add(blockedLabel);
 
@@ -715,11 +717,11 @@ namespace RaceTrader
             {
                 Location = new Point(col2X, yPos + 25),
                 Size = new Size(colWidth, 200),
-                BackColor = Color.FromArgb(60, 60, 60),
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
                 CheckOnClick = true,
                 BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             PopulateListBox(tvmazeBlockedGenresListBox, tvmazeGenres);
             tab.Controls.Add(tvmazeBlockedGenresListBox);
@@ -739,7 +741,7 @@ namespace RaceTrader
                 Location = new Point(col3X, yPos),
                 Size = new Size(colWidth, 20),
                 ForeColor = Color.LightGray,
-                Font = new Font("Consolas", 7.25f)
+                Font = new Font("Cascadia Mono", 7.25f)
             };
             tab.Controls.Add(networksLabel);
 
@@ -747,11 +749,11 @@ namespace RaceTrader
             {
                 Location = new Point(col3X, yPos + 25),
                 Size = new Size(colWidth, 200),
-                BackColor = Color.FromArgb(60, 60, 60),
+                BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
                 CheckOnClick = true,
                 BorderStyle = BorderStyle.FixedSingle,
-                Font = new Font("Consolas", 8.25f)
+                Font = new Font("Cascadia Mono", 8.25f)
             };
             PopulateListBox(allowedNetworksListBox, popularNetworks);
             tab.Controls.Add(allowedNetworksListBox);
@@ -772,13 +774,13 @@ namespace RaceTrader
                 Text = text,
                 Location = location,
                 Size = new Size(width, 25),
-                BackColor = Color.FromArgb(100, 100, 100),  
+                BackColor = Color.FromArgb(72, 80, 98),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = new Font("Consolas", 8.25f)  
+                Font = new Font("Cascadia Mono", 8.25f)
             };
-            button.FlatAppearance.BorderSize = 1;  
-            button.FlatAppearance.BorderColor = Color.Black;  
+            button.FlatAppearance.BorderSize = 1;
+            button.FlatAppearance.BorderColor = Color.Black;
             return button;
         }
 
@@ -1045,7 +1047,7 @@ namespace RaceTrader
 
                     var message = $"✓ IMDbAPI!\n\n" +
                                   $"Test Movie: {testMovie.Title} ({testMovie.Year})\n" +
-                                  $"Rating: {ratingText}\n" +  
+                                  $"Rating: {ratingText}\n" +
                                   $"Votes: {testMovie.ImdbVotes:N0}\n" +
                                   $"Genres: {string.Join(", ", testMovie.Genres ?? new List<string>())}\n" +
                                   $"Language: {testMovie.Language}\n" +
@@ -1083,7 +1085,7 @@ namespace RaceTrader
             try
             {
                 var testShow = await TVMazeHelper.LookupByImdb("tt0944947");
-                
+
                 if (testShow != null)
                 {
                     var message = $"✓ TVMaze API is working!\n\n" +
@@ -1092,21 +1094,21 @@ namespace RaceTrader
                                   $"Genres: {string.Join(", ", testShow.Genres ?? new List<string>())}\n" +
                                   $"Rating: {testShow.Rating?.Average ?? 0}\n" +
                                   $"Network: {testShow.Network?.Name ?? testShow.WebChannel?.Name ?? "N/A"}";
-                    
-                    MessageBox.Show(message, "TVMaze Test Successful", 
+
+                    MessageBox.Show(message, "TVMaze Test Successful",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                     LogManager.Success("TVMaze API test successful");
                 }
                 else
                 {
-                    MessageBox.Show("Could not connect to TVMaze API.", 
+                    MessageBox.Show("Could not connect to TVMaze API.",
                         "Test Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     LogManager.Warning("TVMaze API test failed");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error testing TVMaze:\n{ex.Message}", 
+                MessageBox.Show($"Error testing TVMaze:\n{ex.Message}",
                     "Test Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 LogManager.Error($"TVMaze test error: {ex.Message}");
             }
@@ -1179,7 +1181,7 @@ namespace RaceTrader
                 MessageBox.Show("Settings saved successfully!", "Success",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-               
+
                 this.Close();
             }
             catch (Exception ex)

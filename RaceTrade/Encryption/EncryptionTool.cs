@@ -13,6 +13,7 @@ namespace RaceTrade
         public EncryptionTool()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
         }
 
         private void InitializeComponent()

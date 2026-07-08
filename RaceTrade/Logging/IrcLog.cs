@@ -29,6 +29,7 @@ namespace RaceTrade
         public IrcLog()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
 
             // --- defaults for toolbar controls ---
             searchBox.Text = "Search logs...";

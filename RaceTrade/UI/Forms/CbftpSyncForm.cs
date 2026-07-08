@@ -15,6 +15,7 @@ namespace RaceTrade
         public CbftpSyncForm()
         {
             InitializeComponent();
+            RaceTrade.ThemeManager.ApplyTheme(this);
             LoadCbftpServers();
         }
 
