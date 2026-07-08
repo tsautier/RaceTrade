@@ -17,6 +17,7 @@ namespace RaceTrade
         private Action<string, string, string> sendMessageCallback;
         private Action<string, string, string> fishKeyExchangeCallback;
         private Action<string, string, string> setChannelKeyCallback;
+        private Func<string, string, string> getChannelKeyCallback;
 
         // Disposal flag
         private bool isClosing = false;
@@ -31,6 +32,11 @@ namespace RaceTrade
         public void SetChannelKeyCallback(Action<string, string, string> callback)
         {
             this.setChannelKeyCallback = callback;
+        }
+
+        public void SetChannelKeyLookupCallback(Func<string, string, string> callback)
+        {
+            this.getChannelKeyCallback = callback;
         }
 
         private void SendChannelKey(string siteName, string channelName, string key)
@@ -165,7 +171,8 @@ namespace RaceTrade
 
                         setKeyItem.Click += (s, ev) =>
                         {
-                            string key = PromptForBlowfishKey(channelName);
+                            string currentKey = getChannelKeyCallback?.Invoke(siteName, channelName) ?? string.Empty;
+                            string key = PromptForBlowfishKey(channelName, currentKey);
                             if (!string.IsNullOrWhiteSpace(key))
                             {
                                 setChannelKeyCallback?.Invoke(siteName, channelName, key);
@@ -470,7 +477,7 @@ namespace RaceTrade
             // No-op, kept for compatibility
         }
 
-        private string PromptForBlowfishKey(string channelName)
+        private string PromptForBlowfishKey(string channelName, string currentKey)
         {
             using (var form = new Form())
             {
@@ -479,40 +486,51 @@ namespace RaceTrade
                 form.FormBorderStyle = FormBorderStyle.FixedDialog;
                 form.MinimizeBox = false;
                 form.MaximizeBox = false;
-                form.ClientSize = new Size(350, 110);
-                form.BackColor = Color.FromArgb(18, 22, 31);
+                form.ClientSize = new Size(390, 135);
+                form.BackColor = ThemeManager.Colors.Background;
 
                 var label = new Label
                 {
                     Text = "Enter UTF-8 Blowfish key:",
                     AutoSize = true,
-                    ForeColor = Color.White,
-                    Location = new Point(10, 10)
+                    ForeColor = ThemeManager.Colors.Foreground,
+                    Location = new Point(12, 14)
                 };
 
                 var textBox = new TextBox
                 {
-                    Location = new Point(10, 35),
-                    Width = 320,
-                    BackColor = Color.FromArgb(13, 16, 24),
-                    ForeColor = Color.White
+                    Location = new Point(12, 42),
+                    Width = 366,
+                    BackColor = ThemeManager.Colors.BackgroundDark,
+                    ForeColor = ThemeManager.Colors.Foreground,
+                    Text = currentKey ?? string.Empty
                 };
 
                 var okButton = new Button
                 {
                     Text = "OK",
                     DialogResult = DialogResult.OK,
-                    Location = new Point(175, 70),
-                    Width = 70
+                    Location = new Point(198, 88),
+                    Size = new Size(84, 30),
+                    BackColor = ThemeManager.Colors.ButtonPrimary,
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    UseVisualStyleBackColor = false
                 };
+                okButton.FlatAppearance.BorderColor = ThemeManager.Colors.ButtonPrimaryHover;
 
                 var cancelButton = new Button
                 {
                     Text = "Cancel",
                     DialogResult = DialogResult.Cancel,
-                    Location = new Point(255, 70),
-                    Width = 70
+                    Location = new Point(294, 88),
+                    Size = new Size(84, 30),
+                    BackColor = Color.FromArgb(72, 80, 98),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    UseVisualStyleBackColor = false
                 };
+                cancelButton.FlatAppearance.BorderColor = ThemeManager.Colors.Border;
 
                 form.Controls.Add(label);
                 form.Controls.Add(textBox);
@@ -520,6 +538,11 @@ namespace RaceTrade
                 form.Controls.Add(cancelButton);
                 form.AcceptButton = okButton;
                 form.CancelButton = cancelButton;
+                form.Shown += (s, e) =>
+                {
+                    textBox.Focus();
+                    textBox.SelectAll();
+                };
 
                 return form.ShowDialog(this) == DialogResult.OK
                     ? textBox.Text.Trim()

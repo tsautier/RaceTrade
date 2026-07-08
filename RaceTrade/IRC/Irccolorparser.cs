@@ -10,11 +10,13 @@ namespace RaceTrade
     /// </summary>
     public static class IrcColorParser
     {
+        private static readonly Color ReadableBlack = Color.FromArgb(184, 193, 210);
+
         // mIRC color palette (0-15)
         private static readonly Color[] IrcColors = new Color[]
         {
     Color.White,       // 0
-    Color.Black,       // 1
+    ReadableBlack,     // 1 - black, adjusted for the dark chat theme
     Color.DarkBlue,    // 2
     Color.DarkGreen,   // 3
     Color.Red,         // 4
@@ -24,7 +26,7 @@ namespace RaceTrade
     Color.Yellow,      // 8
     Color.LightGreen,  // 9
     Color.DarkCyan,    // 10
-    Color.Black, // 11  <-- or Color.DimGray, Color.White, whatever you like
+    ReadableBlack,     // 11 - dark gray, adjusted for the dark chat theme
     Color.Blue,        // 12
     Color.Magenta,     // 13
     Color.DarkGray,    // 14

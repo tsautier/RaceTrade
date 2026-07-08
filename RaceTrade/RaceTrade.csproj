@@ -534,6 +534,19 @@
     </ItemGroup>
     <Copy SourceFiles="@(SQLiteDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="TrimReleaseDllPayload" AfterTargets="CopySQLiteDlls" Condition="'$(Configuration)'=='Release'">
+    <ItemGroup>
+      <AllowedReleaseDlls Include="$(OutDir)e_sqlite3.dll" />
+      <AllowedReleaseDlls Include="$(OutDir)Microsoft.Data.Sqlite.dll" />
+      <AllowedReleaseDlls Include="$(OutDir)SQLitePCLRaw.batteries_v2.dll" />
+      <AllowedReleaseDlls Include="$(OutDir)SQLitePCLRaw.core.dll" />
+      <AllowedReleaseDlls Include="$(OutDir)SQLitePCLRaw.provider.dynamic_cdecl.dll" />
+      <ReleaseDllsToDelete Include="$(OutDir)*.dll" Exclude="@(AllowedReleaseDlls)" />
+      <ReleasePdbsToDelete Include="$(OutDir)*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(ReleaseDllsToDelete)" />
+    <Delete Files="@(ReleasePdbsToDelete)" />
+  </Target>
   <Import Project="..\packages\Costura.Fody.6.0.0\build\Costura.Fody.targets" Condition="Exists('..\packages\Costura.Fody.6.0.0\build\Costura.Fody.targets')" />
   <Target Name="GetVersionNumber" BeforeTargets="CreateRarArchive">
     <ReadLinesFromFile File="Properties\AssemblyInfo.cs" Condition="Exists('Properties\AssemblyInfo.cs')">
@@ -546,13 +559,14 @@
       <VersionNumber Condition="'@(VersionLine)' != ''">@(VersionLine-&gt;Replace('[assembly: AssemblyVersion("', '')-&gt;Replace('")]', '')-&gt;Trim())</VersionNumber>
     </PropertyGroup>
   </Target>
-  <Target Name="CreateRarArchive" AfterTargets="Build" Condition="'$(Configuration)'=='Release'" DependsOnTargets="GetVersionNumber">
+  <Target Name="CreateRarArchive" AfterTargets="Build" Condition="'$(Configuration)'=='Release'" DependsOnTargets="GetVersionNumber;TrimReleaseDllPayload">
     <PropertyGroup>
-      <RarExe>C:\Program Files\WinRAR\WinRAR.exe</RarExe>
+      <RarExe>C:\Program Files\WinRAR\Rar.exe</RarExe>
       <RarFile>$(OutDir)..\RaceTrade_$(VersionNumber).rar</RarFile>
     </PropertyGroup>
     <Message Text="Building RAR with version: $(VersionNumber)" Importance="high" />
-    <Exec Command="&quot;$(RarExe)&quot; a -ep1 -m5 &quot;$(RarFile)&quot; &quot;$(OutDir)*.exe&quot; &quot;$(OutDir)*.dll&quot; &quot;$(OutDir)*.config&quot;" />
+    <Delete Files="$(RarFile)" Condition="Exists('$(RarFile)')" />
+    <Exec Command="&quot;$(RarExe)&quot; a -ep1 -m5 &quot;$(RarFile)&quot; &quot;$(TargetPath)&quot; &quot;$(TargetPath).config&quot; &quot;$(OutDir)e_sqlite3.dll&quot; &quot;$(OutDir)Microsoft.Data.Sqlite.dll&quot; &quot;$(OutDir)SQLitePCLRaw.batteries_v2.dll&quot; &quot;$(OutDir)SQLitePCLRaw.core.dll&quot; &quot;$(OutDir)SQLitePCLRaw.provider.dynamic_cdecl.dll&quot;" />
     <Message Text="Created RAR archive: $(RarFile)" Importance="high" />
   </Target>
 </Project>

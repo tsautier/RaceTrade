@@ -85,7 +85,7 @@ namespace RaceTrade
                 if (textBox_Channel_Key.Text == "Format: #channel:blowfishkey")
                 {
                     textBox_Channel_Key.Text = "";
-                    textBox_Channel_Key.ForeColor = Color.Black;
+                    textBox_Channel_Key.ForeColor = ThemeManager.Colors.Foreground;
                 }
             };
 

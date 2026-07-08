@@ -192,8 +192,8 @@ namespace RaceTrade
             outputBox.SelectionColor = Color.Gray;
             outputBox.AppendText(timestamp);
 
-            // force “normal text” color regardless of the incoming color
-            var defaultTextColor = Color.Black;  // or Color.Black
+            // Keep default IRC text readable on the dark chat theme.
+            var defaultTextColor = RaceTrade.ThemeManager.Colors.Foreground;
             IrcColorParser.AppendIrcText(outputBox, message, defaultTextColor);
 
             outputBox.AppendText(Environment.NewLine);

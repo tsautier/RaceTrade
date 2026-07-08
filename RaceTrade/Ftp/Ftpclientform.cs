@@ -336,30 +336,16 @@ namespace RaceTrader
 
         private async void btnLeftUp_Click(object sender, EventArgs e)
         {
-            if (currentLeftPath != "/" && currentLeftPath.Contains("/"))
-            {
-                var parts = currentLeftPath.TrimEnd('/').Split('/');
-                currentLeftPath = "/" + string.Join("/", parts.Take(parts.Length - 1).Skip(1));
-                if (string.IsNullOrEmpty(currentLeftPath) || currentLeftPath == "/")
-                    currentLeftPath = "/";
-
-                txtLeftPath.Text = currentLeftPath;
-                await BrowseLeftSiteAsync(currentLeftPath);
-            }
+            var parentPath = GetParentPath(currentLeftPath);
+            if (!string.Equals(parentPath, currentLeftPath, StringComparison.Ordinal))
+                await BrowseLeftSiteAsync(parentPath);
         }
 
         private async void btnRightUp_Click(object sender, EventArgs e)
         {
-            if (currentRightPath != "/" && currentRightPath.Contains("/"))
-            {
-                var parts = currentRightPath.TrimEnd('/').Split('/');
-                currentRightPath = "/" + string.Join("/", parts.Take(parts.Length - 1).Skip(1));
-                if (string.IsNullOrEmpty(currentRightPath) || currentRightPath == "/")
-                    currentRightPath = "/";
-
-                txtRightPath.Text = currentRightPath;
-                await BrowseRightSiteAsync(currentRightPath);
-            }
+            var parentPath = GetParentPath(currentRightPath);
+            if (!string.Equals(parentPath, currentRightPath, StringComparison.Ordinal))
+                await BrowseRightSiteAsync(parentPath);
         }
 
         private async void txtLeftPath_KeyDown(object sender, KeyEventArgs e)
@@ -367,10 +353,9 @@ namespace RaceTrader
             if (e.KeyCode == Keys.Enter)
             {
                 e.SuppressKeyPress = true;
-                currentLeftPath = txtLeftPath.Text;
-                if (string.IsNullOrEmpty(currentLeftPath))
-                    currentLeftPath = "/";
-                await BrowseLeftSiteAsync(currentLeftPath);
+                var requestedPath = NormalizePath(txtLeftPath.Text);
+                if (!await BrowseLeftSiteAsync(requestedPath))
+                    txtLeftPath.Text = currentLeftPath;
             }
         }
 
@@ -379,10 +364,9 @@ namespace RaceTrader
             if (e.KeyCode == Keys.Enter)
             {
                 e.SuppressKeyPress = true;
-                currentRightPath = txtRightPath.Text;
-                if (string.IsNullOrEmpty(currentRightPath))
-                    currentRightPath = "/";
-                await BrowseRightSiteAsync(currentRightPath);
+                var requestedPath = NormalizePath(txtRightPath.Text);
+                if (!await BrowseRightSiteAsync(requestedPath))
+                    txtRightPath.Text = currentRightPath;
             }
         }
 
@@ -401,31 +385,12 @@ namespace RaceTrader
                     }
                     else
                     {
-                        // If it's a symlink, use the link target path
+                        var nextPath = ResolveItemPath(currentLeftPath, fileItem);
+
                         if (fileItem.IsSymlink && !string.IsNullOrEmpty(fileItem.LinkTarget))
-                        {
-                            // Link target could be absolute or relative
-                            if (fileItem.LinkTarget.StartsWith("/"))
-                            {
-                                // Absolute path - use directly
-                                currentLeftPath = NormalizePath(fileItem.LinkTarget);
-                            }
-                            else
-                            {
-                                // Relative path - combine with current path
-                                currentLeftPath = NormalizePath(currentLeftPath + "/" + fileItem.LinkTarget);
-                            }
+                            LogManager.Info($"Following symlink: {fileItem.Name} -> {fileItem.LinkTarget} (resolved to: {nextPath})");
 
-                            LogManager.Info($"Following symlink: {fileItem.Name} -> {fileItem.LinkTarget} (resolved to: {currentLeftPath})");
-                        }
-                        else
-                        {
-                            // Regular directory - just append the name
-                            currentLeftPath = NormalizePath(currentLeftPath + "/" + fileItem.Name);
-                        }
-
-                        txtLeftPath.Text = currentLeftPath;
-                        await BrowseLeftSiteAsync(currentLeftPath);
+                        await BrowseLeftSiteAsync(nextPath);
                     }
                 }
             }
@@ -446,31 +411,12 @@ namespace RaceTrader
                     }
                     else
                     {
-                        // If it's a symlink, use the link target path
+                        var nextPath = ResolveItemPath(currentRightPath, fileItem);
+
                         if (fileItem.IsSymlink && !string.IsNullOrEmpty(fileItem.LinkTarget))
-                        {
-                            // Link target could be absolute or relative
-                            if (fileItem.LinkTarget.StartsWith("/"))
-                            {
-                                // Absolute path - use directly
-                                currentRightPath = NormalizePath(fileItem.LinkTarget);
-                            }
-                            else
-                            {
-                                // Relative path - combine with current path
-                                currentRightPath = NormalizePath(currentRightPath + "/" + fileItem.LinkTarget);
-                            }
+                            LogManager.Info($"Following symlink: {fileItem.Name} -> {fileItem.LinkTarget} (resolved to: {nextPath})");
 
-                            LogManager.Info($"Following symlink: {fileItem.Name} -> {fileItem.LinkTarget} (resolved to: {currentRightPath})");
-                        }
-                        else
-                        {
-                            // Regular directory - just append the name
-                            currentRightPath = NormalizePath(currentRightPath + "/" + fileItem.Name);
-                        }
-
-                        txtRightPath.Text = currentRightPath;
-                        await BrowseRightSiteAsync(currentRightPath);
+                        await BrowseRightSiteAsync(nextPath);
                     }
                 }
             }
@@ -478,21 +424,122 @@ namespace RaceTrader
 
         private string NormalizePath(string path)
         {
-            while (path.Contains("//"))
-                path = path.Replace("//", "/");
-
             if (string.IsNullOrEmpty(path))
                 return "/";
 
-            if (!path.StartsWith("/"))
-                path = "/" + path;
+            path = path.Trim().Replace('\\', '/');
+            if (string.IsNullOrEmpty(path))
+                return "/";
 
-            return path;
+            var isAbsolute = path.StartsWith("/");
+            var segments = new List<string>();
+
+            foreach (var segment in path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (segment == ".")
+                    continue;
+
+                if (segment == "..")
+                {
+                    if (segments.Count > 0)
+                        segments.RemoveAt(segments.Count - 1);
+                    continue;
+                }
+
+                segments.Add(segment);
+            }
+
+            var normalized = "/" + string.Join("/", segments);
+            if (!isAbsolute && segments.Count == 0)
+                return "/";
+
+            return normalized.Length == 0 ? "/" : normalized;
         }
 
-        private async Task BrowseLeftSiteAsync(string path)
+        private string ResolveRemotePath(string basePath, string childPath)
         {
-            if (cboLeftSite.SelectedItem == null) return;
+            if (string.IsNullOrWhiteSpace(childPath))
+                return NormalizePath(basePath);
+
+            childPath = childPath.Trim().Replace('\\', '/');
+            if (childPath.StartsWith("/"))
+                return NormalizePath(childPath);
+
+            return NormalizePath($"{NormalizePath(basePath).TrimEnd('/')}/{childPath}");
+        }
+
+        private string ResolveItemPath(string currentPath, FileItem fileItem)
+        {
+            if (fileItem == null)
+                return NormalizePath(currentPath);
+
+            if (fileItem.IsSymlink && !string.IsNullOrWhiteSpace(fileItem.LinkTarget))
+                return ResolveRemotePath(currentPath, fileItem.LinkTarget);
+
+            if (!string.IsNullOrWhiteSpace(fileItem.FullPath))
+                return NormalizePath(fileItem.FullPath);
+
+            return ResolveRemotePath(currentPath, fileItem.Name);
+        }
+
+        private string GetParentPath(string path)
+        {
+            path = NormalizePath(path);
+            if (path == "/")
+                return "/";
+
+            var trimmed = path.TrimEnd('/');
+            var lastSlash = trimmed.LastIndexOf('/');
+            if (lastSlash <= 0)
+                return "/";
+
+            return NormalizePath(trimmed.Substring(0, lastSlash));
+        }
+
+        private string GetLeafName(string path)
+        {
+            path = NormalizePath(path).TrimEnd('/');
+            if (path == "/")
+                return string.Empty;
+
+            var lastSlash = path.LastIndexOf('/');
+            return lastSlash >= 0 ? path.Substring(lastSlash + 1) : path;
+        }
+
+        private string NormalizeEntryFullPath(string currentPath, string candidatePath)
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath))
+                return null;
+
+            candidatePath = candidatePath.Trim().Replace('\\', '/');
+            if (!candidatePath.Contains("/"))
+                return null;
+
+            if (candidatePath.StartsWith("/"))
+                return NormalizePath(candidatePath);
+
+            var currentFirstSegment = NormalizePath(currentPath)
+                .Trim('/')
+                .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault();
+            var candidateFirstSegment = candidatePath
+                .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(currentFirstSegment) &&
+                string.Equals(currentFirstSegment, candidateFirstSegment, StringComparison.OrdinalIgnoreCase))
+            {
+                return NormalizePath(candidatePath);
+            }
+
+            return ResolveRemotePath(currentPath, candidatePath);
+        }
+
+        private async Task<bool> BrowseLeftSiteAsync(string path)
+        {
+            if (cboLeftSite.SelectedItem == null) return false;
+
+            path = NormalizePath(path);
 
             try
             {
@@ -502,6 +549,8 @@ namespace RaceTrader
 
                 var files = await GetDirectoryListingAsync(cboLeftSite.SelectedItem.ToString(), path);
                 PopulateListView(listViewLeft, files, path != "/");
+                currentLeftPath = path;
+                txtLeftPath.Text = currentLeftPath;
 
                 // Calculate total size (files only, not directories)
                 long totalSize = files.Where(f => !f.IsDirectory).Sum(f => f.Size);
@@ -519,12 +568,16 @@ namespace RaceTrader
                     UpdateStatus($"Left: Loaded {files.Count} items from {cboLeftSite.SelectedItem}");
                     LogToConsole($"Left: Loaded {files.Count} items", Color.LimeGreen);
                 }
+
+                return true;
             }
             catch (Exception ex)
             {
                 UpdateStatus($"Error browsing left site: {ex.Message}");
                 LogToConsole($"Error browsing left: {ex.Message}", Color.Red);
+                txtLeftPath.Text = currentLeftPath;
                 MessageBox.Show($"Failed to browse directory:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
             finally
             {
@@ -532,9 +585,11 @@ namespace RaceTrader
             }
         }
 
-        private async Task BrowseRightSiteAsync(string path)
+        private async Task<bool> BrowseRightSiteAsync(string path)
         {
-            if (cboRightSite.SelectedItem == null) return;
+            if (cboRightSite.SelectedItem == null) return false;
+
+            path = NormalizePath(path);
 
             try
             {
@@ -544,6 +599,8 @@ namespace RaceTrader
 
                 var files = await GetDirectoryListingAsync(cboRightSite.SelectedItem.ToString(), path);
                 PopulateListView(listViewRight, files, path != "/");
+                currentRightPath = path;
+                txtRightPath.Text = currentRightPath;
 
                 // Calculate total size (files only, not directories)
                 long totalSize = files.Where(f => !f.IsDirectory).Sum(f => f.Size);
@@ -561,12 +618,16 @@ namespace RaceTrader
                     UpdateStatus($"Right: Loaded {files.Count} items from {cboRightSite.SelectedItem}");
                     LogToConsole($"Right: Loaded {files.Count} items", Color.LimeGreen);
                 }
+
+                return true;
             }
             catch (Exception ex)
             {
                 UpdateStatus($"Error browsing right site: {ex.Message}");
                 LogToConsole($"Error browsing right: {ex.Message}", Color.Red);
+                txtRightPath.Text = currentRightPath;
                 MessageBox.Show($"Failed to browse directory:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
             finally
             {
@@ -577,6 +638,8 @@ namespace RaceTrader
         {
             try
             {
+                path = NormalizePath(path);
+
                 var config = GetCbftpConfig();
                 if (config == null)
                     throw new Exception("No CBFTP configuration available");
@@ -643,6 +706,24 @@ namespace RaceTrader
                     var entry = (JObject)token;
 
                     string name = entry.Value<string>("name");
+                    string fullPath =
+                        entry.Value<string>("path") ??
+                        entry.Value<string>("full_path") ??
+                        entry.Value<string>("fullPath") ??
+                        entry.Value<string>("remote_path") ??
+                        entry.Value<string>("remotePath");
+
+                    if (string.IsNullOrWhiteSpace(fullPath) && !string.IsNullOrWhiteSpace(name))
+                        fullPath = NormalizeEntryFullPath(path, name);
+                    else
+                        fullPath = NormalizeEntryFullPath(path, fullPath);
+
+                    if (!string.IsNullOrWhiteSpace(name) && name.Contains("/"))
+                        name = GetLeafName(name);
+
+                    if (string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(fullPath))
+                        name = GetLeafName(fullPath);
+
                     if (string.IsNullOrWhiteSpace(name) || name == "." || name == "..")
                         continue;
 
@@ -727,6 +808,7 @@ namespace RaceTrader
                     files.Add(new FileItem
                     {
                         Name = name,
+                        FullPath = fullPath,
                         IsDirectory = isDir,
                         IsSymlink = isLink,
                         LinkTarget = linkTarget,
@@ -946,7 +1028,7 @@ namespace RaceTrader
                 {
                     try
                     {
-                        string fullPath = NormalizePath(currentPath + "/" + item.Name);
+                        string fullPath = ResolveItemPath(currentPath, item);
 
                         // Always delete directories recursively
                         if (item.IsDirectory)
@@ -1158,44 +1240,18 @@ namespace RaceTrader
 
                 foreach (var fileItem in selectedItems)
                 {
-                    string releaseName = fileItem.Name;
+                    string sourceItemPath = ResolveItemPath(sourcePath, fileItem);
+                    string releaseName = GetLeafName(sourceItemPath);
+                    string srcParentPath = GetParentPath(sourceItemPath);
+                    string dstParentPath = NormalizePath(destPath);
 
-                    // For FXP: CBFTP needs PARENT directories, NOT full paths
-                    // CBFTP will automatically append the release name
+                    if (string.IsNullOrWhiteSpace(releaseName))
+                        releaseName = fileItem.Name;
 
-                    // Source: Use the CURRENT path (parent directory)
-                    string srcParentPath = sourcePath.TrimEnd('/');
-
-                    // Destination: Use the CURRENT path (parent directory)  
-                    string dstParentPath = destPath.TrimEnd('/');
-
-                    // For symlinks, we need to handle the path resolution
                     if (fileItem.IsSymlink && !string.IsNullOrEmpty(fileItem.LinkTarget))
                     {
-                        // Resolve the symlink target to get the actual location
-                        string actualPath;
-
-                        if (fileItem.LinkTarget.StartsWith("/"))
-                        {
-                            // Absolute symlink
-                            actualPath = fileItem.LinkTarget.TrimEnd('/');
-                        }
-                        else
-                        {
-                            // Relative symlink - resolve from current source path
-                            actualPath = NormalizePath(sourcePath + "/" + fileItem.LinkTarget).TrimEnd('/');
-                        }
-
-                        // Extract parent directory and actual release name from resolved path
-                        var lastSlash = actualPath.LastIndexOf('/');
-                        if (lastSlash > 0)
-                        {
-                            srcParentPath = actualPath.Substring(0, lastSlash);
-                            releaseName = actualPath.Substring(lastSlash + 1);
-                        }
-
-                        LogToTransfer($"Symlink: {fileItem.Name} → {actualPath}", Color.Yellow);
-                        LogToConsole($"Symlink FXP: {fileItem.Name} → resolved to {actualPath}", Color.Gray);
+                        LogToTransfer($"Symlink: {fileItem.Name} → {sourceItemPath}", Color.Yellow);
+                        LogToConsole($"Symlink FXP: {fileItem.Name} → resolved to {sourceItemPath}", Color.Gray);
                         LogToConsole($"  src_path: {srcParentPath}, name: {releaseName}", Color.Gray);
                     }
 
@@ -1537,7 +1593,7 @@ namespace RaceTrader
             }
 
             string fileName = fileItem.Name;
-            string fullPath = NormalizePath(currentPath + "/" + fileName);
+            string fullPath = ResolveItemPath(currentPath, fileItem);
             string extension = Path.GetExtension(fileName).ToLower();
 
             // Text-based extensions
@@ -1769,6 +1825,7 @@ namespace RaceTrader
         private class FileItem
         {
             public string Name { get; set; }
+            public string FullPath { get; set; }
             public bool IsDirectory { get; set; }
             public bool IsSymlink { get; set; }
             public string LinkTarget { get; set; }

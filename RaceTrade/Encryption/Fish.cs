@@ -22,8 +22,19 @@ public class FishDecryptor
         // DH1080 key is the 43-char Base64 string itself.
         keyBytes = Encoding.ASCII.GetBytes(blowfishKey);
 
-        if (keyBytes.Length < 4 || keyBytes.Length > 56)
-            throw new ArgumentException("Blowfish key must be between 4 and 56 bytes.");
+        if (keyBytes.Length < 4)
+            throw new ArgumentException("Blowfish key must be at least 4 bytes.");
+
+        // Blowfish's maximum key size is 56 bytes (448 bits). Standard FiSH /
+        // Mircryption clients don't reject a longer key — they silently use only
+        // the first 56 bytes. Match that so keys set channel-side (which we can't
+        // change) still decrypt instead of failing to load.
+        if (keyBytes.Length > 56)
+        {
+            var truncated = new byte[56];
+            Array.Copy(keyBytes, truncated, 56);
+            keyBytes = truncated;
+        }
     }
 
     // ───────────────────────────────

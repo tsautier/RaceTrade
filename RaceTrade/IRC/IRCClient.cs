@@ -46,7 +46,7 @@ public class IRCClient
     private readonly Dictionary<string, string> raceSections;
     private readonly List<string> blacklist;
     private readonly CancellationToken cancellationToken;
-    private readonly Dictionary<string, FishDecryptor> fishDecryptors = new Dictionary<string, FishDecryptor>();
+    private readonly Dictionary<string, FishDecryptor> fishDecryptors = new Dictionary<string, FishDecryptor>(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> mappings = new Dictionary<string, string>();
     private readonly SiteConfig siteConfig;
     private readonly JObject siteConfigJson;
@@ -320,11 +320,17 @@ public class IRCClient
             if (chanProp == null || keyProp == null)
                 continue;
 
-            var chanValue = chanProp.GetValue(siteSettings) as string;
+            var chanValue = (chanProp.GetValue(siteSettings) as string)?.Trim();
             var encKey = keyProp.GetValue(siteSettings) as string;
 
             if (string.IsNullOrWhiteSpace(chanValue) || string.IsNullOrWhiteSpace(encKey))
                 continue;
+
+            // Normalize the channel name the SAME way SetChannelKey (chatbox) does,
+            // so JSON/editor keys match the server's channel name regardless of a
+            // missing '#' or different casing.
+            if (!chanValue.StartsWith("#") && !chanValue.StartsWith("PM:"))
+                chanValue = "#" + chanValue.TrimStart('#');
 
             try
             {

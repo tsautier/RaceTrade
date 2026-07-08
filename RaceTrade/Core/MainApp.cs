@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -29,6 +30,7 @@ namespace RaceTrade
         private bool _restoringLogPositions = false;
 
         private const string LOG_WINDOW_SETTINGS_KEY = "log_window_layout";
+        private const string COMMUNITY_GITHUB_URL = "https://github.com/Bl4DiEDiEBL4/RaceTrade";
 
         private List<Thread> ircThreads = new List<Thread>();
         private Dictionary<string, SiteConfig> siteConfigs = new Dictionary<string, SiteConfig>();
@@ -118,6 +120,7 @@ namespace RaceTrade
             Enable_Disable_Racer_button.Padding = new Padding(0, 0, 0, 0);
 
             WireDockLogsLabel();
+            WireCommunityLinkLabel();
         }
 
         private void WireDockLogsLabel()
@@ -158,6 +161,32 @@ namespace RaceTrade
         {
             if (lblDockLogs == null) return;
             lblDockLogs.Text = _dockLogsToMain ? "Logs: Docked" : "Logs: Free";
+        }
+
+        private void WireCommunityLinkLabel()
+        {
+            if (communityLinkLabel == null) return;
+
+            communityLinkLabel.Cursor = Cursors.Hand;
+            communityLinkLabel.LinkClicked += communityLinkLabel_LinkClicked;
+        }
+
+        private void communityLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = COMMUNITY_GITHUB_URL,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                LogManager.Error($"Failed to open RaceTrade GitHub link: {ex.Message}");
+                MessageBox.Show("Could not open the RaceTrade GitHub page.", "RaceTrade",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
         //protected override CreateParams CreateParams
@@ -227,7 +256,10 @@ namespace RaceTrade
             label1.Font = ThemeManager.Fonts.Subtitle;
             pageTitleLabel.Font = new Font(ThemeManager.Fonts.DisplayFamily, 18F, FontStyle.Bold);
             navMenuLabel.Font = new Font(ThemeManager.Fonts.UiFamily, 7.5F, FontStyle.Bold);
-            secureLabel.Font = new Font(ThemeManager.Fonts.UiFamily, 8F, FontStyle.Bold);
+            communityLinkLabel.Font = new Font(ThemeManager.Fonts.UiFamily, 8F, FontStyle.Bold);
+            communityLinkLabel.LinkColor = ThemeManager.Colors.AccentCyan;
+            communityLinkLabel.ActiveLinkColor = ThemeManager.Colors.Accent;
+            communityLinkLabel.VisitedLinkColor = ThemeManager.Colors.AccentCyan;
             statusTitleLabel.Font = new Font(ThemeManager.Fonts.UiFamily, 8F, FontStyle.Bold);
             lblDockLogs.Font = new Font(ThemeManager.Fonts.UiFamily, 8.5F, FontStyle.Bold);
 
@@ -527,6 +559,13 @@ namespace RaceTrade
                     else
                         MessageBox.Show($"Chat IRC client for {siteName} not found",
                             "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                });
+
+                tabbedIrcLog.SetChannelKeyLookupCallback((siteName, channel) =>
+                {
+                    return chatIrcClients.TryGetValue(siteName, out var client)
+                        ? client.GetChannelKey(channel)
+                        : string.Empty;
                 });
 
                 tabbedIrcLog.VisibleChanged += TabbedIrcLog_VisibleChanged;
@@ -3322,4 +3361,3 @@ namespace RaceTrade
         public string TriggerRegex { get; set; }
         public List<string> Rules { get; set; } = new List<string>();
     }
-

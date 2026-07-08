@@ -44,10 +44,9 @@ namespace RaceTrade
             this.Pre_button = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.Help_button = new System.Windows.Forms.Button();
-            this.secureLabel = new System.Windows.Forms.Label();
+            this.communityLinkLabel = new System.Windows.Forms.LinkLabel();
             this.contentPanel = new System.Windows.Forms.Panel();
             this.pageTitleLabel = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.lblDockLogs = new System.Windows.Forms.Label();
             this.cardCbftp = new System.Windows.Forms.Panel();
             this.cardCbftpTitle = new System.Windows.Forms.Label();
@@ -101,7 +100,7 @@ namespace RaceTrade
             this.sidebarPanel.Controls.Add(this.Pre_button);
             this.sidebarPanel.Controls.Add(this.button1);
             this.sidebarPanel.Controls.Add(this.Help_button);
-            this.sidebarPanel.Controls.Add(this.secureLabel);
+            this.sidebarPanel.Controls.Add(this.communityLinkLabel);
             this.sidebarPanel.Dock = System.Windows.Forms.DockStyle.Left;
             this.sidebarPanel.Location = new System.Drawing.Point(0, 0);
             this.sidebarPanel.Name = "sidebarPanel";
@@ -123,7 +122,7 @@ namespace RaceTrade
             this.titleLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(228)))), ((int)(((byte)(233)))), ((int)(((byte)(242)))));
             this.titleLabel.Location = new System.Drawing.Point(56, 28);
             this.titleLabel.Name = "titleLabel";
-            this.titleLabel.Size = new System.Drawing.Size(110, 20);
+            this.titleLabel.Size = new System.Drawing.Size(72, 15);
             this.titleLabel.TabIndex = 1;
             this.titleLabel.Text = "RACETRADE";
             //
@@ -134,7 +133,7 @@ namespace RaceTrade
             this.label1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(160)))), ((int)(((byte)(178)))));
             this.label1.Location = new System.Drawing.Point(24, 60);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(80, 15);
+            this.label1.Size = new System.Drawing.Size(63, 15);
             this.label1.TabIndex = 2;
             this.label1.Text = "v1.0.7 beta";
             //
@@ -150,7 +149,6 @@ namespace RaceTrade
             //
             // statusTitleLabel
             //
-            this.statusTitleLabel.AutoSize = false;
             this.statusTitleLabel.BackColor = System.Drawing.Color.Transparent;
             this.statusTitleLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(160)))), ((int)(((byte)(178)))));
             this.statusTitleLabel.Location = new System.Drawing.Point(16, 12);
@@ -178,7 +176,7 @@ namespace RaceTrade
             this.navMenuLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(96)))), ((int)(((byte)(104)))), ((int)(((byte)(120)))));
             this.navMenuLabel.Location = new System.Drawing.Point(24, 244);
             this.navMenuLabel.Name = "navMenuLabel";
-            this.navMenuLabel.Size = new System.Drawing.Size(40, 15);
+            this.navMenuLabel.Size = new System.Drawing.Size(41, 15);
             this.navMenuLabel.TabIndex = 4;
             this.navMenuLabel.Text = "MENU";
             //
@@ -201,7 +199,7 @@ namespace RaceTrade
             this.Ftp_button.Name = "Ftp_button";
             this.Ftp_button.Size = new System.Drawing.Size(216, 42);
             this.Ftp_button.TabIndex = 6;
-            this.Ftp_button.Text = "Transfers";
+            this.Ftp_button.Text = "FXP Client";
             this.Ftp_button.UseVisualStyleBackColor = true;
             this.Ftp_button.Click += new System.EventHandler(this.Ftp_button_Click);
             //
@@ -253,30 +251,35 @@ namespace RaceTrade
             this.Help_button.UseVisualStyleBackColor = true;
             this.Help_button.Click += new System.EventHandler(this.Help_button_Click_1);
             //
-            // secureLabel
+            // communityLinkLabel
             //
-            this.secureLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(9)))), ((int)(((byte)(11)))), ((int)(((byte)(17)))));
-            this.secureLabel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.secureLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(197)))), ((int)(((byte)(120)))));
-            this.secureLabel.Location = new System.Drawing.Point(0, 538);
-            this.secureLabel.Name = "secureLabel";
-            this.secureLabel.Padding = new System.Windows.Forms.Padding(24, 0, 0, 0);
-            this.secureLabel.Size = new System.Drawing.Size(244, 46);
-            this.secureLabel.TabIndex = 11;
-            this.secureLabel.Text = "●   SECURE CONNECTION";
-            this.secureLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.communityLinkLabel.ActiveLinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(229)))), ((int)(((byte)(214)))));
+            this.communityLinkLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(9)))), ((int)(((byte)(11)))), ((int)(((byte)(17)))));
+            this.communityLinkLabel.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.communityLinkLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(229)))), ((int)(((byte)(214)))));
+            this.communityLinkLabel.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
+            this.communityLinkLabel.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(229)))), ((int)(((byte)(214)))));
+            this.communityLinkLabel.Location = new System.Drawing.Point(0, 538);
+            this.communityLinkLabel.Name = "communityLinkLabel";
+            this.communityLinkLabel.Padding = new System.Windows.Forms.Padding(24, 0, 0, 0);
+            this.communityLinkLabel.Size = new System.Drawing.Size(244, 46);
+            this.communityLinkLabel.TabIndex = 11;
+            this.communityLinkLabel.TabStop = true;
+            this.communityLinkLabel.Text = "linknet / #racetrade";
+            this.communityLinkLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.communityLinkLabel.VisitedLinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(168)))), ((int)(((byte)(255)))));
             //
             // contentPanel
             //
             this.contentPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.contentPanel.Controls.Add(this.pageTitleLabel);
-            this.contentPanel.Controls.Add(this.label2);
             this.contentPanel.Controls.Add(this.lblDockLogs);
             this.contentPanel.Controls.Add(this.cardCbftp);
             this.contentPanel.Controls.Add(this.cardSites);
             this.contentPanel.Controls.Add(this.cardPrebots);
             this.contentPanel.Controls.Add(this.cardLogs);
             this.contentPanel.Controls.Add(this.cardTools);
+            this.contentPanel.Controls.Add(this.exitButton);
             this.contentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.contentPanel.Location = new System.Drawing.Point(244, 0);
             this.contentPanel.Name = "contentPanel";
@@ -290,20 +293,9 @@ namespace RaceTrade
             this.pageTitleLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(228)))), ((int)(((byte)(233)))), ((int)(((byte)(242)))));
             this.pageTitleLabel.Location = new System.Drawing.Point(28, 20);
             this.pageTitleLabel.Name = "pageTitleLabel";
-            this.pageTitleLabel.Size = new System.Drawing.Size(90, 28);
+            this.pageTitleLabel.Size = new System.Drawing.Size(64, 15);
             this.pageTitleLabel.TabIndex = 0;
             this.pageTitleLabel.Text = "Dashboard";
-            //
-            // label2
-            //
-            this.label2.AutoSize = true;
-            this.label2.BackColor = System.Drawing.Color.Transparent;
-            this.label2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(160)))), ((int)(((byte)(178)))));
-            this.label2.Location = new System.Drawing.Point(30, 54);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(120, 15);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "linknet / #racetrade";
             //
             // lblDockLogs
             //
@@ -314,7 +306,7 @@ namespace RaceTrade
             this.lblDockLogs.Location = new System.Drawing.Point(1082, 22);
             this.lblDockLogs.Name = "lblDockLogs";
             this.lblDockLogs.Padding = new System.Windows.Forms.Padding(12, 6, 12, 6);
-            this.lblDockLogs.Size = new System.Drawing.Size(98, 27);
+            this.lblDockLogs.Size = new System.Drawing.Size(102, 27);
             this.lblDockLogs.TabIndex = 2;
             this.lblDockLogs.Text = "Logs: Docked";
             //
@@ -328,14 +320,13 @@ namespace RaceTrade
             this.cardCbftp.Controls.Add(this.Add_cbftp_site);
             this.cardCbftp.Controls.Add(this.Cbftp_Edit_Site);
             this.cardCbftp.Controls.Add(this.Sync_From_Cbftp_Button);
-            this.cardCbftp.Location = new System.Drawing.Point(28, 92);
+            this.cardCbftp.Location = new System.Drawing.Point(31, 60);
             this.cardCbftp.Name = "cardCbftp";
             this.cardCbftp.Size = new System.Drawing.Size(372, 220);
             this.cardCbftp.TabIndex = 3;
             //
             // cardCbftpTitle
             //
-            this.cardCbftpTitle.AutoSize = false;
             this.cardCbftpTitle.BackColor = System.Drawing.Color.Transparent;
             this.cardCbftpTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(160)))), ((int)(((byte)(178)))));
             this.cardCbftpTitle.Location = new System.Drawing.Point(18, 14);
@@ -414,14 +405,13 @@ namespace RaceTrade
             this.cardSites.Controls.Add(this.cardSitesTitle);
             this.cardSites.Controls.Add(this.add_sites_button);
             this.cardSites.Controls.Add(this.Edit_sites_button);
-            this.cardSites.Location = new System.Drawing.Point(420, 92);
+            this.cardSites.Location = new System.Drawing.Point(423, 60);
             this.cardSites.Name = "cardSites";
             this.cardSites.Size = new System.Drawing.Size(372, 220);
             this.cardSites.TabIndex = 4;
             //
             // cardSitesTitle
             //
-            this.cardSitesTitle.AutoSize = false;
             this.cardSitesTitle.BackColor = System.Drawing.Color.Transparent;
             this.cardSitesTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(160)))), ((int)(((byte)(178)))));
             this.cardSitesTitle.Location = new System.Drawing.Point(18, 14);
@@ -459,14 +449,13 @@ namespace RaceTrade
             this.cardPrebots.Controls.Add(this.Add_PreBot_button);
             this.cardPrebots.Controls.Add(this.Prebot_edit_button);
             this.cardPrebots.Controls.Add(this.buttonImportPredb);
-            this.cardPrebots.Location = new System.Drawing.Point(812, 92);
+            this.cardPrebots.Location = new System.Drawing.Point(815, 60);
             this.cardPrebots.Name = "cardPrebots";
             this.cardPrebots.Size = new System.Drawing.Size(372, 220);
             this.cardPrebots.TabIndex = 5;
             //
             // cardPrebotsTitle
             //
-            this.cardPrebotsTitle.AutoSize = false;
             this.cardPrebotsTitle.BackColor = System.Drawing.Color.Transparent;
             this.cardPrebotsTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(160)))), ((int)(((byte)(178)))));
             this.cardPrebotsTitle.Location = new System.Drawing.Point(18, 14);
@@ -516,14 +505,13 @@ namespace RaceTrade
             this.cardLogs.Controls.Add(this.ToggleIRCLog);
             this.cardLogs.Controls.Add(this.ToggleApplicationLog);
             this.cardLogs.Controls.Add(this.ToggleRaceLog);
-            this.cardLogs.Location = new System.Drawing.Point(28, 332);
+            this.cardLogs.Location = new System.Drawing.Point(31, 300);
             this.cardLogs.Name = "cardLogs";
-            this.cardLogs.Size = new System.Drawing.Size(568, 220);
+            this.cardLogs.Size = new System.Drawing.Size(568, 135);
             this.cardLogs.TabIndex = 6;
             //
             // cardLogsTitle
             //
-            this.cardLogsTitle.AutoSize = false;
             this.cardLogsTitle.BackColor = System.Drawing.Color.Transparent;
             this.cardLogsTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(160)))), ((int)(((byte)(178)))));
             this.cardLogsTitle.Location = new System.Drawing.Point(18, 14);
@@ -582,15 +570,13 @@ namespace RaceTrade
             this.cardTools.Controls.Add(this.cardToolsTitle);
             this.cardTools.Controls.Add(this.button2);
             this.cardTools.Controls.Add(this.blacklist_add);
-            this.cardTools.Controls.Add(this.exitButton);
-            this.cardTools.Location = new System.Drawing.Point(616, 332);
+            this.cardTools.Location = new System.Drawing.Point(619, 300);
             this.cardTools.Name = "cardTools";
-            this.cardTools.Size = new System.Drawing.Size(568, 220);
+            this.cardTools.Size = new System.Drawing.Size(568, 135);
             this.cardTools.TabIndex = 7;
             //
             // cardToolsTitle
             //
-            this.cardToolsTitle.AutoSize = false;
             this.cardToolsTitle.BackColor = System.Drawing.Color.Transparent;
             this.cardToolsTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(160)))), ((int)(((byte)(178)))));
             this.cardToolsTitle.Location = new System.Drawing.Point(18, 14);
@@ -623,11 +609,12 @@ namespace RaceTrade
             //
             // exitButton
             //
+            this.exitButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.exitButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.exitButton.Location = new System.Drawing.Point(16, 84);
+            this.exitButton.Location = new System.Drawing.Point(1044, 522);
             this.exitButton.Name = "exitButton";
-            this.exitButton.Size = new System.Drawing.Size(536, 34);
-            this.exitButton.TabIndex = 3;
+            this.exitButton.Size = new System.Drawing.Size(140, 34);
+            this.exitButton.TabIndex = 8;
             this.exitButton.Text = "Exit";
             this.exitButton.UseVisualStyleBackColor = true;
             this.exitButton.Click += new System.EventHandler(this.exitButton_Click_1);
@@ -677,10 +664,9 @@ namespace RaceTrade
         private System.Windows.Forms.Button Pre_button;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button Help_button;
-        private System.Windows.Forms.Label secureLabel;
+        private System.Windows.Forms.LinkLabel communityLinkLabel;
         private System.Windows.Forms.Panel contentPanel;
         private System.Windows.Forms.Label pageTitleLabel;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label lblDockLogs;
         private System.Windows.Forms.Panel cardCbftp;
         private System.Windows.Forms.Label cardCbftpTitle;

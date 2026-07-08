@@ -186,9 +186,9 @@ namespace RaceTrader
             this.btnLeftRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLeftRefresh.Font = new System.Drawing.Font("Cascadia Mono", 9F, System.Drawing.FontStyle.Bold);
             this.btnLeftRefresh.ForeColor = System.Drawing.Color.White;
-            this.btnLeftRefresh.Location = new System.Drawing.Point(544, 37);
+            this.btnLeftRefresh.Location = new System.Drawing.Point(529, 36);
             this.btnLeftRefresh.Name = "btnLeftRefresh";
-            this.btnLeftRefresh.Size = new System.Drawing.Size(75, 22);
+            this.btnLeftRefresh.Size = new System.Drawing.Size(90, 28);
             this.btnLeftRefresh.TabIndex = 4;
             this.btnLeftRefresh.Text = "Refresh";
             this.btnLeftRefresh.UseVisualStyleBackColor = false;
@@ -201,9 +201,9 @@ namespace RaceTrader
             this.btnLeftUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLeftUp.Font = new System.Drawing.Font("Cascadia Mono", 9F, System.Drawing.FontStyle.Bold);
             this.btnLeftUp.ForeColor = System.Drawing.Color.White;
-            this.btnLeftUp.Location = new System.Drawing.Point(464, 37);
+            this.btnLeftUp.Location = new System.Drawing.Point(421, 36);
             this.btnLeftUp.Name = "btnLeftUp";
-            this.btnLeftUp.Size = new System.Drawing.Size(75, 22);
+            this.btnLeftUp.Size = new System.Drawing.Size(90, 28);
             this.btnLeftUp.TabIndex = 3;
             this.btnLeftUp.Text = "Up";
             this.btnLeftUp.UseVisualStyleBackColor = false;
@@ -218,7 +218,7 @@ namespace RaceTrader
             this.txtLeftPath.ForeColor = System.Drawing.Color.White;
             this.txtLeftPath.Location = new System.Drawing.Point(10, 39);
             this.txtLeftPath.Name = "txtLeftPath";
-            this.txtLeftPath.Size = new System.Drawing.Size(447, 21);
+            this.txtLeftPath.Size = new System.Drawing.Size(400, 21);
             this.txtLeftPath.TabIndex = 2;
             this.txtLeftPath.Text = "/";
             this.txtLeftPath.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtLeftPath_KeyDown);
@@ -345,9 +345,9 @@ namespace RaceTrader
             this.btnRightRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRightRefresh.Font = new System.Drawing.Font("Cascadia Mono", 9F, System.Drawing.FontStyle.Bold);
             this.btnRightRefresh.ForeColor = System.Drawing.Color.White;
-            this.btnRightRefresh.Location = new System.Drawing.Point(546, 37);
+            this.btnRightRefresh.Location = new System.Drawing.Point(531, 36);
             this.btnRightRefresh.Name = "btnRightRefresh";
-            this.btnRightRefresh.Size = new System.Drawing.Size(75, 22);
+            this.btnRightRefresh.Size = new System.Drawing.Size(90, 28);
             this.btnRightRefresh.TabIndex = 4;
             this.btnRightRefresh.Text = "Refresh";
             this.btnRightRefresh.UseVisualStyleBackColor = false;
@@ -360,9 +360,9 @@ namespace RaceTrader
             this.btnRightUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRightUp.Font = new System.Drawing.Font("Cascadia Mono", 9F, System.Drawing.FontStyle.Bold);
             this.btnRightUp.ForeColor = System.Drawing.Color.White;
-            this.btnRightUp.Location = new System.Drawing.Point(465, 37);
+            this.btnRightUp.Location = new System.Drawing.Point(423, 36);
             this.btnRightUp.Name = "btnRightUp";
-            this.btnRightUp.Size = new System.Drawing.Size(75, 22);
+            this.btnRightUp.Size = new System.Drawing.Size(90, 28);
             this.btnRightUp.TabIndex = 3;
             this.btnRightUp.Text = "Up";
             this.btnRightUp.UseVisualStyleBackColor = false;
@@ -377,7 +377,7 @@ namespace RaceTrader
             this.txtRightPath.ForeColor = System.Drawing.Color.White;
             this.txtRightPath.Location = new System.Drawing.Point(10, 39);
             this.txtRightPath.Name = "txtRightPath";
-            this.txtRightPath.Size = new System.Drawing.Size(449, 21);
+            this.txtRightPath.Size = new System.Drawing.Size(403, 21);
             this.txtRightPath.TabIndex = 2;
             this.txtRightPath.Text = "/";
             this.txtRightPath.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtRightPath_KeyDown);

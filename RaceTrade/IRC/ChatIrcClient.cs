@@ -302,10 +302,7 @@ public class ChatIrcClient
         if (string.IsNullOrWhiteSpace(channel) || string.IsNullOrWhiteSpace(utf8Key))
             return;
 
-        channel = channel.Trim();
-
-        if (!channel.StartsWith("#") && !channel.StartsWith("PM:"))
-            channel = "#" + channel.TrimStart('#');
+        channel = NormalizeKeyName(channel);
 
         try
         {
@@ -344,6 +341,63 @@ public class ChatIrcClient
         {
             AppendOutput($"[ERROR] Failed to save channel key for {channel}: {ex.Message}", Color.Red);
         }
+    }
+
+    public string GetChannelKey(string channel)
+    {
+        if (string.IsNullOrWhiteSpace(channel) || siteConfig?.SiteSettings == null)
+            return string.Empty;
+
+        channel = NormalizeKeyName(channel);
+        var siteSettings = siteConfig.SiteSettings;
+
+        if (channel.StartsWith("PM:", StringComparison.OrdinalIgnoreCase))
+        {
+            string pmNick = channel.Substring(3);
+            lock (fishLock)
+            {
+                return pmFishKeys.TryGetValue(pmNick, out var pmKey) ? pmKey : string.Empty;
+            }
+        }
+
+        if (siteSettings.ChatKeys != null)
+        {
+            foreach (var kvp in siteSettings.ChatKeys)
+            {
+                if (!string.Equals(NormalizeKeyName(kvp.Key), channel, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                return SecureConfig.Decrypt(kvp.Value) ?? string.Empty;
+            }
+        }
+
+        for (int i = 1; i <= 20; i++)
+        {
+            var chanProp = siteSettings.GetType().GetProperty($"Chan{i}");
+            var keyProp = siteSettings.GetType().GetProperty($"BlowfishKey{i}");
+            var chanValue = chanProp?.GetValue(siteSettings) as string;
+
+            if (!string.Equals(NormalizeKeyName(chanValue), channel, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var encKey = keyProp?.GetValue(siteSettings) as string;
+            return string.IsNullOrWhiteSpace(encKey) ? string.Empty : SecureConfig.Decrypt(encKey) ?? string.Empty;
+        }
+
+        return string.Empty;
+    }
+
+    private static string NormalizeKeyName(string channel)
+    {
+        if (string.IsNullOrWhiteSpace(channel))
+            return string.Empty;
+
+        channel = channel.Trim();
+
+        if (!channel.StartsWith("#") && !channel.StartsWith("PM:", StringComparison.OrdinalIgnoreCase))
+            channel = "#" + channel.TrimStart('#');
+
+        return channel;
     }
 
     public void SetChannelBlowfishKey(string channel, string utf8Key)
