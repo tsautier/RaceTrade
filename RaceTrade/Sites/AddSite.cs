@@ -76,6 +76,17 @@ namespace RaceTrade
             Add_channel_button.Click += Add_channel_button_Click;
             Remove_channel_button.Click += Remove_channel_button_Click;
 
+            // Click a channel line -> load "#channel:key" into the textbox so it can be
+            // edited, then press Add to update it in place.
+            ListboxChannels.SelectedIndexChanged += (s, e) =>
+            {
+                if (ListboxChannels.SelectedItem is ChannelInfo selected)
+                {
+                    textBox_Channel_Key.Text = $"{selected.Channel}:{selected.BlowfishKey}";
+                    textBox_Channel_Key.ForeColor = ThemeManager.Colors.Foreground;
+                }
+            };
+
             // Set placeholder text
             textBox_Channel_Key.Text = "Format: #channel:blowfishkey";
             textBox_Channel_Key.ForeColor = Color.Gray;
@@ -485,10 +496,29 @@ namespace RaceTrade
 
                                 if (!string.IsNullOrWhiteSpace(channel))
                                 {
+                                    string plainKey = "";
+                                    if (!string.IsNullOrWhiteSpace(key))
+                                    {
+                                        try
+                                        {
+                                            plainKey = SecureConfig.Decrypt(key);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            // Key was encrypted by a different Windows user/machine (DPAPI is
+                                            // per-user). Don't blow up the whole load - show it empty so it
+                                            // can simply be re-entered.
+                                            plainKey = "";
+                                            LogManager.Error(
+                                                $"Could not decrypt stored Blowfish key for {channel}. " +
+                                                $"It was encrypted by another Windows user/machine - please re-enter it. ({ex.Message})");
+                                        }
+                                    }
+
                                     ListboxChannels.Items.Add(new ChannelInfo
                                     {
                                         Channel = channel,
-                                        BlowfishKey = string.IsNullOrWhiteSpace(key) ? "" : SecureConfig.Decrypt(key)
+                                        BlowfishKey = plainKey
                                     });
                                 }
                             }
@@ -632,13 +662,20 @@ namespace RaceTrade
                 return;
             }
 
-            // Check for duplicates
-            foreach (ChannelInfo existingChannel in ListboxChannels.Items)
+            // If the channel already exists, update its key in place (edit support)
+            for (int i = 0; i < ListboxChannels.Items.Count; i++)
             {
-                if (existingChannel.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase))
+                if (ListboxChannels.Items[i] is ChannelInfo existingChannel &&
+                    existingChannel.Channel.Equals(channel, StringComparison.OrdinalIgnoreCase))
                 {
-                    MessageBox.Show($"Channel '{channel}' already exists!",
-                        "Duplicate Channel", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    existingChannel.Channel = channel;
+                    existingChannel.BlowfishKey = blowfishKey;
+                    ListboxChannels.Items[i] = existingChannel; // refresh display
+
+                    textBox_Channel_Key.Clear();
+                    textBox_Channel_Key.Focus();
+
+                    LogManager.Success($"Updated key for channel: {channel}");
                     return;
                 }
             }
@@ -1045,35 +1082,9 @@ namespace RaceTrade
 
 
 
-                // Save channels from listbox
-                int channelIndex = 1;
-                foreach (ChannelInfo channelInfo in ListboxChannels.Items)
-                {
-                    var channelProp = currentSite.SiteSettings.GetType().GetProperty($"Chan{channelIndex}");
-                    var keyProp = currentSite.SiteSettings.GetType().GetProperty($"BlowfishKey{channelIndex}");
-
-                    if (channelProp != null && keyProp != null)
-                    {
-                        channelProp.SetValue(currentSite.SiteSettings, channelInfo.Channel);
-                        keyProp.SetValue(currentSite.SiteSettings, SecureConfig.Encrypt(channelInfo.BlowfishKey));
-                    }
-
-                    channelIndex++;
-                    if (channelIndex > 20) break;
-                }
-
-                // Clear any remaining channels
-                for (int i = channelIndex; i <= 20; i++)
-                {
-                    var channelProp = currentSite.SiteSettings.GetType().GetProperty($"Chan{i}");
-                    var keyProp = currentSite.SiteSettings.GetType().GetProperty($"BlowfishKey{i}");
-
-                    if (channelProp != null && keyProp != null)
-                    {
-                        channelProp.SetValue(currentSite.SiteSettings, "");
-                        keyProp.SetValue(currentSite.SiteSettings, "");
-                    }
-                }
+                // Save channels from listbox (also pushes the raw keys into the running
+                // IRC clients, same as the chatbox does).
+                ApplyChannelListToSiteSettings();
 
                 // Ensure the sites directory exists
                 string sitesDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sites");
@@ -1676,6 +1687,21 @@ namespace RaceTrade
                     channelProp.SetValue(currentSite.SiteSettings, "");
                     keyProp.SetValue(currentSite.SiteSettings, "");
                 }
+            }
+
+            // Chatbox parity: push the RAW keys straight into the running IRC clients so
+            // they take effect immediately - no restart and no DPAPI round-trip involved.
+            var siteName = currentSite.SiteSettings.Sitename;
+            if (!string.IsNullOrWhiteSpace(siteName))
+            {
+                var liveKeys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (ChannelInfo ci in ListboxChannels.Items)
+                {
+                    if (!string.IsNullOrWhiteSpace(ci.Channel) && !string.IsNullOrWhiteSpace(ci.BlowfishKey))
+                        liveKeys[ci.Channel] = ci.BlowfishKey;
+                }
+
+                MainApp.ApplyChannelKeysToRunningClients(siteName, liveKeys);
             }
         }
 

@@ -85,6 +85,40 @@ namespace RaceTrade
         private readonly Dictionary<string, IRCClient> raceIrcClients = new Dictionary<string, IRCClient>();
         private readonly Dictionary<string, ChatIrcClient> chatIrcClients = new Dictionary<string, ChatIrcClient>();
 
+        private static MainApp _instance;
+
+        /// <summary>
+        /// Installs channel keys straight into the RUNNING IRC clients for a site using the
+        /// raw (un-encrypted) key — exactly what the chatbox's SetChannelKey does. This means
+        /// keys entered in the site editor take effect immediately, without a restart and
+        /// without depending on the DPAPI encrypt/decrypt round-trip.
+        /// </summary>
+        public static void ApplyChannelKeysToRunningClients(string siteName, IDictionary<string, string> channelKeys)
+        {
+            var app = _instance;
+            if (app == null || string.IsNullOrWhiteSpace(siteName) || channelKeys == null)
+                return;
+
+            foreach (var kvp in channelKeys)
+            {
+                if (string.IsNullOrWhiteSpace(kvp.Key) || string.IsNullOrWhiteSpace(kvp.Value))
+                    continue;
+
+                try
+                {
+                    if (app.raceIrcClients.TryGetValue(siteName, out var raceClient))
+                        raceClient.SetChannelKey(kvp.Key, kvp.Value, persist: false);
+
+                    if (app.chatIrcClients.TryGetValue(siteName, out var chatClient))
+                        chatClient.SetChannelKey(kvp.Key, kvp.Value, persist: false);
+                }
+                catch (Exception ex)
+                {
+                    LogManager.Error($"Failed to apply Blowfish key for {kvp.Key} on [{siteName}]: {ex.Message}");
+                }
+            }
+        }
+
 
        // private enum LogLayout
       ////  {
@@ -101,6 +135,7 @@ namespace RaceTrade
         {
             InitializeComponent();
             LoadConfigIntoDropdown();
+            _instance = this;
             CbftpRacer.SetMainForm(this);
             this.Move += Form1_Move;
             this.Resize += Form1_Resize;

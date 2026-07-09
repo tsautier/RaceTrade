@@ -133,12 +133,27 @@ public class IRCClient
         }
         this.botName = config.SiteSettings.BotName;
 
-        this.channels = new List<string>
-    {
-        config.SiteSettings.Chan1,
-        config.SiteSettings.Chan2,
-        config.SiteSettings.Chan3
-    }.Where(c => !string.IsNullOrEmpty(c)).ToList();
+        // Monitor ALL configured channels (Chan1..Chan20), not just the first three.
+        // The site editor supports 20 channels and LoadChannelKeys loads keys for all 20,
+        // so anything past Chan3 was never joined/monitored and its messages were ignored
+        // before decryption ever happened.
+        this.channels = new List<string>();
+        for (int i = 1; i <= 20; i++)
+        {
+            var chanProp = config.SiteSettings.GetType().GetProperty($"Chan{i}");
+            var chanValue = (chanProp?.GetValue(config.SiteSettings) as string)?.Trim();
+
+            if (string.IsNullOrWhiteSpace(chanValue))
+                continue;
+
+            // Normalize exactly like SetChannelKey/LoadChannelKeys do, so a channel
+            // written without '#' (or with different casing) still matches.
+            if (!chanValue.StartsWith("#") && !chanValue.StartsWith("PM:"))
+                chanValue = "#" + chanValue.TrimStart('#');
+
+            if (!this.channels.Contains(chanValue, StringComparer.OrdinalIgnoreCase))
+                this.channels.Add(chanValue);
+        }
 
         // Handle announce modes (Global PreBot, PreBot, SiteBot)
         if (isGlobalPrebot)
