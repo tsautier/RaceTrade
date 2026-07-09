@@ -3,6 +3,8 @@ using RaceTrade;
 using RaceTrader;
 using SQLitePCL;
 using System;
+using System.Drawing;
+using System.Drawing.Text;
 using System.IO;
 using System.Windows.Forms;
 
@@ -15,6 +17,7 @@ namespace WinFormsTraderApp
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            ConfigureAntdUi();
 
             try
             {
@@ -37,6 +40,19 @@ namespace WinFormsTraderApp
 
             RaceHelper.LoadAllSiteConfigs();
             Application.Run(new RaceTrade.MainApp());
+        }
+
+        private static void ConfigureAntdUi()
+        {
+            AntdUI.Config.IsDark = true;
+            AntdUI.Config.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+            AntdUI.Config.TextRenderingHighQuality = true;
+            AntdUI.Config.ShadowEnabled = true;
+            AntdUI.Style.SetPrimary(Color.FromArgb(0, 229, 214));
+            AntdUI.Style.SetSuccess(Color.FromArgb(42, 199, 122));
+            AntdUI.Style.SetError(Color.FromArgb(255, 76, 92));
+            AntdUI.Style.SetWarning(Color.FromArgb(245, 172, 70));
+            AntdUI.Style.SetInfo(Color.FromArgb(0, 168, 255));
         }
 
         private static void CreateRequiredDirectories()

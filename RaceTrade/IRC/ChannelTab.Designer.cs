@@ -73,28 +73,29 @@ namespace RaceTrade
             // 
             // inputBox
             // 
+            this.inputBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.inputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(20)))), ((int)(((byte)(28)))));
             this.inputBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.inputBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.inputBox.Font = new System.Drawing.Font("Cascadia Mono", 9F);
             this.inputBox.ForeColor = System.Drawing.Color.White;
             this.inputBox.Location = new System.Drawing.Point(5, 5);
             this.inputBox.Name = "inputBox";
-            this.inputBox.Size = new System.Drawing.Size(915, 25);
+            this.inputBox.Size = new System.Drawing.Size(910, 25);
             this.inputBox.TabIndex = 0;
             this.inputBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.InputBox_KeyDown);
             // 
             // sendButton
             // 
+            this.sendButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.sendButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(50)))), ((int)(((byte)(64)))));
-            this.sendButton.Dock = System.Windows.Forms.DockStyle.Right;
             this.sendButton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(48)))), ((int)(((byte)(62)))));
             this.sendButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.sendButton.Font = new System.Drawing.Font("Cascadia Mono", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.sendButton.ForeColor = System.Drawing.Color.White;
             this.sendButton.Location = new System.Drawing.Point(920, 5);
             this.sendButton.Name = "sendButton";
-            this.sendButton.Size = new System.Drawing.Size(75, 30);
+            this.sendButton.Size = new System.Drawing.Size(75, 25);
             this.sendButton.TabIndex = 1;
             this.sendButton.Text = "Send";
             this.sendButton.UseVisualStyleBackColor = false;
@@ -108,7 +109,7 @@ namespace RaceTrade
             this.mainPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainPanel.Location = new System.Drawing.Point(0, 0);
             this.mainPanel.Name = "mainPanel";
-            this.mainPanel.Size = new System.Drawing.Size(1000, 560);
+            this.mainPanel.Size = new System.Drawing.Size(1000, 565);
             this.mainPanel.TabIndex = 3;
             // 
             // userListPanel
@@ -127,11 +128,11 @@ namespace RaceTrade
             this.inputPanel.Controls.Add(this.inputBox);
             this.inputPanel.Controls.Add(this.sendButton);
             this.inputPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.inputPanel.Location = new System.Drawing.Point(0, 560);
+            this.inputPanel.Location = new System.Drawing.Point(0, 565);
             this.inputPanel.Margin = new System.Windows.Forms.Padding(0);
             this.inputPanel.Name = "inputPanel";
             this.inputPanel.Padding = new System.Windows.Forms.Padding(5);
-            this.inputPanel.Size = new System.Drawing.Size(1000, 40);
+            this.inputPanel.Size = new System.Drawing.Size(1000, 35);
             this.inputPanel.TabIndex = 4;
             // 
             // ChannelTab

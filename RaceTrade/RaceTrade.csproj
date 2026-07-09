@@ -189,6 +189,9 @@
     <Compile Include="UI\Forms\GlobalBlacklistForm.Designer.cs">
       <DependentUpon>GlobalBlacklistForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\Forms\ChangelogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="UI\Forms\Helpform.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -271,6 +274,9 @@
     <Compile Include="Database\TVMazeCache.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="AntdUI, Version=2.4.2.0, Culture=neutral, PublicKeyToken=0e24e5118ea3d6af, processorArchitecture=MSIL">
+      <HintPath>..\packages\AntdUI.2.4.2\lib\net48\AntdUI.dll</HintPath>
+    </Reference>
     <Reference Include="BouncyCastle.Crypto, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\BouncyCastle.NetCore.2.2.1\lib\net45\BouncyCastle.Crypto.dll</HintPath>
     </Reference>

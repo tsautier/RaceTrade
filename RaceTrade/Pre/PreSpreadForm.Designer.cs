@@ -300,7 +300,7 @@
             this.btnSaveSiteConfig.FlatAppearance.BorderSize = 0;
             this.btnSaveSiteConfig.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSaveSiteConfig.ForeColor = System.Drawing.Color.White;
-            this.btnSaveSiteConfig.Location = new System.Drawing.Point(434, 276);
+            this.btnSaveSiteConfig.Location = new System.Drawing.Point(434, 263);
             this.btnSaveSiteConfig.Name = "btnSaveSiteConfig";
             this.btnSaveSiteConfig.Size = new System.Drawing.Size(133, 37);
             this.btnSaveSiteConfig.TabIndex = 8;
@@ -314,9 +314,9 @@
             this.btnSendPre.FlatAppearance.BorderSize = 0;
             this.btnSendPre.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSendPre.ForeColor = System.Drawing.Color.White;
-            this.btnSendPre.Location = new System.Drawing.Point(13, 542);
+            this.btnSendPre.Location = new System.Drawing.Point(13, 532);
             this.btnSendPre.Name = "btnSendPre";
-            this.btnSendPre.Size = new System.Drawing.Size(573, 43);
+            this.btnSendPre.Size = new System.Drawing.Size(573, 38);
             this.btnSendPre.TabIndex = 2;
             this.btnSendPre.Text = "SITE PRE (Checked Sites)";
             this.btnSendPre.UseVisualStyleBackColor = false;
@@ -410,7 +410,7 @@
             this.listBoxReleases.ItemHeight = 16;
             this.listBoxReleases.Location = new System.Drawing.Point(13, 238);
             this.listBoxReleases.Name = "listBoxReleases";
-            this.listBoxReleases.Size = new System.Drawing.Size(559, 290);
+            this.listBoxReleases.Size = new System.Drawing.Size(559, 274);
             this.listBoxReleases.TabIndex = 6;
             this.listBoxReleases.SelectedIndexChanged += new System.EventHandler(this.ListBoxReleases_SelectedIndexChanged);
 
@@ -420,9 +420,9 @@
             this.btnDeleteRelease.FlatAppearance.BorderSize = 0;
             this.btnDeleteRelease.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnDeleteRelease.ForeColor = System.Drawing.Color.White;
-            this.btnDeleteRelease.Location = new System.Drawing.Point(13, 542);
+            this.btnDeleteRelease.Location = new System.Drawing.Point(13, 532);
             this.btnDeleteRelease.Name = "btnDeleteRelease";
-            this.btnDeleteRelease.Size = new System.Drawing.Size(133, 43);
+            this.btnDeleteRelease.Size = new System.Drawing.Size(133, 38);
             this.btnDeleteRelease.TabIndex = 9;
             this.btnDeleteRelease.Text = "Delete Release";
             this.btnDeleteRelease.UseVisualStyleBackColor = false;
@@ -434,9 +434,9 @@
             this.btnDistribute.FlatAppearance.BorderSize = 0;
             this.btnDistribute.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnDistribute.ForeColor = System.Drawing.Color.White;
-            this.btnDistribute.Location = new System.Drawing.Point(156, 542);
+            this.btnDistribute.Location = new System.Drawing.Point(160, 532);
             this.btnDistribute.Name = "btnDistribute";
-            this.btnDistribute.Size = new System.Drawing.Size(200, 43);
+            this.btnDistribute.Size = new System.Drawing.Size(196, 38);
             this.btnDistribute.TabIndex = 7;
             this.btnDistribute.Text = "Distribute Release";
             this.btnDistribute.UseVisualStyleBackColor = false;
@@ -448,9 +448,9 @@
             this.btnCheckCompletion.FlatAppearance.BorderSize = 0;
             this.btnCheckCompletion.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCheckCompletion.ForeColor = System.Drawing.Color.White;
-            this.btnCheckCompletion.Location = new System.Drawing.Point(366, 542);
+            this.btnCheckCompletion.Location = new System.Drawing.Point(370, 532);
             this.btnCheckCompletion.Name = "btnCheckCompletion";
-            this.btnCheckCompletion.Size = new System.Drawing.Size(206, 43);
+            this.btnCheckCompletion.Size = new System.Drawing.Size(202, 38);
             this.btnCheckCompletion.TabIndex = 8;
             this.btnCheckCompletion.Text = "Check Completion";
             this.btnCheckCompletion.UseVisualStyleBackColor = false;
@@ -493,7 +493,7 @@
             this.richTextBoxCompletionLog.Location = new System.Drawing.Point(13, 25);
             this.richTextBoxCompletionLog.Name = "richTextBoxCompletionLog";
             this.richTextBoxCompletionLog.ReadOnly = true;
-            this.richTextBoxCompletionLog.Size = new System.Drawing.Size(1060, 146);
+            this.richTextBoxCompletionLog.Size = new System.Drawing.Size(1048, 146);
             this.richTextBoxCompletionLog.TabIndex = 0;
             this.richTextBoxCompletionLog.Text = "";
 
@@ -502,9 +502,9 @@
             this.btnClearLog.FlatAppearance.BorderSize = 0;
             this.btnClearLog.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnClearLog.ForeColor = System.Drawing.Color.White;
-            this.btnClearLog.Location = new System.Drawing.Point(1080, 25);
+            this.btnClearLog.Location = new System.Drawing.Point(1087, 25);
             this.btnClearLog.Name = "btnClearLog";
-            this.btnClearLog.Size = new System.Drawing.Size(107, 31);
+            this.btnClearLog.Size = new System.Drawing.Size(98, 36);
             this.btnClearLog.TabIndex = 1;
             this.btnClearLog.Text = "Clear Log";
             this.btnClearLog.UseVisualStyleBackColor = false;

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ using RaceTrader;
 
 namespace RaceTrade
 {
-    public partial class MainApp : Form
+    public partial class MainApp : AntdUI.Window
     {
         private List<string> siteFiles = new List<string>();
         private bool isTraderRunning = false;
@@ -31,6 +32,18 @@ namespace RaceTrade
 
         private const string LOG_WINDOW_SETTINGS_KEY = "log_window_layout";
         private const string COMMUNITY_GITHUB_URL = "https://github.com/Bl4DiEDiEBL4/RaceTrade";
+        private const int WM_NCHITTEST = 0x0084;
+        private const int WM_NCLBUTTONDOWN = 0x00A1;
+        private const int HTCLIENT = 1;
+        private const int HTCAPTION = 2;
+        private const int DragTopStripHeight = 34;
+        private const int RightChromeReserveWidth = 180;
+
+        [DllImport("user32.dll")]
+        private static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
         private List<Thread> ircThreads = new List<Thread>();
         private Dictionary<string, SiteConfig> siteConfigs = new Dictionary<string, SiteConfig>();
@@ -55,6 +68,7 @@ namespace RaceTrade
 
 
         private HelpForm helpForm;
+        private ChangelogForm changelogForm;
         private RaceTrader.FtpClientForm _ftpClientForm;
         private IrcLog logOutput;
         private TabbedIrcLog tabbedIrcLog;
@@ -156,6 +170,7 @@ namespace RaceTrade
 
             WireDockLogsLabel();
             WireCommunityLinkLabel();
+            WireWindowDragSurface();
         }
 
         private void WireDockLogsLabel()
@@ -224,6 +239,59 @@ namespace RaceTrade
             }
         }
 
+        private void WireWindowDragSurface()
+        {
+            WireDragControl(this);
+            WireDragControl(contentPanel);
+            WireDragControl(sidebarPanel);
+            WireDragControl(logoPanel);
+            WireDragControl(titleLabel);
+            WireDragControl(label1);
+            WireDragControl(pageTitleLabel);
+            WireDragControl(navMenuLabel);
+            WireDragControl(statusTitleLabel);
+            WireDragControl(cardCbftpTitle);
+            WireDragControl(cardSitesTitle);
+            WireDragControl(cardPrebotsTitle);
+            WireDragControl(cardLogsTitle);
+            WireDragControl(cardToolsTitle);
+        }
+
+        private void WireDragControl(Control control)
+        {
+            if (control == null) return;
+
+            control.MouseDown -= DashboardDragSurface_MouseDown;
+            control.MouseDown += DashboardDragSurface_MouseDown;
+        }
+
+        private void DashboardDragSurface_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left) return;
+
+            ReleaseCapture();
+            SendMessage(Handle, WM_NCLBUTTONDOWN, (IntPtr)HTCAPTION, IntPtr.Zero);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            if (m.Msg != WM_NCHITTEST || (int)m.Result != HTCLIENT) return;
+
+            var screenPoint = new Point(
+                unchecked((short)(long)m.LParam),
+                unchecked((short)((long)m.LParam >> 16)));
+            var clientPoint = PointToClient(screenPoint);
+
+            if (clientPoint.Y >= 0 &&
+                clientPoint.Y <= DragTopStripHeight &&
+                clientPoint.X < Width - RightChromeReserveWidth)
+            {
+                m.Result = (IntPtr)HTCAPTION;
+            }
+        }
+
         //protected override CreateParams CreateParams
         //{
         //    get
@@ -278,6 +346,9 @@ namespace RaceTrade
         private void StyleDashboard()
         {
             // Base dark theme for the whole window.
+            Dark = true;
+            Mode = AntdUI.TAMode.Dark;
+            EnableHitTest = true;
             ThemeManager.ApplyTheme(this);
 
             // Surfaces: the whole right content area is one gradient panel; the
@@ -309,26 +380,25 @@ namespace RaceTrade
                     e.Graphics.FillPolygon(br, pts);
             };
 
-            // Rounded card surfaces.
+            // AntdUI card surfaces.
             foreach (var card in new[] { statusCard, cardCbftp, cardSites, cardPrebots, cardLogs, cardTools })
-                ThemeManager.StyleCard(card);
+                StyleDashboardCard(card);
 
             // Card titles.
             foreach (var lbl in new[] { cardCbftpTitle, cardSitesTitle, cardPrebotsTitle, cardLogsTitle, cardToolsTitle })
                 lbl.Font = new Font(ThemeManager.Fonts.UiFamily, 9F, FontStyle.Bold);
 
-            // Card action buttons (rounded + UI font).
+            // AntdUI dashboard action buttons.
             foreach (var b in new[] {
                 Add_Cbftp_button, Add_Ccbftp_Sections, Add_cbftp_site, Cbftp_Edit_Site, Sync_From_Cbftp_Button,
                 add_sites_button, Edit_sites_button,
                 Add_PreBot_button, Prebot_edit_button, buttonImportPredb,
                 ToggleCBFTPLog, ToggleIRCLog, ToggleApplicationLog, ToggleRaceLog,
                 button2, blacklist_add })
-                ThemeManager.StyleActionButton(b);
+                StyleDashboardButton(b);
 
-            // Exit stays red, but rounded like the rest.
-            ThemeManager.StyleActionButton(exitButton);
-            ThemeManager.StyleDangerButton(exitButton);
+            // Exit stays danger-toned.
+            StyleDashboardButton(exitButton, AntdUI.TTypeMini.Error);
 
             // Big trader Start/Stop button.
             Enable_Disable_Racer_button.Font = new Font(ThemeManager.Fonts.UiFamily, 11F, FontStyle.Bold);
@@ -348,10 +418,141 @@ namespace RaceTrade
             ThemeManager.StyleNavButton(Pre_button, false, NavGlyph("flag"));
             ThemeManager.StyleNavButton(button1, false, NavGlyph("settings"));
             ThemeManager.StyleNavButton(Help_button, false, NavGlyph("help"));
+            ThemeManager.StyleNavButton(Changelog_button, false, NavGlyph("changelog"));
 
             UpdateTraderButton();
             UpdateLogButtonStates();
             LoadConfigIntoDropdown();
+        }
+
+        private static void StyleDashboardCard(AntdUI.Panel card)
+        {
+            if (card == null) return;
+
+            card.Back = ThemeManager.Colors.Surface2;
+            card.BackColor = ThemeManager.Colors.Surface2;
+            card.ForeColor = ThemeManager.Colors.Foreground;
+            card.BorderColor = ThemeManager.Colors.Border;
+            card.BorderWidth = 1F;
+            card.Radius = 8;
+            card.Shadow = 0;
+            card.AutoContainerBgTransparent = true;
+            ThemeManager.SetDoubleBuffered(card);
+        }
+
+        private static void StyleDashboardButton(AntdUI.Button button, AntdUI.TTypeMini? forcedType = null)
+        {
+            if (button == null) return;
+
+            button.Type = forcedType ?? ResolveDashboardButtonType(button);
+            button.Shape = AntdUI.TShape.Default;
+            button.Radius = 2;
+            button.BorderWidth = 1F;
+            button.Font = new Font(ThemeManager.Fonts.UiFamily, 9.5F, FontStyle.Regular);
+            ApplyDashboardButtonPalette(button);
+        }
+
+        private static void ApplyDashboardButtonPalette(AntdUI.Button button)
+        {
+            Color back;
+            Color hover;
+            Color active;
+            Color border;
+            Color fore = Color.FromArgb(232, 238, 247);
+
+            switch (button.Type)
+            {
+                case AntdUI.TTypeMini.Success:
+                    back = Color.FromArgb(39, 132, 92);
+                    hover = Color.FromArgb(46, 154, 108);
+                    active = Color.FromArgb(31, 113, 78);
+                    border = Color.FromArgb(55, 177, 123);
+                    break;
+
+                case AntdUI.TTypeMini.Error:
+                    back = Color.FromArgb(146, 61, 76);
+                    hover = Color.FromArgb(170, 70, 88);
+                    active = Color.FromArgb(124, 51, 65);
+                    border = Color.FromArgb(211, 91, 109);
+                    fore = Color.FromArgb(255, 238, 241);
+                    break;
+
+                case AntdUI.TTypeMini.Primary:
+                    back = Color.FromArgb(22, 114, 132);
+                    hover = Color.FromArgb(25, 137, 158);
+                    active = Color.FromArgb(18, 94, 110);
+                    border = Color.FromArgb(0, 196, 210);
+                    break;
+
+                default:
+                    back = ThemeManager.Colors.ButtonBackground;
+                    hover = ThemeManager.Colors.ButtonHover;
+                    active = ThemeManager.Colors.ButtonPressed;
+                    border = ThemeManager.Colors.Border;
+                    break;
+            }
+
+            button.DefaultBack = back;
+            button.BackColor = back;
+            button.BackHover = hover;
+            button.BackActive = active;
+            button.DefaultBorderColor = border;
+            button.ForeColor = fore;
+            button.ForeHover = Color.FromArgb(248, 252, 255);
+            button.ForeActive = Color.FromArgb(248, 252, 255);
+        }
+
+        private static AntdUI.TTypeMini ResolveDashboardButtonType(AntdUI.Button button)
+        {
+            string key = $"{button.Name} {button.Text}";
+
+            if (ContainsAny(key, "delete", "remove", "exit", "cancel", "clear", "stop"))
+                return AntdUI.TTypeMini.Error;
+
+            if (ContainsAny(key, "add", "import", "sync", "start", "save"))
+                return AntdUI.TTypeMini.Success;
+
+            if (ContainsAny(key, "edit", "section", "test", "refresh", "fetch", "send", "blacklist"))
+                return AntdUI.TTypeMini.Primary;
+
+            return AntdUI.TTypeMini.Default;
+        }
+
+        private static void SetDashboardToggleButton(AntdUI.Button button, bool active)
+        {
+            if (button == null) return;
+
+            button.Type = active ? AntdUI.TTypeMini.Primary : AntdUI.TTypeMini.Default;
+            button.Shape = AntdUI.TShape.Default;
+            button.Radius = 2;
+            button.BorderWidth = 1F;
+            ApplyDashboardButtonPalette(button);
+
+            if (!active)
+            {
+                var back = Color.FromArgb(28, 33, 45);
+                var hover = Color.FromArgb(65, 76, 100);
+                var activeBack = Color.FromArgb(54, 64, 84);
+                button.DefaultBack = back;
+                button.BackColor = back;
+                button.BackHover = hover;
+                button.BackActive = activeBack;
+                button.DefaultBorderColor = Color.FromArgb(78, 88, 110);
+                button.ForeColor = Color.FromArgb(226, 232, 242);
+                button.ForeHover = Color.FromArgb(255, 255, 255);
+                button.ForeActive = Color.FromArgb(255, 255, 255);
+            }
+        }
+
+        private static bool ContainsAny(string value, params string[] terms)
+        {
+            foreach (var term in terms)
+            {
+                if (value.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+            }
+
+            return false;
         }
 
         private static string NavGlyph(string key)
@@ -365,6 +566,7 @@ namespace RaceTrade
                 case "flag": code = 0xE7C1; break;
                 case "settings": code = 0xE713; break;
                 case "help": code = 0xE897; break;
+                case "changelog": code = 0xE8A5; break;
                 default: return null;
             }
             return ((char)code).ToString();
@@ -630,12 +832,12 @@ namespace RaceTrade
             {
                 if (applicationLog.Visible)
                 {
-                    ToggleApplicationLog.BackColor = ThemeManager.Colors.ToggleOn;
+                    SetDashboardToggleButton(ToggleApplicationLog, true);
                     ToggleApplicationLog.Text = "App";
                 }
                 else
                 {
-                    ToggleApplicationLog.BackColor = ThemeManager.Colors.ToggleOff;
+                    SetDashboardToggleButton(ToggleApplicationLog, false);
                     ToggleApplicationLog.Text = "App (Off)";
                 }
             }
@@ -645,12 +847,12 @@ namespace RaceTrade
             {
                 if (cbftpLog.Visible)
                 {
-                    ToggleCBFTPLog.BackColor = ThemeManager.Colors.ToggleOn;
+                    SetDashboardToggleButton(ToggleCBFTPLog, true);
                     ToggleCBFTPLog.Text = "Cbftp Log";
                 }
                 else
                 {
-                    ToggleCBFTPLog.BackColor = ThemeManager.Colors.ToggleOff;
+                    SetDashboardToggleButton(ToggleCBFTPLog, false);
                     ToggleCBFTPLog.Text = "Cbftp (Off)";
                 }
             }
@@ -660,13 +862,28 @@ namespace RaceTrade
             {
                 if (logOutput.Visible)
                 {
-                    ToggleIRCLog.BackColor = ThemeManager.Colors.ToggleOn;
+                    SetDashboardToggleButton(ToggleIRCLog, true);
                     ToggleIRCLog.Text = "IRC Log";
                 }
                 else
                 {
-                    ToggleIRCLog.BackColor = ThemeManager.Colors.ToggleOff;
+                    SetDashboardToggleButton(ToggleIRCLog, false);
                     ToggleIRCLog.Text = "IRC (Off)";
+                }
+            }
+
+            // Race Log button state
+            if (raceLog != null && !raceLog.IsDisposed)
+            {
+                if (raceLog.Visible)
+                {
+                    SetDashboardToggleButton(ToggleRaceLog, true);
+                    ToggleRaceLog.Text = "Race Log";
+                }
+                else
+                {
+                    SetDashboardToggleButton(ToggleRaceLog, false);
+                    ToggleRaceLog.Text = "Race (Off)";
                 }
             }
         }
@@ -691,18 +908,20 @@ namespace RaceTrade
 
         private void ToggleApplicationLog_Click(object sender, EventArgs e)
         {
+            if (LogManager.DisableApplicationLog) return;
+
             if (applicationLog != null && !applicationLog.IsDisposed)
             {
                 if (applicationLog.Visible)
                 {
                     applicationLog.Hide();
-                    ToggleApplicationLog.BackColor = ThemeManager.Colors.ToggleOff;
+                    SetDashboardToggleButton(ToggleApplicationLog, false);
                     ToggleApplicationLog.Text = "App (Off)";
                 }
                 else
                 {
                     applicationLog.Show();
-                    ToggleApplicationLog.BackColor = ThemeManager.Colors.ToggleOn;
+                    SetDashboardToggleButton(ToggleApplicationLog, true);
                     ToggleApplicationLog.Text = "App";
                 }
             }
@@ -710,18 +929,20 @@ namespace RaceTrade
 
         private void ToggleCBFTPLog_Click(object sender, EventArgs e)
         {
+            if (LogManager.DisableCbftpLog) return;
+
             if (cbftpLog != null && !cbftpLog.IsDisposed)
             {
                 if (cbftpLog.Visible)
                 {
                     cbftpLog.Hide();
-                    ToggleCBFTPLog.BackColor = ThemeManager.Colors.ToggleOff;
+                    SetDashboardToggleButton(ToggleCBFTPLog, false);
                     ToggleCBFTPLog.Text = "Cbftp (Off)";
                 }
                 else
                 {
                     cbftpLog.Show();
-                    ToggleCBFTPLog.BackColor = ThemeManager.Colors.ToggleOn;
+                    SetDashboardToggleButton(ToggleCBFTPLog, true);
                     ToggleCBFTPLog.Text = "Cbftp Log";
                 }
             }
@@ -734,13 +955,13 @@ namespace RaceTrade
                 if (logOutput.Visible)
                 {
                     logOutput.Hide();
-                    ToggleIRCLog.BackColor = ThemeManager.Colors.ToggleOff;
+                    SetDashboardToggleButton(ToggleIRCLog, false);
                     ToggleIRCLog.Text = "IRC (Off)";
                 }
                 else
                 {
                     logOutput.Show();
-                    ToggleIRCLog.BackColor = ThemeManager.Colors.ToggleOn;
+                    SetDashboardToggleButton(ToggleIRCLog, true);
                     ToggleIRCLog.Text = "IRC Log";
                 }
             }
@@ -1004,10 +1225,13 @@ namespace RaceTrade
                     LogManager.DisableApplicationLog = disableAppLog;
 
 
-                    // optionally disable toggle buttons on main form
-                    ToggleRaceLog.Enabled = !disableRaceLog;
-                    ToggleCBFTPLog.Enabled = !disableCbftpLog;
-                    ToggleApplicationLog.Enabled = !disableAppLog;
+                    // Keep AntdUI buttons visually readable; handlers no-op when a log is disabled.
+                    ToggleRaceLog.Enabled = true;
+                    ToggleCBFTPLog.Enabled = true;
+                    ToggleApplicationLog.Enabled = true;
+                    ToggleRaceLog.Cursor = disableRaceLog ? Cursors.No : Cursors.Hand;
+                    ToggleCBFTPLog.Cursor = disableCbftpLog ? Cursors.No : Cursors.Hand;
+                    ToggleApplicationLog.Cursor = disableAppLog ? Cursors.No : Cursors.Hand;
 
                     LogManager.Info($"Settings loaded - App: {appName ?? "RaceTrader"}, Debug: {debugEnabled}");
                 }
@@ -1090,18 +1314,20 @@ namespace RaceTrade
         }
         private void ToggleRaceLog_Click(object sender, EventArgs e)
         {
+            if (LogManager.DisableRaceLog) return;
+
             if (raceLog != null && !raceLog.IsDisposed)
             {
                 if (raceLog.Visible)
                 {
                     raceLog.Hide();
-                    ToggleRaceLog.BackColor = ThemeManager.Colors.ToggleOff;
+                    SetDashboardToggleButton(ToggleRaceLog, false);
                     ToggleRaceLog.Text = "Race (Off)";
                 }
                 else
                 {
                     raceLog.Show();
-                    ToggleRaceLog.BackColor = ThemeManager.Colors.ToggleOn;
+                    SetDashboardToggleButton(ToggleRaceLog, true);
                     ToggleRaceLog.Text = "Race Log";
                 }
             }
@@ -2487,6 +2713,20 @@ namespace RaceTrade
 
         }
 
+        private void Changelog_button_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ToggleWindow(ref changelogForm, () => new ChangelogForm());
+            }
+            catch (Exception ex)
+            {
+                LogManager.Exception(ex, "Error opening changelog");
+                MessageBox.Show($"Error opening changelog:\n{ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         /// <summary>
         /// Starts IRC connections for chat only (without processing releases)
         /// </summary>
@@ -3041,7 +3281,7 @@ namespace RaceTrade
                 if (result != DialogResult.Yes)
                 {
                     buttonImportPredb.Enabled = true;
-                    buttonImportPredb.Text = "Import from predb.club";
+                    buttonImportPredb.Text = "Import";
                     return;
                 }
 
@@ -3066,7 +3306,7 @@ namespace RaceTrade
             {
                 // Re-enable button
                 buttonImportPredb.Enabled = true;
-                buttonImportPredb.Text = "Import from predb.club";
+                buttonImportPredb.Text = "Import";
             }
         }
 

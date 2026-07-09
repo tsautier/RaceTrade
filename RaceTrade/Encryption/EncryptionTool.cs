@@ -8,7 +8,7 @@ namespace RaceTrade
     /// One-time utility to encrypt all existing passwords and Blowfish keys.
     /// Run this ONCE to encrypt your existing configuration files.
     /// </summary>
-    public partial class EncryptionTool : Form
+    public partial class EncryptionTool : AntdUI.Window
     {
         public EncryptionTool()
         {

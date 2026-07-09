@@ -13,7 +13,7 @@ using System.Linq;
 
 namespace RaceTrade
 {
-    public partial class PreBot : Form
+    public partial class PreBot : AntdUI.Window
     {
         private string prebotFilePath;
         private PreBotConfig prebotConfig;
@@ -524,7 +524,7 @@ namespace RaceTrade
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 9)
             };
-            closeButton.FlatAppearance.BorderSize = 0;
+            ThemeManager.StyleDangerButton(closeButton);
             closeButton.Click += (s, e) => resultForm.Close();
 
             resultForm.Controls.Add(resultRichTextBox);

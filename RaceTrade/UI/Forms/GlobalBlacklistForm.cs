@@ -4,7 +4,7 @@ using RaceTrade;
 
 namespace RaceTrader
 {
-    public partial class GlobalBlacklistForm : Form
+    public partial class GlobalBlacklistForm : AntdUI.Window
     {
         private MainApp mainApp;
 

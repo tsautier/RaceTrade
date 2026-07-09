@@ -14,7 +14,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
 namespace RaceTrade
 {
-    public partial class AddSite : Form
+    public partial class AddSite : AntdUI.Window
     {
 
         private string currentSiteFilePath; // Path to the currently selected site's JSON file

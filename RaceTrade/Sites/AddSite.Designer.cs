@@ -287,7 +287,7 @@
             this.Exit_button.Name = "Exit_button";
             this.Exit_button.Size = new System.Drawing.Size(67, 30);
             this.Exit_button.TabIndex = 2;
-            this.Exit_button.Text = "Exit";
+            this.Exit_button.Text = "Close";
             this.Exit_button.UseVisualStyleBackColor = false;
             this.Exit_button.Click += new System.EventHandler(this.Exit_button_Click_1);
             // 

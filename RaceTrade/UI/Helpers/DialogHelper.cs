@@ -180,6 +180,7 @@ namespace RaceTrade
             inputForm.Controls.Add(cancelButton);
             inputForm.AcceptButton = confirmButton;
             inputForm.CancelButton = cancelButton;
+            ThemeManager.ApplyTheme(inputForm);
 
             return inputForm.ShowDialog() == DialogResult.OK ? textBox.Text : null;
         }
@@ -260,6 +261,7 @@ namespace RaceTrade
             inputForm.Controls.Add(cancelButton);
             inputForm.AcceptButton = confirmButton;
             inputForm.CancelButton = cancelButton;
+            ThemeManager.ApplyTheme(inputForm);
 
             return inputForm.ShowDialog() == DialogResult.OK ? textBox.Text : null;
         }
@@ -344,7 +346,7 @@ namespace RaceTrade
     /// <summary>
     /// A reusable progress dialog for long-running operations.
     /// </summary>
-    public class ProgressDialog : Form
+    public class ProgressDialog : AntdUI.Window
     {
         private ProgressBar progressBar;
         private Label statusLabel;
@@ -407,7 +409,7 @@ namespace RaceTrade
             this.Controls.Add(progressBar);
             this.Controls.Add(cancelButton);
 
-            ThemeManager.EnableDarkTitleBar(this);
+            ThemeManager.ApplyTheme(this);
         }
 
         public void UpdateProgress(int value, string status = null)

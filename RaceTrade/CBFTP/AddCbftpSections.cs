@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace RaceTrade
 {
-    public partial class AddCbftpSection : Form
+    public partial class AddCbftpSection : AntdUI.Window
     {
         private const string SectionFilePath = "sections/cbftp_sections.json";
         private Dictionary<string, string> cbftpSections;

@@ -9,7 +9,7 @@ using RaceTrade;
 
 namespace RaceTrader
 {
-    public partial class SettingsForm : Form
+    public partial class SettingsForm : AntdUI.Window
     {
         private const string SETTINGS_FILE = "settings/settings.json";
         public string AppName { get; private set; }

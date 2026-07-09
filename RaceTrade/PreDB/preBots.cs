@@ -11,7 +11,7 @@ using System.Windows.Forms;
 
 namespace RaceTrade
 {
-    public partial class preBots : Form
+    public partial class preBots : AntdUI.Window
     {
         public preBots()
         {

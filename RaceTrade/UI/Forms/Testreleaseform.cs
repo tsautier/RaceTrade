@@ -15,13 +15,14 @@ namespace RaceTrader
     /// <summary>
     /// Test form using ONLY existing production methods - zero duplication
     /// </summary>
-    public class TestReleaseForm : Form
+    public class TestReleaseForm : AntdUI.Window
     {
         private TextBox releaseNameTextBox;
         private ComboBox siteComboBox;
         private ComboBox sectionComboBox;
         private Button testButton;
         private Button clearButton;
+        private Button closeButton;
         private RichTextBox resultsTextBox;
         private JObject currentSiteConfig;
         private string currentSiteName;
@@ -188,7 +189,8 @@ namespace RaceTrader
             resultsTextBox = new RichTextBox
             {
                 Location = new Point(20, yPos),
-                Size = new Size(950, 600),
+                Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - yPos - 70),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 BackColor = Color.FromArgb(9, 11, 17),
                 ForeColor = Color.White,
                 Font = new Font("Cascadia Mono", 8.25f),
@@ -197,6 +199,20 @@ namespace RaceTrader
             };
             this.Controls.Add(resultsTextBox);
 
+            closeButton = new Button
+            {
+                Text = "Close",
+                Location = new Point(this.ClientSize.Width - 130, this.ClientSize.Height - 45),
+                Size = new Size(110, 30),
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+                FlatStyle = FlatStyle.Flat,
+                DialogResult = DialogResult.Cancel,
+                Font = new Font("Cascadia Mono", 8.25f)
+            };
+            RaceTrade.ThemeManager.StyleDangerButton(closeButton);
+            closeButton.Click += (s, e) => this.Close();
+            this.Controls.Add(closeButton);
+            this.CancelButton = closeButton;
 
         }
 

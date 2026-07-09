@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace RaceTrade
 {
-    public partial class CbftpSyncForm : Form
+    public partial class CbftpSyncForm : AntdUI.Window
     {
         private List<CbftpSite> fetchedSites;
 

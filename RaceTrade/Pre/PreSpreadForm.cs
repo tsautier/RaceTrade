@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RaceTrade
 {
-    public partial class PreSpreadForm : Form
+    public partial class PreSpreadForm : AntdUI.Window
     {
         private List<PreCbftpServer> cbftpServers = new List<PreCbftpServer>();
         private List<PreSiteConfig> siteConfigs = new List<PreSiteConfig>();
@@ -32,7 +32,7 @@ namespace RaceTrade
 
         /// <summary>
         /// Dashboard-matching visual polish for the Pre window (UI only): elevated
-        /// card-style group boxes, rounded action buttons, accent titles and a
+        /// card-style group boxes, semantic action buttons, accent titles and a
         /// subtle gradient background. No layout or logic changes.
         /// </summary>
         private void StylePreForm()
@@ -60,13 +60,13 @@ namespace RaceTrade
                     btnSaveSiteConfig, btnSendPre, btnRefreshReleases, btnDistribute,
                     btnCheckCompletion, btnDeleteRelease, btnClearLog, btnSaveConfig })
                 {
-                    if (b != null) ThemeManager.StyleActionButton(b);
+                    StylePreActionButton(b);
                 }
 
                 // Close button keeps a danger accent.
                 if (btnClose != null)
                 {
-                    ThemeManager.StyleActionButton(btnClose);
+                    StylePreActionButton(btnClose);
                     ThemeManager.StyleDangerButton(btnClose);
                 }
             }
@@ -74,6 +74,18 @@ namespace RaceTrade
             {
                 // Styling must never break the Pre window.
             }
+        }
+
+        private static void StylePreActionButton(Button button)
+        {
+            if (button == null) return;
+
+            ThemeManager.StyleActionButton(button);
+            button.AutoSize = false;
+            button.Padding = Padding.Empty;
+            button.TextAlign = ContentAlignment.MiddleCenter;
+            button.TextImageRelation = TextImageRelation.Overlay;
+            button.UseCompatibleTextRendering = false;
         }
 
         private void LoadConfiguration()

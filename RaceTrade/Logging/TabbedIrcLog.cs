@@ -511,26 +511,18 @@ namespace RaceTrade
                     Text = "OK",
                     DialogResult = DialogResult.OK,
                     Location = new Point(198, 88),
-                    Size = new Size(84, 30),
-                    BackColor = ThemeManager.Colors.ButtonPrimary,
-                    ForeColor = Color.White,
-                    FlatStyle = FlatStyle.Flat,
-                    UseVisualStyleBackColor = false
+                    Size = new Size(84, 30)
                 };
-                okButton.FlatAppearance.BorderColor = ThemeManager.Colors.ButtonPrimaryHover;
+                ThemeManager.StyleSuccessButton(okButton);
 
                 var cancelButton = new Button
                 {
                     Text = "Cancel",
                     DialogResult = DialogResult.Cancel,
                     Location = new Point(294, 88),
-                    Size = new Size(84, 30),
-                    BackColor = Color.FromArgb(72, 80, 98),
-                    ForeColor = Color.White,
-                    FlatStyle = FlatStyle.Flat,
-                    UseVisualStyleBackColor = false
+                    Size = new Size(84, 30)
                 };
-                cancelButton.FlatAppearance.BorderColor = ThemeManager.Colors.Border;
+                ThemeManager.StyleDangerButton(cancelButton);
 
                 form.Controls.Add(label);
                 form.Controls.Add(textBox);

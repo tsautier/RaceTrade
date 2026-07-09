@@ -12,7 +12,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RaceTrade
 {
-    public partial class CbftpAddSiteForm : Form
+    public partial class CbftpAddSiteForm : AntdUI.Window
     {
         public enum CbftpSiteFormMode
         {

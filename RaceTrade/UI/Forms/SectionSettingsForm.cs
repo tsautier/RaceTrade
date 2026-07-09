@@ -14,7 +14,7 @@ namespace RaceTrader
     /// Section-specific settings form for IMDB and TVMaze filtering
     /// Each section can have its own IMDB (movies) or TVMaze (TV) configuration
     /// </summary>
-    public class SectionSettingsForm : Form
+    public class SectionSettingsForm : AntdUI.Window
     {
         private ComboBox siteComboBox;
         private ComboBox sectionComboBox;

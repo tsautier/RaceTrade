@@ -9,7 +9,7 @@ using Org.BouncyCastle.Tls;
 
 namespace RaceTrade
 {
-    public partial class AddCbftp : Form
+    public partial class AddCbftp : AntdUI.Window
     {
         private string currentCbftpId;
 
@@ -176,7 +176,7 @@ namespace RaceTrade
         }
 
         /// <summary>
-        /// Exit button click handler.
+        /// Close button click handler.
         /// </summary>
         private void button4_Click(object sender, EventArgs e)
         {

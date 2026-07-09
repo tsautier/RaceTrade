@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace RaceTrade
 {
-    public partial class SiteRulesForm : Form
+    public partial class SiteRulesForm : AntdUI.Window
     {
         public SiteRulesForm()
         {

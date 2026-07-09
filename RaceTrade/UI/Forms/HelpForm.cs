@@ -1,19 +1,25 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using AntButton = AntdUI.Button;
+using AntInput = AntdUI.Input;
+using AntPanel = AntdUI.Panel;
 
 namespace RaceTrader
 {
-    public class HelpForm : Form
+    public class HelpForm : AntdUI.Window
     {
         private RichTextBox helpTextBox;
-        private Panel topPanel;
+        private AntPanel topPanel;
         private Label titleLabel;
-        private Button closeButton;
-        private TextBox searchBox;
-        private Button searchButton;
+        private AntButton closeButton;
+        private AntInput searchBox;
+        private AntButton searchButton;
+        private readonly string windowTitle;
+        private readonly string headingText;
+        private readonly string contentText;
 
-        private const string HELP_CONTENT = @"
+        private const string DOCUMENTATION_CONTENT = @"
 ================================================================================
                     RACETRADE COMPLETE GUIDE
               Rules, Mapping, and Configuration Manual
@@ -38,10 +44,53 @@ TABLE OF CONTENTS
 ================================================================================
 1. CHANGELOG
 ================================================================================
-Version 1.0.7b - January 15, 2026
+Version 1.0.8b (Current - Beta)
+--------------------------------
+Released: July 9, 2026
 
-New Features
-FTP Client Browser
+BUG FIXES & THEMING:
+
+- Dashboard cleanup
+  - Moved Exit button away from Tools and placed it bottom-right
+  - Replaced useless ""Secure Connection"" footer with ""linknet / #racetrade""
+  - Added GitHub link action to the footer text
+  - Fixed Race Log dashboard button so it shows ""Race (Off)"" / ""Race Log""
+  - Updated app version text under the logo to v1.0.8b
+
+- Dark theme button polish
+  - Added translucent dark-theme colors for important actions
+  - Save/Add/Import/Start actions use green success styling
+  - Edit/Test/Refresh/Send actions use blue primary styling
+  - Delete/Remove/Close/Cancel/Clear actions use red danger styling
+  - Removed rounded button corners for a sharper RaceTrade look
+  - Applied consistent button styling across forms and dialogs
+
+- FXP browser fixes
+  - Fixed incorrect path appending that could browse completely wrong directories
+  - Added more spacing around Up and Refresh buttons
+  - Fixed release packaging so only the required runtime files are included
+
+- ChatBox fixes
+  - Lightened pure black text colors so bot/status text remains readable
+  - Kept the dark panel look while improving contrast
+  - Fixed Send button height so it matches the input field
+  - Fixed Blowfish key dialog to prefill existing keys
+  - Improved Blowfish dialog OK/Cancel button visibility
+
+- Help and manager form fixes
+  - Restored readable formatting in the Help window
+  - Fixed Affil Spread & Pre Manager button spacing
+  - Fixed centered text on Pre Manager action buttons
+  - Fixed Clear Log button clipping in the Pre Manager
+
+
+Version 1.0.7b (Beta)
+----------------------
+Released: January 2026
+
+NEW FEATURES:
+
+FXP Client Browser
 
 - Dual-pane FTP browser with side-by-side site navigation
 - Direct CBFTP integration using proper REST API endpoints
@@ -56,7 +105,7 @@ FTP Client Browser
 - Context menus for quick operations (Delete, FXP, Refresh)
 
 
-Version 1.0.6b (Current - Beta)
+Version 1.0.6b (Beta)
 --------------------------------
 Released: December 2025
 
@@ -178,7 +227,7 @@ If upgrading from 1.0.5b:
 ================================================================================
 
 
-Version 1.0.5b (Current - Beta)
+Version 1.0.5b (Beta)
 --------------------------------
 Released: December 2025
 
@@ -780,7 +829,7 @@ Requests:
 Bottom buttons:
   - Save   : save entire site configuration.
   - Delete : delete this site.
-  - Exit   : close Site Editor.
+  - Close  : close Site Editor.
   - Help   : open this guide.
 
 ---------------------------------------------
@@ -1253,28 +1302,104 @@ Version 1.0.5b - December 2025
 ";
 
         public HelpForm()
+            : this("RaceTrader Help", "RaceTrader Complete Guide", BuildGuideContent())
         {
+        }
+
+        protected HelpForm(string windowTitle, string headingText, string contentText)
+        {
+            this.windowTitle = windowTitle;
+            this.headingText = headingText;
+            this.contentText = contentText;
             InitializeComponent();
             RaceTrade.ThemeManager.ApplyTheme(this);
+            ApplySyntaxHighlighting();
+        }
+
+        internal static string GetChangelogContent()
+        {
+            int start = FindSectionStart(DOCUMENTATION_CONTENT, "1. CHANGELOG");
+            int end = FindSectionStart(DOCUMENTATION_CONTENT, "2. QUICK START - GET RACING IN 5 MINUTES", start + 1);
+            if (start < 0 || end <= start)
+                return "No changelog content found.";
+
+            return DOCUMENTATION_CONTENT.Substring(start, end - start)
+                .Replace("1. CHANGELOG", "CHANGELOG")
+                .Trim();
+        }
+
+        private static string BuildGuideContent()
+        {
+            string content = RemoveChangelog(DOCUMENTATION_CONTENT);
+
+            return content
+                .Replace("1. Changelog\r\n", "")
+                .Replace("1. Changelog\n", "")
+                .Replace("2. Quick Start - Get Racing in 5 Minutes", "1. Quick Start - Get Racing in 5 Minutes")
+                .Replace("3. Core Concepts - Understanding the System", "2. Core Concepts - Understanding the System")
+                .Replace("4. Configuration Walkthrough", "3. Configuration Walkthrough")
+                .Replace("   4.1 Adding a New Site", "   3.1 Adding a New Site")
+                .Replace("   4.2 Editing an Existing Site", "   3.2 Editing an Existing Site")
+                .Replace("5. Rules System - Complete Reference", "4. Rules System - Complete Reference")
+                .Replace("6. Tag Rules vs Section Rules - CRITICAL DISTINCTION", "5. Tag Rules vs Section Rules - CRITICAL DISTINCTION")
+                .Replace("7. Real-World Examples", "6. Real-World Examples")
+                .Replace("8. Troubleshooting", "7. Troubleshooting")
+                .Replace("9. Advanced Configurations", "8. Advanced Configurations")
+                .Replace("2. QUICK START - GET RACING IN 5 MINUTES", "1. QUICK START - GET RACING IN 5 MINUTES")
+                .Replace("3. CORE CONCEPTS - UNDERSTANDING THE SYSTEM", "2. CORE CONCEPTS - UNDERSTANDING THE SYSTEM")
+                .Replace("4. CONFIGURATION WALKTHROUGH", "3. CONFIGURATION WALKTHROUGH")
+                .Replace("5. RULES SYSTEM - COMPLETE REFERENCE", "4. RULES SYSTEM - COMPLETE REFERENCE")
+                .Replace("6. TAG RULES vs SECTION RULES - CRITICAL DISTINCTION", "5. TAG RULES vs SECTION RULES - CRITICAL DISTINCTION")
+                .Replace("7. REAL-WORLD EXAMPLES", "6. REAL-WORLD EXAMPLES")
+                .Replace("8. TROUBLESHOOTING", "7. TROUBLESHOOTING")
+                .Replace("9. ADVANCED CONFIGURATIONS", "8. ADVANCED CONFIGURATIONS");
+        }
+
+        private static string RemoveChangelog(string content)
+        {
+            int start = FindSectionStart(content, "1. CHANGELOG");
+            int end = FindSectionStart(content, "2. QUICK START - GET RACING IN 5 MINUTES", start + 1);
+            if (start < 0 || end <= start)
+                return content;
+
+            return content.Remove(start, end - start);
+        }
+
+        private static int FindSectionStart(string content, string heading, int startIndex = 0)
+        {
+            int headingIndex = content.IndexOf(heading, startIndex, StringComparison.Ordinal);
+            if (headingIndex < 0)
+                return -1;
+
+            const string separator = "================================================================================";
+            int separatorIndex = content.LastIndexOf(separator, headingIndex, StringComparison.Ordinal);
+            return separatorIndex >= 0 ? separatorIndex : headingIndex;
         }
 
         private void InitializeComponent()
         {
-            this.Text = "RaceTrader Help";
+            this.Text = windowTitle;
             this.Size = new Size(1000, 900);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(22, 26, 36);
+            this.Dark = true;
+            this.Mode = AntdUI.TAMode.Dark;
             this.Font = new Font("Cascadia Mono", 8.25f);
             this.TopMost = true;             // Always on top
             this.ShowIcon = false;           // Remove icon
             this.ControlBox = true;          // Keep the X close button
 
             // Top Panel with title and close button
-            topPanel = new Panel
+            topPanel = new AntPanel
             {
                 Dock = DockStyle.Top,
-                Height = 70,
+                Height = 88,
+                Back = Color.FromArgb(16, 20, 28),
                 BackColor = Color.FromArgb(16, 20, 28),
+                BorderColor = Color.FromArgb(48, 56, 72),
+                BorderWidth = 0F,
+                Radius = 0,
+                Shadow = 0,
                 Padding = new Padding(10)
             };
             this.Controls.Add(topPanel);
@@ -1282,11 +1407,15 @@ Version 1.0.5b - December 2025
             // Title
             titleLabel = new Label
             {
-                Text = "RaceTrader Complete Guide",
-                Font = new Font("Cascadia Mono", 12f, FontStyle.Bold),
+                Text = headingText,
+                Font = new Font("Cascadia Mono", 13.5f, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(10, 10),
-                AutoSize = true
+                BackColor = Color.Transparent,
+                Location = new Point(10, 11),
+                Size = new Size(650, 24),
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleLeft,
+                UseCompatibleTextRendering = false
             };
             topPanel.Controls.Add(titleLabel);
 
@@ -1295,51 +1424,60 @@ Version 1.0.5b - December 2025
             {
                 Text = "Search:",
                 ForeColor = Color.White,
-                Location = new Point(10, 35),
+                BackColor = Color.Transparent,
+                Location = new Point(10, 52),
                 AutoSize = true,
-                Font = new Font("Cascadia Mono", 8.25f)
+                Font = new Font("Cascadia Mono", 8.5f, FontStyle.Bold)
             };
             topPanel.Controls.Add(searchLabel);
 
-            searchBox = new TextBox
+            searchBox = new AntInput
             {
-                Location = new Point(75, 33),
-                Size = new Size(300, 22),
+                Location = new Point(76, 43),
+                Size = new Size(390, 34),
                 BackColor = Color.FromArgb(33, 38, 50),
                 ForeColor = Color.White,
-                Font = new Font("Cascadia Mono", 8.25f)
+                Font = new Font("Cascadia Mono", 9.25f),
+                PlaceholderText = "Find text",
+                BorderColor = Color.FromArgb(72, 84, 108),
+                BorderHover = RaceTrade.ThemeManager.Colors.AccentCyan,
+                BorderActive = RaceTrade.ThemeManager.Colors.AccentCyan,
+                BorderWidth = 1F,
+                PaddingLR = 10,
+                Radius = 3
             };
             searchBox.KeyPress += SearchBox_KeyPress;
             topPanel.Controls.Add(searchBox);
 
-            searchButton = new Button
+            searchButton = new AntButton
             {
                 Text = "Find",
-                Location = new Point(380, 31),
-                Size = new Size(60, 26),
-                BackColor = Color.FromArgb(72, 80, 98),
+                Location = new Point(480, 43),
+                Size = new Size(92, 34),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Cascadia Mono", 8.25f)
+                Font = new Font("Cascadia Mono", 8.75f, FontStyle.Bold),
+                Type = AntdUI.TTypeMini.Primary,
+                Shape = AntdUI.TShape.Default,
+                Radius = 3,
+                BorderWidth = 1F
             };
-            searchButton.FlatAppearance.BorderSize = 1;
-            searchButton.FlatAppearance.BorderColor = Color.Black;
             searchButton.Click += SearchButton_Click;
             topPanel.Controls.Add(searchButton);
 
             // Close button
-            closeButton = new Button
+            closeButton = new AntButton
             {
                 Text = "Close",
-                Location = new Point(880, 15),
-                Size = new Size(80, 30),
-                BackColor = Color.FromArgb(168, 75, 76),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(876, 18),
+                Size = new Size(96, 34),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Cascadia Mono", 8.25f)
+                Font = new Font("Cascadia Mono", 8.75f, FontStyle.Bold),
+                Type = AntdUI.TTypeMini.Error,
+                Shape = AntdUI.TShape.Default,
+                Radius = 3,
+                BorderWidth = 1F
             };
-            closeButton.FlatAppearance.BorderSize = 1;
-            closeButton.FlatAppearance.BorderColor = Color.Black;
             closeButton.Click += (s, e) => this.Hide();
             topPanel.Controls.Add(closeButton);
 
@@ -1347,8 +1485,8 @@ Version 1.0.5b - December 2025
             // Main help content
             helpTextBox = new RichTextBox
             {
-                Location = new Point(0, 70),
-                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 70),
+                Location = new Point(0, 88),
+                Size = new Size(this.ClientSize.Width, this.ClientSize.Height - 88),
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
                 BackColor = Color.FromArgb(13, 16, 24),
                 ForeColor = Color.White,
@@ -1356,44 +1494,63 @@ Version 1.0.5b - December 2025
                 ReadOnly = true,
                 BorderStyle = BorderStyle.None,
                 WordWrap = true,
-                Text = HELP_CONTENT
+                Text = contentText
             };
             this.Controls.Add(helpTextBox);
 
-            // Apply syntax highlighting
-            ApplySyntaxHighlighting();
+            // Formatting is applied after the theme pass in the constructor.
         }
 
         private void ApplySyntaxHighlighting()
         {
+            if (helpTextBox == null || string.IsNullOrEmpty(helpTextBox.Text))
+                return;
+
+            helpTextBox.SuspendLayout();
+
             // Reset all text to default colors first
             helpTextBox.SelectAll();
-            helpTextBox.SelectionColor = Color.White;
+            helpTextBox.SelectionFont = new Font("Cascadia Mono", 9f, FontStyle.Regular);
+            helpTextBox.SelectionColor = RaceTrade.ThemeManager.Colors.Foreground;
             helpTextBox.SelectionBackColor = helpTextBox.BackColor;
             helpTextBox.Select(0, 0);
 
-            // Now apply highlights
-            HighlightPattern(@"^={5,}\s*$", Color.FromArgb(80, 180, 255)); // section separators
-            HighlightPattern(@"^-{5,}\s*$", Color.Gray);                    // dashed separators
+            Color accent = RaceTrade.ThemeManager.Colors.AccentCyan;
+            Color heading = Color.FromArgb(255, 211, 96);
+            Color subheading = Color.FromArgb(112, 226, 170);
+            Color muted = RaceTrade.ThemeManager.Colors.ForegroundMuted;
+            Color info = Color.FromArgb(141, 211, 255);
+            Color warning = RaceTrade.ThemeManager.Colors.WarningLight;
+            Color danger = RaceTrade.ThemeManager.Colors.DangerLight;
 
-            // Color section titles
-            HighlightPattern(@"^\d+\.\s+[A-Z].*$", Color.FromArgb(255, 215, 0)); // Gold
+            ApplyLineStyle(@"^={5,}\s*$", muted, FontStyle.Regular, 8.5f);
+            ApplyLineStyle(@"^-{5,}\s*$", Color.FromArgb(82, 94, 118), FontStyle.Regular, 8.5f);
+            ApplyLineStyle(@"^\s*(RACETRADE COMPLETE GUIDE|CHANGELOG)\s*$", accent, FontStyle.Bold, 15f);
+            ApplyLineStyle(@"^\s*Rules, Mapping, and Configuration Manual\s*$", muted, FontStyle.Italic, 10f);
+            ApplyLineStyle(@"^\d+\.\s+.*$", heading, FontStyle.Bold, 11f);
+            ApplyLineStyle(@"^Version\s+.*$", Color.FromArgb(182, 204, 255), FontStyle.Bold, 10f);
+            ApplyLineStyle(@"^[A-Z][A-Z0-9 /&()""'.,+-]+:$", subheading, FontStyle.Bold, 10f);
+            ApplyLineStyle(@"^\s*\d+\.\s+.*$", Color.FromArgb(228, 233, 242), FontStyle.Bold, 9.3f);
+            ApplyLineStyle(@"^\s*-\s+.*$", RaceTrade.ThemeManager.Colors.Foreground, FontStyle.Regular, 9f);
+            ApplyLineStyle(@"^\s{2,}-\s+.*$", muted, FontStyle.Regular, 8.8f);
 
-            // Color subsection headers
-            HighlightPattern(@"^[A-Z\s-]+:$", Color.FromArgb(144, 238, 144)); // Light green
+            HighlightPattern(@"CRITICAL|WARNING|IMPORTANT|DROP|FAILED|ERROR|BUG FIXES", danger, FontStyle.Bold);
+            HighlightPattern(@"NEW FEATURES|IMPROVEMENTS|TECHNICAL CHANGES|MIGRATION NOTES", subheading, FontStyle.Bold);
+            HighlightPattern(@"Example.*?:", warning, FontStyle.Bold);
+            HighlightPattern(@"\b(ALLOW|DROP|SKIP|RACE|ENABLED|DISABLED)\b", warning, FontStyle.Bold);
+            HighlightPattern(@"\[[^\]\r\n]+\]", info, FontStyle.Bold);
+            HighlightPattern(@"\{[^\}\r\n]+\}", info, FontStyle.Bold);
+            HighlightPattern(@"(?i)\b(regex|chat_keys|chan\d+|blowfish_key\d+|cbftp|imdb|tvmaze|prebot|sitebot)\b", Color.FromArgb(184, 193, 255), FontStyle.Regular);
+            HighlightPattern(@"[✓✅]", RaceTrade.ThemeManager.Colors.SuccessLight, FontStyle.Bold);
+            HighlightPattern(@"[✗❌]", danger, FontStyle.Bold);
+            HighlightPattern(@"[⚠☐]", warning, FontStyle.Bold);
 
-            // Color examples
-            HighlightPattern(@"Example.*:", Color.FromArgb(255, 165, 0)); // Orange
-
-            // Color code/regex patterns
-            HighlightPattern(@"\[.*?\]", Color.FromArgb(173, 216, 230)); // Light blue
-            HighlightPattern(@"(?i)\.\*/i", Color.FromArgb(255, 182, 193)); // Light pink
-
-            // Color checkmarks and crosses
-            HighlightPattern(@"[✓✗☐]", Color.Yellow);
+            helpTextBox.Select(0, 0);
+            helpTextBox.SelectionLength = 0;
+            helpTextBox.ResumeLayout();
         }
 
-        private void HighlightPattern(string pattern, Color color)
+        private void ApplyLineStyle(string pattern, Color color, FontStyle style, float size)
         {
             try
             {
@@ -1404,6 +1561,27 @@ Version 1.0.5b - December 2025
                 {
                     helpTextBox.Select(match.Index, match.Length);
                     helpTextBox.SelectionColor = color;
+                    helpTextBox.SelectionFont = new Font("Cascadia Mono", size, style);
+                }
+            }
+            catch
+            {
+                // Ignore regex/font errors
+            }
+        }
+
+        private void HighlightPattern(string pattern, Color color, FontStyle style = FontStyle.Regular)
+        {
+            try
+            {
+                var regex = new System.Text.RegularExpressions.Regex(pattern,
+                    System.Text.RegularExpressions.RegexOptions.Multiline);
+
+                foreach (System.Text.RegularExpressions.Match match in regex.Matches(helpTextBox.Text))
+                {
+                    helpTextBox.Select(match.Index, match.Length);
+                    helpTextBox.SelectionColor = color;
+                    helpTextBox.SelectionFont = new Font("Cascadia Mono", 9f, style);
                 }
 
                 helpTextBox.Select(0, 0); // Reset selection

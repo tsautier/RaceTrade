@@ -87,6 +87,15 @@ namespace RaceTrade
         private static readonly HashSet<string> _privateFamilyNames =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        private enum ButtonTone
+        {
+            Neutral,
+            Primary,
+            Success,
+            Danger,
+            Warning
+        }
+
         static ThemeManager()
         {
             TryLoadBundledFonts();
@@ -210,6 +219,15 @@ namespace RaceTrade
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
+        private const int WM_NCLBUTTONDOWN = 0x00A1;
+        private const int HTCAPTION = 2;
+
+        [DllImport("user32.dll")]
+        private static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
         /// <summary>
         /// Asks the desktop window manager to paint this form's title bar dark
         /// (Windows 10 1809+ / Windows 11). No-op / harmless on older systems.
@@ -242,12 +260,75 @@ namespace RaceTrade
         public static void ApplyTheme(Form form)
         {
             if (form == null) return;
+            if (form is AntdUI.Window antWindow)
+            {
+                antWindow.Dark = true;
+                antWindow.Mode = AntdUI.TAMode.Dark;
+                antWindow.EnableHitTest = true;
+                antWindow.BorderColor = Colors.Border;
+                EnableAntdWindowDrag(antWindow);
+            }
+
             form.BackColor = Colors.Background;
             form.ForeColor = Colors.Foreground;
             EnableDarkTitleBar(form);
 
             foreach (Control control in form.Controls)
                 ApplyThemeToControl(control);
+        }
+
+        private static void EnableAntdWindowDrag(Form form)
+        {
+            if (form == null) return;
+
+            WireDragSurface(form, form);
+
+            foreach (Control control in form.Controls)
+                WireDragSurfaceRecursive(form, control);
+        }
+
+        private static void WireDragSurfaceRecursive(Form form, Control control)
+        {
+            if (control == null) return;
+
+            if (IsDragSurface(control))
+                WireDragSurface(form, control);
+
+            foreach (Control child in control.Controls)
+                WireDragSurfaceRecursive(form, child);
+        }
+
+        private static bool IsDragSurface(Control control)
+        {
+            if (control is LinkLabel || control.Cursor == Cursors.Hand)
+                return false;
+
+            return control is Panel ||
+                   control is AntdUI.Panel ||
+                   control is Label ||
+                   control is GroupBox ||
+                   control is TableLayoutPanel ||
+                   control is FlowLayoutPanel;
+        }
+
+        private static void WireDragSurface(Form form, Control surface)
+        {
+            if (surface == null) return;
+
+            surface.MouseDown -= AntdWindowDragSurface_MouseDown;
+            surface.MouseDown += AntdWindowDragSurface_MouseDown;
+        }
+
+        private static void AntdWindowDragSurface_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left) return;
+            if (!(sender is Control control)) return;
+
+            Form form = control as Form ?? control.FindForm();
+            if (form == null || form.WindowState == FormWindowState.Maximized) return;
+
+            ReleaseCapture();
+            SendMessage(form.Handle, WM_NCLBUTTONDOWN, (IntPtr)HTCAPTION, IntPtr.Zero);
         }
 
         /// <summary>
@@ -299,22 +380,117 @@ namespace RaceTrade
                 ApplyThemeToControl(child);
         }
 
-        private static void StyleButton(Button button)
+        private static Color Blend(Color accent, Color surface, double amount)
         {
-            // Respect buttons that were explicitly styled as semantic actions.
-            if (button.Tag is string tag &&
-                (tag == "primary" || tag == "danger" || tag == "success" || tag == "skip"))
-                return;
+            amount = Math.Max(0, Math.Min(1, amount));
+            int r = (int)Math.Round(surface.R + (accent.R - surface.R) * amount);
+            int g = (int)Math.Round(surface.G + (accent.G - surface.G) * amount);
+            int b = (int)Math.Round(surface.B + (accent.B - surface.B) * amount);
+            return Color.FromArgb(r, g, b);
+        }
 
-            button.BackColor = Colors.ButtonBackground;
-            button.ForeColor = Colors.Foreground;
+        private static bool ContainsAny(string value, params string[] terms)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            foreach (var term in terms)
+            {
+                if (value.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static ButtonTone ResolveButtonTone(Button button)
+        {
+            if (button?.Tag is string tag)
+            {
+                switch (tag.Trim().ToLowerInvariant())
+                {
+                    case "primary": return ButtonTone.Primary;
+                    case "success": return ButtonTone.Success;
+                    case "danger": return ButtonTone.Danger;
+                    case "warning": return ButtonTone.Warning;
+                    case "skip": return ButtonTone.Neutral;
+                }
+            }
+
+            string key = $"{button?.Name} {button?.Text}";
+
+            if (ContainsAny(key, "delete", "remove", "exit", "close", "cancel", "stop", "clear", "deselect", "unmap"))
+                return ButtonTone.Danger;
+
+            if (ContainsAny(key, "disable", "drop"))
+                return ButtonTone.Warning;
+
+            if (ContainsAny(key, "save", "add", "import", "sync", "start", "enable", "apply", "ok", "confirm", "create"))
+                return ButtonTone.Success;
+
+            if (ContainsAny(key, "edit", "map", "test", "refresh", "fetch", "send", "run", "get", "help", "view", "export", "select", "rules", "blacklist"))
+                return ButtonTone.Primary;
+
+            return ButtonTone.Neutral;
+        }
+
+        private static void ApplyButtonPalette(Button button, ButtonTone tone)
+        {
             button.FlatStyle = FlatStyle.Flat;
-            button.FlatAppearance.BorderColor = Colors.Border;
             button.FlatAppearance.BorderSize = 1;
-            button.FlatAppearance.MouseOverBackColor = Colors.ButtonHover;
-            button.FlatAppearance.MouseDownBackColor = Colors.ButtonPressed;
             button.UseVisualStyleBackColor = false;
             if (button.Font == null) button.Font = Fonts.Default;
+
+            switch (tone)
+            {
+                case ButtonTone.Primary:
+                    button.BackColor = Blend(Colors.Accent, Colors.ButtonBackground, 0.34);
+                    button.ForeColor = Color.FromArgb(224, 244, 255);
+                    button.FlatAppearance.BorderColor = Blend(Colors.AccentCyan, Colors.Border, 0.58);
+                    button.FlatAppearance.MouseOverBackColor = Blend(Colors.Accent, Colors.ButtonHover, 0.52);
+                    button.FlatAppearance.MouseDownBackColor = Blend(Colors.Accent, Colors.ButtonPressed, 0.42);
+                    break;
+
+                case ButtonTone.Success:
+                    button.BackColor = Blend(Colors.Success, Colors.ButtonBackground, 0.36);
+                    button.ForeColor = Color.FromArgb(232, 255, 244);
+                    button.FlatAppearance.BorderColor = Blend(Colors.SuccessLight, Colors.Border, 0.58);
+                    button.FlatAppearance.MouseOverBackColor = Blend(Colors.Success, Colors.ButtonHover, 0.52);
+                    button.FlatAppearance.MouseDownBackColor = Blend(Colors.Success, Colors.ButtonPressed, 0.42);
+                    break;
+
+                case ButtonTone.Danger:
+                    button.BackColor = Blend(Colors.Danger, Colors.ButtonBackground, 0.34);
+                    button.ForeColor = Color.FromArgb(255, 234, 236);
+                    button.FlatAppearance.BorderColor = Blend(Colors.DangerLight, Colors.Border, 0.58);
+                    button.FlatAppearance.MouseOverBackColor = Blend(Colors.Danger, Colors.ButtonHover, 0.52);
+                    button.FlatAppearance.MouseDownBackColor = Blend(Colors.Danger, Colors.ButtonPressed, 0.42);
+                    break;
+
+                case ButtonTone.Warning:
+                    button.BackColor = Blend(Colors.Warning, Colors.ButtonBackground, 0.28);
+                    button.ForeColor = Color.FromArgb(255, 246, 220);
+                    button.FlatAppearance.BorderColor = Blend(Colors.WarningLight, Colors.Border, 0.52);
+                    button.FlatAppearance.MouseOverBackColor = Blend(Colors.Warning, Colors.ButtonHover, 0.45);
+                    button.FlatAppearance.MouseDownBackColor = Blend(Colors.Warning, Colors.ButtonPressed, 0.35);
+                    break;
+
+                default:
+                    button.BackColor = Colors.ButtonBackground;
+                    button.ForeColor = Colors.Foreground;
+                    button.FlatAppearance.BorderColor = Colors.Border;
+                    button.FlatAppearance.MouseOverBackColor = Colors.ButtonHover;
+                    button.FlatAppearance.MouseDownBackColor = Colors.ButtonPressed;
+                    break;
+            }
+        }
+
+        private static void StyleButton(Button button)
+        {
+            if (button.Tag is string tag && string.Equals(tag, "skip", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            ApplyButtonPalette(button, ResolveButtonTone(button));
         }
 
         private static void StyleTextBox(TextBox textBox)
@@ -464,12 +640,7 @@ namespace RaceTrade
         public static void StylePrimaryButton(Button button)
         {
             button.Tag = "primary";
-            button.BackColor = Colors.ButtonPrimary;
-            button.ForeColor = Colors.BackgroundDarkest;
-            button.FlatStyle = FlatStyle.Flat;
-            button.FlatAppearance.BorderSize = 0;
-            button.FlatAppearance.MouseOverBackColor = Colors.ButtonPrimaryHover;
-            button.UseVisualStyleBackColor = false;
+            ApplyButtonPalette(button, ButtonTone.Primary);
             button.Font = Fonts.DefaultBold;
         }
 
@@ -479,12 +650,7 @@ namespace RaceTrade
         public static void StyleDangerButton(Button button)
         {
             button.Tag = "danger";
-            button.BackColor = Colors.Danger;
-            button.ForeColor = Color.White;
-            button.FlatStyle = FlatStyle.Flat;
-            button.FlatAppearance.BorderSize = 0;
-            button.FlatAppearance.MouseOverBackColor = Colors.DangerLight;
-            button.UseVisualStyleBackColor = false;
+            ApplyButtonPalette(button, ButtonTone.Danger);
             button.Font = Fonts.DefaultBold;
         }
 
@@ -494,12 +660,7 @@ namespace RaceTrade
         public static void StyleSuccessButton(Button button)
         {
             button.Tag = "success";
-            button.BackColor = Colors.Success;
-            button.ForeColor = Colors.BackgroundDarkest;
-            button.FlatStyle = FlatStyle.Flat;
-            button.FlatAppearance.BorderSize = 0;
-            button.FlatAppearance.MouseOverBackColor = Colors.SuccessLight;
-            button.UseVisualStyleBackColor = false;
+            ApplyButtonPalette(button, ButtonTone.Success);
             button.Font = Fonts.DefaultBold;
         }
 
@@ -644,33 +805,19 @@ namespace RaceTrade
         }
 
         /// <summary>
-        /// Styles a card action button: rounded, flat, soft border, sized text in
+        /// Styles a card action button: flat, soft border, sized text in
         /// the UI font (not the terminal mono font). Tagged so the generic themer
         /// leaves it alone.
         /// </summary>
         public static void StyleActionButton(Button b, int radius = 8)
         {
             if (b == null) return;
+            var tone = ResolveButtonTone(b);
             b.Tag = "skip";
-            b.FlatStyle = FlatStyle.Flat;
-            b.FlatAppearance.BorderSize = 1;
-            b.FlatAppearance.BorderColor = Colors.Border;
-            b.FlatAppearance.MouseOverBackColor = Colors.ButtonHover;
-            b.FlatAppearance.MouseDownBackColor = Colors.ButtonPressed;
-            b.BackColor = Colors.ButtonBackground;
-            b.ForeColor = Colors.Foreground;
-            b.UseVisualStyleBackColor = false;
+            ApplyButtonPalette(b, tone);
             b.Font = new Font(Fonts.UiFamily, 9.75F, FontStyle.Regular);
             SetDoubleBuffered(b);
-
-            void Reshape()
-            {
-                if (b.Width <= 0 || b.Height <= 0) return;
-                using (var p = RoundedRect(new Rectangle(0, 0, b.Width, b.Height), radius))
-                    b.Region = new Region(p);
-            }
-            Reshape();
-            b.Resize += (s, e) => Reshape();
+            b.Region = null;
         }
 
         /// <summary>A bold card/section title in the accent colour.</summary>

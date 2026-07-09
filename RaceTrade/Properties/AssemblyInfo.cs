@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("Racer")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("▂▃▅▇█▓▒░۩۞۩ HiGH VOLTAGE ۩۞۩░▒▓█▇▅▃▂ ┌ಠ_ಠ)┌∩┐ ᶠᶸᶜᵏ♥ᵧₒᵤ")]
-[assembly: AssemblyProduct("RaceTrade Beta 1.0.7B January")]
+[assembly: AssemblyProduct("RaceTrade Beta 1.0.8B July")]
 [assembly: AssemblyCopyright("Copyright ©  2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -29,5 +29,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.0.7.0")]
-[assembly: AssemblyFileVersion("1.0.7.0")]
+[assembly: AssemblyVersion("1.0.8.0")]
+[assembly: AssemblyFileVersion("1.0.8.0")]
