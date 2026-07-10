@@ -47,7 +47,7 @@ namespace RaceTrade
             this.toolbar.Dock = System.Windows.Forms.DockStyle.Top;
             this.toolbar.Location = new System.Drawing.Point(0, 0);
             this.toolbar.Name = "toolbar";
-            this.toolbar.Size = new System.Drawing.Size(964, 40);
+            this.toolbar.Size = new System.Drawing.Size(900, 40);
             this.toolbar.TabIndex = 0;
             // 
             // searchBox
@@ -142,7 +142,7 @@ namespace RaceTrade
             this.logRichTextBox.Location = new System.Drawing.Point(0, 40);
             this.logRichTextBox.Name = "logRichTextBox";
             this.logRichTextBox.ReadOnly = true;
-            this.logRichTextBox.Size = new System.Drawing.Size(964, 544);
+            this.logRichTextBox.Size = new System.Drawing.Size(900, 560);
             this.logRichTextBox.TabIndex = 1;
             this.logRichTextBox.Text = "";
             // 
@@ -151,7 +151,7 @@ namespace RaceTrade
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(13)))), ((int)(((byte)(16)))), ((int)(((byte)(24)))));
-            this.ClientSize = new System.Drawing.Size(964, 584);
+            this.ClientSize = new System.Drawing.Size(900, 600);
             this.Controls.Add(this.logRichTextBox);
             this.Controls.Add(this.toolbar);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);

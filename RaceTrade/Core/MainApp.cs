@@ -626,9 +626,8 @@ namespace RaceTrade
             bool vis = o.Value<bool?>("visible") ?? f.Visible;
 
             f.StartPosition = FormStartPosition.Manual;
-            // Keep every log window matched to the current main window size.
-            // Restore only the saved position so the log windows never drift in size.
-            f.Size = this.Size;
+            // Keep every log window a uniform (designer) size — restore only the
+            // saved POSITION, so all four logs always match in size.
             f.Location = new Point(x, y);
 
             if (vis) f.Show();
@@ -1349,49 +1348,138 @@ namespace RaceTrade
             try
             {
                 int spacing = 2;
+                int minLogHeight = 80; // minimal height for logs so they don't collapse completely
+
+                // Screen work area
+                Rectangle wa = Screen.FromControl(this).WorkingArea;
 
                 // Main window is the anchor – DO NOT CHANGE ITS LOCATION HERE
                 int mainX = this.Location.X;
                 int mainY = this.Location.Y;
+                int mainWidth = this.Width;
                 int mainHeight = this.Height;
-                Size logSize = this.Size;
+
+                // Base (ideal) heights
+                int appBaseHeight = 250;
+                int raceBaseHeight = 400;
+                int cbftpBaseHeight = 300;
+                int ircBaseHeight = 250;
 
                 bool appVisible = applicationLog != null && !applicationLog.IsDisposed && applicationLog.Visible;
                 bool raceVisible = raceLog != null && !raceLog.IsDisposed && raceLog.Visible;
                 bool cbftpVisible = cbftpLog != null && !cbftpLog.IsDisposed && cbftpLog.Visible;
                 bool ircVisible = logOutput != null && !logOutput.IsDisposed && logOutput.Visible;
 
-                // App log above main.
+                // ------------------ TOP: Application log ABOVE main ----------------------
+                int appHeight = 0;
                 if (appVisible)
                 {
-                    applicationLog.StartPosition = FormStartPosition.Manual;
-                    applicationLog.Size = logSize;
-                    applicationLog.Location = new Point(mainX, mainY - spacing - logSize.Height);
+                    // Free space above main window
+                    int topAvailable = mainY - wa.Top - spacing;
+
+                    if (topAvailable <= 0)
+                    {
+                        // No space above – make it as small as possible or basically hidden
+                        appHeight = Math.Max(0, topAvailable);
+                    }
+                    else if (appBaseHeight <= topAvailable)
+                    {
+                        appHeight = appBaseHeight;
+                    }
+                    else
+                    {
+                        // Shrink to fit above, but keep a reasonable minimum
+                        appHeight = Math.Max(Math.Min(appBaseHeight, topAvailable), Math.Min(minLogHeight, topAvailable));
+                    }
                 }
 
-                // Logs below main. Every visible log keeps the exact same size as main.
+                
+                // What space do we have under the main window?
+                int bottomAvailable = wa.Bottom - (mainY + mainHeight) - spacing;
+                if (bottomAvailable < 0) bottomAvailable = 0;
+
+                // Collect visible logs under main with their base heights
+                var bottomLogs = new List<(Form Form, int BaseHeight)>();
+                if (raceVisible) bottomLogs.Add((raceLog, raceBaseHeight));
+                if (cbftpVisible) bottomLogs.Add((cbftpLog, cbftpBaseHeight));
+                if (ircVisible) bottomLogs.Add((logOutput, ircBaseHeight));
+
+                var bottomHeights = new Dictionary<Form, int>();
+
+                if (bottomLogs.Count > 0)
+                {
+                    int totalBase = bottomLogs.Sum(l => l.BaseHeight);
+                    int totalSpacing = spacing * (bottomLogs.Count - 1);
+
+                    if (totalBase + totalSpacing <= bottomAvailable || bottomAvailable == 0)
+                    {
+                        // Either everything fits as-is, or there is literally no space (bottomAvailable==0)
+                        foreach (var (form, baseH) in bottomLogs)
+                        {
+                            bottomHeights[form] = (bottomAvailable == 0) ? 0 : baseH;
+                        }
+                    }
+                    else
+                    {
+                        // Need to shrink logs to fit into bottomAvailable
+                        double factor = (double)(bottomAvailable - totalSpacing) / totalBase;
+                        if (factor < 0) factor = 0;
+
+                        // First pass: scaled heights with a minimum
+                        foreach (var (form, baseH) in bottomLogs)
+                        {
+                            int h = (int)(baseH * factor);
+                            h = Math.Max(minLogHeight, h);
+                            bottomHeights[form] = h;
+                        }
+
+                        // Ensure we don't exceed bottomAvailable due to minLogHeight / rounding
+                        int sumHeights = bottomHeights.Values.Sum();
+                        if (sumHeights + totalSpacing > bottomAvailable && sumHeights > 0)
+                        {
+                            double factor2 = (double)(bottomAvailable - totalSpacing) / sumHeights;
+                            if (factor2 < 0) factor2 = 0;
+
+                            foreach (var key in bottomHeights.Keys.ToList())
+                            {
+                                int h = (int)(bottomHeights[key] * factor2);
+                                bottomHeights[key] = Math.Max(30, h); // don't go too tiny
+                            }
+                        }
+                    }
+                }
+                               
+                // App log above main
+                if (appVisible && appHeight > 0)
+                {
+                    applicationLog.StartPosition = FormStartPosition.Manual;
+                    applicationLog.Size = new Size(mainWidth, appHeight);
+                    applicationLog.Location = new Point(mainX, mainY - spacing - appHeight);
+                }
+
+                // Logs below main – we start from bottom edge of main
                 int currentY = mainY + mainHeight + spacing;
 
-                if (raceVisible)
+                if (raceVisible && bottomHeights.TryGetValue(raceLog, out int raceHeight) && raceHeight > 0)
                 {
                     raceLog.StartPosition = FormStartPosition.Manual;
-                    raceLog.Size = logSize;
+                    raceLog.Size = new Size(mainWidth, raceHeight);
                     raceLog.Location = new Point(mainX, currentY);
-                    currentY += logSize.Height + spacing;
+                    currentY += raceHeight + spacing;
                 }
 
-                if (cbftpVisible)
+                if (cbftpVisible && bottomHeights.TryGetValue(cbftpLog, out int cbftpHeight) && cbftpHeight > 0)
                 {
                     cbftpLog.StartPosition = FormStartPosition.Manual;
-                    cbftpLog.Size = logSize;
+                    cbftpLog.Size = new Size(mainWidth, cbftpHeight);
                     cbftpLog.Location = new Point(mainX, currentY);
-                    currentY += logSize.Height + spacing;
+                    currentY += cbftpHeight + spacing;
                 }
 
-                if (ircVisible)
+                if (ircVisible && bottomHeights.TryGetValue(logOutput, out int ircHeight) && ircHeight > 0)
                 {
                     logOutput.StartPosition = FormStartPosition.Manual;
-                    logOutput.Size = logSize;
+                    logOutput.Size = new Size(mainWidth, ircHeight);
                     logOutput.Location = new Point(mainX, currentY);
                 }
             }
