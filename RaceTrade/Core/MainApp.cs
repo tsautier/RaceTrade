@@ -626,8 +626,8 @@ namespace RaceTrade
             bool vis = o.Value<bool?>("visible") ?? f.Visible;
 
             f.StartPosition = FormStartPosition.Manual;
-            // Keep every log window a uniform (designer) size — restore only the
-            // saved POSITION, so all four logs always match in size.
+            // Restore only the saved position; keep width matched to the main window.
+            f.Width = this.Width;
             f.Location = new Point(x, y);
 
             if (vis) f.Show();
