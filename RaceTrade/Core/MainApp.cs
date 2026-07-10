@@ -3607,6 +3607,12 @@ namespace RaceTrade
         [JsonProperty("dupeRules")]
         public DupeRules DupeRules { get; set; }
 
+        [JsonProperty("imdb", NullValueHandling = NullValueHandling.Ignore)]
+        public JObject Imdb { get; set; }
+
+        [JsonProperty("tvmaze", NullValueHandling = NullValueHandling.Ignore)]
+        public JObject Tvmaze { get; set; }
+
     }
 
     public class Tag

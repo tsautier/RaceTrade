@@ -824,7 +824,7 @@ namespace RaceTrader
                 return;
 
             var siteName = siteComboBox.SelectedItem.ToString();
-            currentSiteFile = Path.Combine("sites", $"{siteName}.json");
+            currentSiteFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sites", $"{siteName}.json");
 
             LoadSections();
         }

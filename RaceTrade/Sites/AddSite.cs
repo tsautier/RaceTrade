@@ -1093,6 +1093,8 @@ namespace RaceTrade
                     Directory.CreateDirectory(sitesDirectory);
                 }
 
+                MergeSectionMediaSettingsFromFile();
+
                 // Write to JSON file
                 string jsonContent = JsonConvert.SerializeObject(currentSite, Formatting.Indented);
                 File.WriteAllText(currentSiteFilePath, jsonContent);
@@ -1727,6 +1729,7 @@ namespace RaceTrade
                     if (existingSiteConfig != null)
                     {
 
+                        MergeSectionMediaSettings(existingSiteConfig.Sections, currentSite.Sections);
                         existingSiteConfig.Sections = currentSite.Sections;
 
                         // Update other fields
@@ -1765,6 +1768,52 @@ namespace RaceTrade
             catch (Exception ex)
             {
                 MessageBox.Show($"Error saving site configuration: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void MergeSectionMediaSettingsFromFile()
+        {
+            if (currentSite?.Sections == null ||
+                string.IsNullOrWhiteSpace(currentSiteFilePath) ||
+                !File.Exists(currentSiteFilePath))
+            {
+                return;
+            }
+
+            try
+            {
+                var existingSiteConfig = JsonConvert.DeserializeObject<SiteConfig>(
+                    File.ReadAllText(currentSiteFilePath));
+
+                MergeSectionMediaSettings(existingSiteConfig?.Sections, currentSite.Sections);
+            }
+            catch (Exception ex)
+            {
+                LogManager.Warning($"Could not refresh TVMaze/IMDB section settings before save: {ex.Message}");
+            }
+        }
+
+        private static void MergeSectionMediaSettings(IEnumerable<Section> sourceSections, IEnumerable<Section> targetSections)
+        {
+            if (sourceSections == null || targetSections == null)
+                return;
+
+            foreach (var targetSection in targetSections)
+            {
+                if (string.IsNullOrWhiteSpace(targetSection?.IrcName))
+                    continue;
+
+                var sourceSection = sourceSections.FirstOrDefault(s =>
+                    string.Equals(s.IrcName, targetSection.IrcName, StringComparison.OrdinalIgnoreCase));
+
+                if (sourceSection == null)
+                    continue;
+
+                if (sourceSection.Imdb != null)
+                    targetSection.Imdb = sourceSection.Imdb;
+
+                if (sourceSection.Tvmaze != null)
+                    targetSection.Tvmaze = sourceSection.Tvmaze;
             }
         }
 
@@ -2405,7 +2454,7 @@ namespace RaceTrade
                     return;
                 }
 
-                var siteFile = Path.Combine("sites", $"{siteName}.json");
+                var siteFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sites", $"{siteName}.json");
                 if (!File.Exists(siteFile))
                 {
                     MessageBox.Show($"Site configuration '{siteName}' does not exist.\n\nPlease save the site first.",
@@ -2413,9 +2462,12 @@ namespace RaceTrade
                     return;
                 }
 
-                // CLEAN VERSION - no debug messages
-                var sectionSettingsForm = new SectionSettingsForm(siteName);
-                sectionSettingsForm.ShowDialog();
+                using (var sectionSettingsForm = new SectionSettingsForm(siteName))
+                {
+                    sectionSettingsForm.ShowDialog(this);
+                }
+
+                MergeSectionMediaSettingsFromFile();
             }
             catch (Exception ex)
             {
