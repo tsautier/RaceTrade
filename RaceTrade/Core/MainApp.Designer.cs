@@ -592,7 +592,7 @@ namespace RaceTrade
             // exitButton
             // 
             this.exitButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.exitButton.Location = new System.Drawing.Point(562, 522);
+            this.exitButton.Location = new System.Drawing.Point(573, 538);
             this.exitButton.Name = "exitButton";
             this.exitButton.Size = new System.Drawing.Size(130, 34);
             this.exitButton.TabIndex = 8;
