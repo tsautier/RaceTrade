@@ -46,7 +46,7 @@ namespace RaceTrade
                         CbftpSections = new Dictionary<string, string>()
                     };
                     var emptyJson = JsonConvert.SerializeObject(emptyData, Formatting.Indented);
-                    File.WriteAllText(SectionFilePath, emptyJson);
+                    AtomicFile.WriteAllText(SectionFilePath, emptyJson);
                     LogManager.Info($"Created sections file: {SectionFilePath}");
                 }
             }
@@ -177,7 +177,7 @@ namespace RaceTrade
                 var jsonContent = JsonConvert.SerializeObject(data, Formatting.Indented);
 
                 // Write to the JSON file
-                File.WriteAllText(SectionFilePath, jsonContent);
+                AtomicFile.WriteAllText(SectionFilePath, jsonContent);
             }
             catch (Exception ex)
             {

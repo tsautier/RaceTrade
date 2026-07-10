@@ -34,15 +34,26 @@ namespace RaceTrader
 
         #region Rate Limiting
 
+        private static readonly object rateLimitLock = new object();
+
         private static async Task RateLimitDelay()
         {
-            var timeSinceLastRequest = DateTime.Now - lastRequestTime;
-            if (timeSinceLastRequest < minRequestInterval)
+            // Releases are processed concurrently; compute and reserve the next slot
+            // atomically, otherwise the interval check is defeated and we burst into
+            // the API's rate limiter (HTTP 429).
+            TimeSpan delay;
+            lock (rateLimitLock)
             {
-                var delay = minRequestInterval - timeSinceLastRequest;
-                await Task.Delay(delay);
+                var now = DateTime.Now;
+                var earliestNext = lastRequestTime + minRequestInterval;
+                delay = earliestNext > now ? earliestNext - now : TimeSpan.Zero;
+
+                // Reserve our slot up front so concurrent callers stagger.
+                lastRequestTime = now + delay;
             }
-            lastRequestTime = DateTime.Now;
+
+            if (delay > TimeSpan.Zero)
+                await Task.Delay(delay);
         }
 
         #endregion
@@ -413,7 +424,12 @@ namespace RaceTrader
         /// </summary>
         public static bool IsMulti(string releaseName)
         {
-            return releaseName.ToUpper().Contains("MULTI");
+            if (string.IsNullOrEmpty(releaseName))
+                return false;
+
+            // Must be a delimited MULTi tag, not any title containing the substring
+            // (e.g. "Multitude") - same approach as IsInternal.
+            return Regex.IsMatch(releaseName, @"[\s._-]MULTI([\s._-]|$)", RegexOptions.IgnoreCase);
         }
 
         /// <summary>

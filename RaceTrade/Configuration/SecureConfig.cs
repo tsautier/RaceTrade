@@ -181,7 +181,7 @@ namespace RaceTrade
                 if (modified)
                 {
                     var updatedJson = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
-                    System.IO.File.WriteAllText(filePath, updatedJson);
+                    AtomicFile.WriteAllText(filePath, updatedJson);
                     LogManager.Success($"Encrypted sensitive data in {filePath}");
                 }
                 else
@@ -277,7 +277,7 @@ namespace RaceTrade
                 if (modified)
                 {
                     var updatedJson = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
-                    System.IO.File.WriteAllText(mainConfigPath, updatedJson);
+                    AtomicFile.WriteAllText(mainConfigPath, updatedJson);
                     LogManager.Success($"Encrypted passwords in {mainConfigPath}");
                 }
                 else
@@ -343,7 +343,7 @@ namespace RaceTrade
                     if (modified)
                     {
                         var updatedJson = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
-                        System.IO.File.WriteAllText(file, updatedJson);
+                        AtomicFile.WriteAllText(file, updatedJson);
                         encryptedCount++;
                     }
                 }

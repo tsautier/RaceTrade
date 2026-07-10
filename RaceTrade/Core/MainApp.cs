@@ -661,7 +661,7 @@ namespace RaceTrade
                 root[LOG_WINDOW_SETTINGS_KEY] = layout;
 
                 Directory.CreateDirectory(Path.GetDirectoryName(SETTINGS_FILE) ?? "settings");
-                File.WriteAllText(SETTINGS_FILE, root.ToString(Formatting.Indented));
+                AtomicFile.WriteAllText(SETTINGS_FILE, root.ToString(Formatting.Indented));
             }
             catch (Exception ex)
             {
@@ -1030,7 +1030,7 @@ namespace RaceTrade
                     ["patterns"] = new JArray()
                 };
 
-                File.WriteAllText(GlobalBlacklistPath, defaultBlacklist.ToString(Formatting.Indented));
+                AtomicFile.WriteAllText(GlobalBlacklistPath, defaultBlacklist.ToString(Formatting.Indented));
             }
             catch (Exception ex)
             {
@@ -1056,7 +1056,7 @@ namespace RaceTrade
 
                 config["patterns"] = new JArray(globalBlacklistPatterns);
 
-                File.WriteAllText(GlobalBlacklistPath, config.ToString(Formatting.Indented));
+                AtomicFile.WriteAllText(GlobalBlacklistPath, config.ToString(Formatting.Indented));
 
                 // Update RaceHelper
                 RaceHelper.SetGlobalBlacklist(globalBlacklistPatterns);
@@ -1144,7 +1144,7 @@ namespace RaceTrade
                 }
 
                 config["enabled"] = enabled;
-                File.WriteAllText(GlobalBlacklistPath, config.ToString(Formatting.Indented));
+                AtomicFile.WriteAllText(GlobalBlacklistPath, config.ToString(Formatting.Indented));
 
                 LoadGlobalBlacklist();
             }
@@ -1679,7 +1679,7 @@ namespace RaceTrade
                             server.Password = addCbftpForm.Password;
                             server.Profile = addCbftpForm.Profile;
 
-                            File.WriteAllText(filePath, JsonConvert.SerializeObject(configData, Formatting.Indented));
+                            AtomicFile.WriteAllText(filePath, JsonConvert.SerializeObject(configData, Formatting.Indented));
                             LogManager.Success($"Configuration for '{server.Name}' updated successfully.");
                         }   
 
@@ -2431,7 +2431,7 @@ namespace RaceTrade
                 try
                 {
                     string updatedJsonContent = JsonConvert.SerializeObject(configData, Formatting.Indented);
-                    File.WriteAllText(filePath, updatedJsonContent);
+                    AtomicFile.WriteAllText(filePath, updatedJsonContent);
                     LogManager.Success($"New configuration '{newServer.Name}' added successfully.");
                 }
                 catch (Exception ex)
@@ -2611,7 +2611,7 @@ namespace RaceTrade
                 };
 
                 string jsonContent = JsonConvert.SerializeObject(defaultSite, Formatting.Indented);
-                File.WriteAllText(defaultFilePath, jsonContent);
+                AtomicFile.WriteAllText(defaultFilePath, jsonContent);
             }
 
             // Open the AddSite form
@@ -3232,7 +3232,7 @@ namespace RaceTrade
                     }
                 };
 
-                File.WriteAllText(templateFilePath, JsonConvert.SerializeObject(defaultPreBot, Formatting.Indented));
+                AtomicFile.WriteAllText(templateFilePath, JsonConvert.SerializeObject(defaultPreBot, Formatting.Indented));
             }
 
             try

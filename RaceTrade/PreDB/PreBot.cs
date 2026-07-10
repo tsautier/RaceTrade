@@ -192,7 +192,7 @@ namespace RaceTrade
                                !oldFilePath.Equals(newFilePath, StringComparison.OrdinalIgnoreCase);
 
                 string jsonContent = JsonConvert.SerializeObject(prebotConfig, Formatting.Indented);
-                File.WriteAllText(newFilePath, jsonContent);
+                AtomicFile.WriteAllText(newFilePath, jsonContent);
 
                 if (isRename && File.Exists(oldFilePath))
                 {

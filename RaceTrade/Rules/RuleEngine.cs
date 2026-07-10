@@ -385,10 +385,17 @@ public class RulesEngine
         string op = parts[1];
 
         string last = parts[parts.Length - 1];
-        bool hasAction =
+
+        // Only treat the trailing token as an ACTION when a value token still remains
+        // (parts.Length > 3). Otherwise a rule whose VALUE is literally "DROP"/"ALLOW"
+        // (e.g. "[release] contains DROP") would be parsed as having no value and
+        // silently discarded.
+        bool lastLooksLikeAction =
             string.Equals(last, ACTION_ALLOW, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(last, ACTION_DROP, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(last, ACTION_EXCEPT, StringComparison.OrdinalIgnoreCase);
+
+        bool hasAction = lastLooksLikeAction && parts.Length > 3;
 
         string action = hasAction ? last : ACTION_ALLOW;
 
@@ -422,7 +429,7 @@ public class RulesEngine
                 .Replace("\\*", ".*")
                 .Replace("\\?", ".") + "$";
 
-            return Regex.IsMatch(value, regexPattern, RegexOptions.IgnoreCase);
+            return Regex.IsMatch(value, regexPattern, RegexOptions.IgnoreCase, RegexTimeout);
         }
         catch (Exception ex)
         {
@@ -448,13 +455,15 @@ public class RulesEngine
     }
 
     /// <summary>
-    /// Checks if value is in a comma or pipe-separated list.
+    /// Checks if value is EQUAL to one of the entries in a comma or pipe-separated list.
+    /// This is membership, not containment: "[group] isin GRP1,GRP2" must not match a
+    /// group of "MYGRP12". Use 'contains' if you want substring behaviour.
     /// </summary>
     private bool IsInList(string value, string listString)
     {
         return listString
             .Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries)
-            .Any(item => value.IndexOf(item.Trim(), StringComparison.OrdinalIgnoreCase) >= 0);
+            .Any(item => string.Equals(value, item.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 }
 

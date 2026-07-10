@@ -452,7 +452,7 @@ public class IRCClient
 
             fileConfig.SiteSettings.ChatKeys[channel] = encKey;
 
-            File.WriteAllText(siteFile, JsonConvert.SerializeObject(fileConfig, Formatting.Indented));
+            AtomicFile.WriteAllText(siteFile, JsonConvert.SerializeObject(fileConfig, Formatting.Indented));
 
             AppendOutput($"[FiSH] Saved key for {channel} to site config", Color.Green);
         }

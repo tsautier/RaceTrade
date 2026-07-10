@@ -57,6 +57,29 @@ public class DH1080
     }
 
     /// <summary>
+    /// Decodes a peer's DH1080 public key, accepting either standard Base64 (what this
+    /// app emits) or the FiSH custom Base64 that real mIRC/FiSH clients emit. Whichever
+    /// yields the expected key length wins.
+    /// </summary>
+    private static byte[] DecodeDh1080PublicKey(string key)
+    {
+        byte[] standard = null;
+        byte[] fish = null;
+
+        try { standard = Convert.FromBase64String(key); } catch { /* not standard base64 */ }
+        if (standard != null && standard.Length == PrimeByteLength)
+            return standard;
+
+        try { fish = DH1080Base64Decode(key); } catch { /* not FiSH base64 */ }
+        if (fish != null && fish.Length == PrimeByteLength)
+            return fish;
+
+        // Neither produced a valid length - return whatever we got so the caller's
+        // length check reports a clear error.
+        return standard ?? fish;
+    }
+
+    /// <summary>
     /// Computes the shared FiSH key string for the peer's DH1080 public key.
     /// Return value is the *FiSH Blowfish key string*, same as DH1080_Compute().
     /// </summary>
@@ -65,25 +88,10 @@ public class DH1080
         if (string.IsNullOrWhiteSpace(otherPublicKey))
             throw new ArgumentException("Other public key must not be null or empty.", nameof(otherPublicKey));
 
-        byte[] otherBytes = null;
-
-        // TRY STANDARD BASE64 FIRST (for mIRC compatibility)
-        try
-        {
-            otherBytes = Convert.FromBase64String(otherPublicKey.Trim());
-        }
-        catch
-        {
-            // Fall back to FiSH custom Base64
-            try
-            {
-                otherBytes = DH1080Base64Decode(otherPublicKey.Trim());
-            }
-            catch
-            {
-                throw new ArgumentException("Invalid DH1080 public key (decode failed).", nameof(otherPublicKey));
-            }
-        }
+        // A FiSH custom-Base64 key can often ALSO parse as standard Base64 (the alphabets
+        // overlap) but yields the wrong bytes/length. So don't just take the first that
+        // parses - take whichever actually produces a valid 135-byte key.
+        byte[] otherBytes = DecodeDh1080PublicKey(otherPublicKey.Trim());
 
         if (otherBytes == null || otherBytes.Length == 0)
             throw new ArgumentException("Invalid DH1080 public key (decode failed).", nameof(otherPublicKey));

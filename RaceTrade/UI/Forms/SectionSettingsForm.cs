@@ -1175,7 +1175,7 @@ namespace RaceTrader
                 section["tvmaze"] = tvmazeConfig;
 
                 // Save back to file
-                File.WriteAllText(currentSiteFile, currentSiteConfig.ToString(Formatting.Indented));
+                RaceTrade.AtomicFile.WriteAllText(currentSiteFile, currentSiteConfig.ToString(Formatting.Indented));
 
                 LogManager.Success($"Settings saved for section in tvmaze/imdb settings: {sectionName}");
                 MessageBox.Show("Settings saved successfully!", "Success",

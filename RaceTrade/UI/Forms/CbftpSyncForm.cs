@@ -199,7 +199,7 @@ namespace RaceTrade
 
                     // Save to file
                     Directory.CreateDirectory("sites");
-                    File.WriteAllText(filePath, JsonConvert.SerializeObject(siteConfig, Formatting.Indented));
+                    AtomicFile.WriteAllText(filePath, JsonConvert.SerializeObject(siteConfig, Formatting.Indented));
 
                     // Collect all section names for sections.json
                     foreach (var section in site.Sections)
@@ -306,7 +306,7 @@ namespace RaceTrade
                 }
             }
 
-            File.WriteAllText(sectionsFile, JsonConvert.SerializeObject(sectionData, Formatting.Indented));
+            AtomicFile.WriteAllText(sectionsFile, JsonConvert.SerializeObject(sectionData, Formatting.Indented));
 
             LogManager.Success(
                 $"Updated cbftp_sections.json: {added} new section(s) added, {sectionData.CbftpSections.Count} total");

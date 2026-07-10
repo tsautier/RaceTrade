@@ -59,7 +59,7 @@ namespace RaceTrade
                 {
                     var emptyConfig = new Config();
                     var emptyJson = JsonConvert.SerializeObject(emptyConfig, Formatting.Indented);
-                    File.WriteAllText(filePath, emptyJson);
+                    AtomicFile.WriteAllText(filePath, emptyJson);
                     LogManager.Info($"Created configuration file: {filePath}");
                 }
             }
@@ -223,7 +223,7 @@ namespace RaceTrade
                     config.CbftpServers = servers;
 
                     var updatedJson = JsonConvert.SerializeObject(config, Formatting.Indented);
-                    File.WriteAllText(filePath, updatedJson);
+                    AtomicFile.WriteAllText(filePath, updatedJson);
 
                     LogManager.Info($"CBFTP server '{serverToDelete.Name ?? currentCbftpId}' deleted successfully");
                     DialogHelper.ShowSuccess("CBFTP server successfully deleted.");

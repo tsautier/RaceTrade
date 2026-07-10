@@ -141,18 +141,29 @@ namespace RaceTrader
                     Directory.CreateDirectory(settingsDir);
                 }
 
-                var settings = new JObject
+                // Load the existing file and only update OUR keys. Rebuilding the whole
+                // object from scratch erased everything else stored here - most notably
+                // the log-window layout and "dockLogsToMain" written by MainApp.
+                JObject settings;
+                try
                 {
-                    
-                    ["app_name"] = appName,
-                    ["debug_enabled"] = debugCheckBox.Checked,
-                    ["allow_insecure_ssl"] = insecureSslCheckBox.Checked,
-                    ["disable_race_log"] = disableRaceLogCheckBox.Checked,
-                    ["disable_cbftp_log"] = disableCbftpLogCheckBox.Checked,
-                    ["disable_app_log"] = disableAppLogCheckBox.Checked,
-                };
+                    settings = File.Exists(SETTINGS_FILE)
+                        ? JObject.Parse(File.ReadAllText(SETTINGS_FILE))
+                        : new JObject();
+                }
+                catch
+                {
+                    settings = new JObject();
+                }
 
-                File.WriteAllText(SETTINGS_FILE, settings.ToString(Formatting.Indented));
+                settings["app_name"] = appName;
+                settings["debug_enabled"] = debugCheckBox.Checked;
+                settings["allow_insecure_ssl"] = insecureSslCheckBox.Checked;
+                settings["disable_race_log"] = disableRaceLogCheckBox.Checked;
+                settings["disable_cbftp_log"] = disableCbftpLogCheckBox.Checked;
+                settings["disable_app_log"] = disableAppLogCheckBox.Checked;
+
+                RaceTrade.AtomicFile.WriteAllText(SETTINGS_FILE, settings.ToString(Formatting.Indented));
 
                 AppName = appName;
                 DebugEnabled = debugCheckBox.Checked;

@@ -51,7 +51,7 @@ namespace RaceTrade
             {
                 var config = new PreCbftpServersConfig { Servers = servers };
                 var json = JsonConvert.SerializeObject(config, Formatting.Indented);
-                File.WriteAllText(CbftpServersFile, json);
+                AtomicFile.WriteAllText(CbftpServersFile, json);
             }
             catch (Exception ex)
             {
@@ -91,7 +91,7 @@ namespace RaceTrade
             {
                 var config = new PreSitesConfig { Sites = sites };
                 var json = JsonConvert.SerializeObject(config, Formatting.Indented);
-                File.WriteAllText(SitesFile, json);
+                AtomicFile.WriteAllText(SitesFile, json);
             }
             catch (Exception ex)
             {

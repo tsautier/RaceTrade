@@ -251,6 +251,7 @@
     <Compile Include="UI\Forms\SectionSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Configuration\AtomicFile.cs" />
     <Compile Include="Configuration\SecureConfig.cs" />
     <Compile Include="Configuration\SettingsForm.cs">
       <SubType>Form</SubType>

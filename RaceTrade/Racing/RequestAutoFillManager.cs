@@ -723,7 +723,18 @@ namespace RaceTrader
             {
                 var now = DateTime.UtcNow;
 
-                foreach (var site in _sites)
+                // Snapshot under the lock - Stop()/Start() clear _sites/_allSites from
+                // another thread, which would throw "Collection was modified" and kill
+                // this loop (an unobserved exception on a fire-and-forget task).
+                List<SiteConfig> sitesSnapshot;
+                List<SiteConfig> allSitesSnapshot;
+                lock (_sync)
+                {
+                    sitesSnapshot = _sites.ToList();
+                    allSitesSnapshot = _allSites.ToList();
+                }
+
+                foreach (var site in sitesSnapshot)
                 {
                     if (token.IsCancellationRequested)
                         break;
@@ -754,12 +765,12 @@ namespace RaceTrader
                             var entries = await RequestAutoFillManager.PollOnceAndLogAsync(site, token);
 
                             // 2) try to auto-fill them from other sites
-                            if (entries != null && entries.Count > 0 && _allSites.Count > 0)
+                            if (entries != null && entries.Count > 0 && allSitesSnapshot.Count > 0)
                             {
                                 await RequestAutoFillManager.TryFillRequestsForSiteAsync(
                                     site,
                                     entries,
-                                    _allSites,
+                                    allSitesSnapshot,
                                     token);
                             }
                         }

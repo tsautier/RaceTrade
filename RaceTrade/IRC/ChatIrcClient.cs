@@ -27,12 +27,14 @@ public class ChatIrcClient
     private readonly SiteConfig siteConfig;
     private readonly CancellationToken cancellationToken;
 
-    // Blowfish for channels / PM
-    private readonly Dictionary<string, FishDecryptor> fishDecryptors = new Dictionary<string, FishDecryptor>();
+    // Blowfish for channels / PM.
+    // Channel names and IRC nicks are case-insensitive, so these must be too.
+    // ALL access (read and write) must be inside lock (fishLock).
+    private readonly Dictionary<string, FishDecryptor> fishDecryptors = new Dictionary<string, FishDecryptor>(StringComparer.OrdinalIgnoreCase);
 
     // FiSH PM key handling
-    private readonly Dictionary<string, string> pmFishKeys = new Dictionary<string, string>();
-    private readonly Dictionary<string, DH1080> pendingKeyExchanges = new Dictionary<string, DH1080>();
+    private readonly Dictionary<string, string> pmFishKeys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, DH1080> pendingKeyExchanges = new Dictionary<string, DH1080>(StringComparer.OrdinalIgnoreCase);
 
     // Tabbed IRC UI
     private TabbedIrcLog tabbedLogOutput;
@@ -58,8 +60,9 @@ public class ChatIrcClient
     private int _disconnecting = 0;
     private bool IsDisconnecting => Volatile.Read(ref _disconnecting) == 1;
 
-    // Use one lock for ALL FiSH/PM key dictionaries (not just fishDecryptors)
-    private readonly object _keyLock = new object();
+    // NOTE: there used to be a separate _keyLock here. Writers took _keyLock (or no
+    // lock at all) while readers took fishLock, so the two never excluded each other
+    // and the dictionaries could be mutated mid-read. Everything now uses fishLock.
 
     public ChatIrcClient(SiteConfig config, string siteName, Action<string, string> callback, IrcLog logOutput, CancellationToken cancellationToken)
     {
@@ -94,12 +97,23 @@ public class ChatIrcClient
 
         this.botName = config.SiteSettings.BotName;
 
-        this.channels = new List<string>
+        // Join ALL configured channels (Chan1..Chan20), not just the first three.
+        // The site editor supports 20 and LoadChannelKeys loads keys for all 20, so
+        // anything past Chan3 was never joined and never decrypted.
+        this.channels = new List<string>();
+        for (int i = 1; i <= 20; i++)
         {
-            config.SiteSettings.Chan1,
-            config.SiteSettings.Chan2,
-            config.SiteSettings.Chan3
-        }.Where(c => !string.IsNullOrEmpty(c)).ToList();
+            var chanProp = config.SiteSettings.GetType().GetProperty($"Chan{i}");
+            var chanValue = chanProp?.GetValue(config.SiteSettings) as string;
+
+            if (string.IsNullOrWhiteSpace(chanValue))
+                continue;
+
+            chanValue = NormalizeKeyName(chanValue);
+
+            if (!this.channels.Contains(chanValue, StringComparer.OrdinalIgnoreCase))
+                this.channels.Add(chanValue);
+        }
 
         LoadChannelKeys(config);
     }
@@ -239,6 +253,10 @@ public class ChatIrcClient
             if (string.IsNullOrWhiteSpace(chanValue) || string.IsNullOrWhiteSpace(encKey))
                 continue;
 
+            // Normalize like SetChannelKey does, so a channel written without '#'
+            // (or with different casing) still matches the server's channel name.
+            chanValue = NormalizeKeyName(chanValue);
+
             try
             {
                 var plainKey = SecureConfig.Decrypt(encKey);
@@ -306,7 +324,10 @@ public class ChatIrcClient
 
         try
         {
-            fishDecryptors[channel] = new FishDecryptor(utf8Key);
+            lock (fishLock)
+            {
+                fishDecryptors[channel] = new FishDecryptor(utf8Key);
+            }
 
             if (!persist)
                 return;
@@ -333,7 +354,7 @@ public class ChatIrcClient
 
             fileConfig.SiteSettings.ChatKeys[channel] = encKey;
 
-            File.WriteAllText(siteFile, JsonConvert.SerializeObject(fileConfig, Formatting.Indented));
+            AtomicFile.WriteAllText(siteFile, JsonConvert.SerializeObject(fileConfig, Formatting.Indented));
 
             AppendOutput($"[FiSH] Saved key for {channel} to site config", Color.Green);
         }
@@ -407,7 +428,13 @@ public class ChatIrcClient
 
         try
         {
-            fishDecryptors[channel] = new FishDecryptor(utf8Key);
+            channel = NormalizeKeyName(channel);
+
+            lock (fishLock)
+            {
+                fishDecryptors[channel] = new FishDecryptor(utf8Key);
+            }
+
             AppendOutput($"[FiSH] Manual Blowfish key set for channel {channel}", Color.Yellow);
         }
         catch (Exception ex)
@@ -489,7 +516,7 @@ public class ChatIrcClient
             // Do NOT wait on listeningTask here
             // Do NOT close/dispose currentSslStream here
 
-            lock (_keyLock)
+            lock (fishLock)
             {
                 fishDecryptors.Clear();
                 pmFishKeys.Clear();
@@ -757,22 +784,25 @@ public class ChatIrcClient
                 string oldPmKey = $"PM:{oldNick}";
                 string newPmKey = $"PM:{newNick}";
 
-                if (fishDecryptors.ContainsKey(oldPmKey))
+                lock (fishLock)
                 {
-                    fishDecryptors[newPmKey] = fishDecryptors[oldPmKey];
-                    fishDecryptors.Remove(oldPmKey);
-                }
+                    if (fishDecryptors.ContainsKey(oldPmKey))
+                    {
+                        fishDecryptors[newPmKey] = fishDecryptors[oldPmKey];
+                        fishDecryptors.Remove(oldPmKey);
+                    }
 
-                if (pmFishKeys.ContainsKey(oldNick))
-                {
-                    pmFishKeys[newNick] = pmFishKeys[oldNick];
-                    pmFishKeys.Remove(oldNick);
-                }
+                    if (pmFishKeys.ContainsKey(oldNick))
+                    {
+                        pmFishKeys[newNick] = pmFishKeys[oldNick];
+                        pmFishKeys.Remove(oldNick);
+                    }
 
-                if (pendingKeyExchanges.ContainsKey(oldNick))
-                {
-                    pendingKeyExchanges[newNick] = pendingKeyExchanges[oldNick];
-                    pendingKeyExchanges.Remove(oldNick);
+                    if (pendingKeyExchanges.ContainsKey(oldNick))
+                    {
+                        pendingKeyExchanges[newNick] = pendingKeyExchanges[oldNick];
+                        pendingKeyExchanges.Remove(oldNick);
+                    }
                 }
 
                 return;
@@ -868,7 +898,7 @@ public class ChatIrcClient
                         string ourPublicKey = dh.GetPublicKey();
                         string sharedSecret = dh.ComputeSharedSecret(theirPublicKeyRaw);
 
-                        lock (_keyLock)
+                        lock (fishLock)
                         {
                             pmFishKeys[username] = sharedSecret;
                             fishDecryptors[$"PM:{username}"] = new FishDecryptor(sharedSecret);
@@ -905,21 +935,31 @@ public class ChatIrcClient
                     if (username.Equals(thisNick, StringComparison.OrdinalIgnoreCase))
                         return;
 
-                    if (pendingKeyExchanges.ContainsKey(username))
+                    DH1080 pendingDh;
+                    lock (fishLock)
+                    {
+                        pendingKeyExchanges.TryGetValue(username, out pendingDh);
+                    }
+
+                    if (pendingDh != null)
                     {
                         try
                         {
-                            var dh = pendingKeyExchanges[username];
-                            string sharedSecret = dh.ComputeSharedSecret(theirPublicKeyRaw);
+                            string sharedSecret = pendingDh.ComputeSharedSecret(theirPublicKeyRaw);
 
-                            pmFishKeys[username] = sharedSecret;
-                            fishDecryptors[$"PM:{username}"] = new FishDecryptor(sharedSecret);
+                            // Mutate all three dictionaries under the one lock. Never call
+                            // back into the UI while holding it.
+                            lock (fishLock)
+                            {
+                                pmFishKeys[username] = sharedSecret;
+                                fishDecryptors[$"PM:{username}"] = new FishDecryptor(sharedSecret);
+                                pendingKeyExchanges.Remove(username);
+                            }
+
                             SafeTabbedLogAction(t => t?.AppendChannelMessage(siteName, $"PM:{username}",
                                 "[FiSH] ✓ Key exchange completed! Messages are now encrypted.", Color.Green));
                             SafeTabbedLogAction(t => t?.AppendChannelMessage(siteName, $"PM:{username}",
                                 $"[FiSH] Key for {username} set to *censored* (CBC Mode)", Color.Green));
-
-                            pendingKeyExchanges.Remove(username);
                         }
                         catch (Exception ex)
                         {
@@ -1125,7 +1165,7 @@ public class ChatIrcClient
                 AppendOutput($"[DEBUG] Our public key length: {publicKey.Length}", Color.Cyan);
             }
 
-            lock (_keyLock)
+            lock (fishLock)
             {
                 pendingKeyExchanges[targetUser] = dh;
             }

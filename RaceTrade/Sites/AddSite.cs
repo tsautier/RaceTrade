@@ -497,6 +497,8 @@ namespace RaceTrade
                                 if (!string.IsNullOrWhiteSpace(channel))
                                 {
                                     string plainKey = "";
+                                    bool decryptFailed = false;
+
                                     if (!string.IsNullOrWhiteSpace(key))
                                     {
                                         try
@@ -506,9 +508,10 @@ namespace RaceTrade
                                         catch (Exception ex)
                                         {
                                             // Key was encrypted by a different Windows user/machine (DPAPI is
-                                            // per-user). Don't blow up the whole load - show it empty so it
-                                            // can simply be re-entered.
+                                            // per-user). Don't blow up the whole load - show it empty, but
+                                            // remember the original so a later save doesn't wipe it.
                                             plainKey = "";
+                                            decryptFailed = true;
                                             LogManager.Error(
                                                 $"Could not decrypt stored Blowfish key for {channel}. " +
                                                 $"It was encrypted by another Windows user/machine - please re-enter it. ({ex.Message})");
@@ -518,7 +521,9 @@ namespace RaceTrade
                                     ListboxChannels.Items.Add(new ChannelInfo
                                     {
                                         Channel = channel,
-                                        BlowfishKey = plainKey
+                                        BlowfishKey = plainKey,
+                                        StoredValue = key,
+                                        DecryptFailed = decryptFailed
                                     });
                                 }
                             }
@@ -670,6 +675,9 @@ namespace RaceTrade
                 {
                     existingChannel.Channel = channel;
                     existingChannel.BlowfishKey = blowfishKey;
+                    // User supplied a fresh key -> it must be (re)encrypted on save.
+                    existingChannel.DecryptFailed = false;
+                    existingChannel.StoredValue = null;
                     ListboxChannels.Items[i] = existingChannel; // refresh display
 
                     textBox_Channel_Key.Clear();
@@ -953,7 +961,7 @@ namespace RaceTrade
                 }
 
                 // Save the updated configuration back to the JSON file
-                File.WriteAllText(currentSiteFilePath, JsonConvert.SerializeObject(siteData, Formatting.Indented));
+                AtomicFile.WriteAllText(currentSiteFilePath, JsonConvert.SerializeObject(siteData, Formatting.Indented));
                 MessageBox.Show("Mappings saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
@@ -1041,10 +1049,18 @@ namespace RaceTrade
                 var existingChatKeys = currentSite?.SiteSettings?.ChatKeys
                                        ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
+                // Preserve settings that have no UI control - rebuilding SiteSettings from
+                // the form would otherwise null them out. (release_prefix/release_suffix are
+                // read at runtime by IRCClient.)
+                var existingReleasePrefix = currentSite?.SiteSettings?.ReleasePrefix;
+                var existingReleaseSuffix = currentSite?.SiteSettings?.ReleaseSuffix;
+
                 // Save site settings
                 currentSite.SiteSettings = new SiteSettings
                 {
                     Sitename = siteName,
+                    ReleasePrefix = existingReleasePrefix,
+                    ReleaseSuffix = existingReleaseSuffix,
                     BotName = textBox5.Text.Trim(),
                     NewRegexPattern = New_Field_regex.Text.Trim(),
                     IgnoreWords = Ignore_Word_regex.Text.Trim(),
@@ -1097,7 +1113,7 @@ namespace RaceTrade
 
                 // Write to JSON file
                 string jsonContent = JsonConvert.SerializeObject(currentSite, Formatting.Indented);
-                File.WriteAllText(currentSiteFilePath, jsonContent);
+                AtomicFile.WriteAllText(currentSiteFilePath, jsonContent);
                 LogManager.Success($"Site saved! Passwords encrypted automatically");
                 //MessageBox.Show("Site saved! Passwords encrypted automatically.", "Success");
 
@@ -1673,8 +1689,16 @@ namespace RaceTrade
                 var keyProp = currentSite.SiteSettings.GetType().GetProperty($"BlowfishKey{channelIndex}");
                 if (channelProp != null && keyProp != null)
                 {
+                    // If we could not decrypt this key on load and the user hasn't typed a
+                    // new one, write the ORIGINAL stored value back untouched. Encrypting an
+                    // empty string returns an empty string, which would silently wipe the key.
+                    string keyToStore =
+                        (channelInfo.DecryptFailed && string.IsNullOrWhiteSpace(channelInfo.BlowfishKey))
+                            ? channelInfo.StoredValue
+                            : SecureConfig.Encrypt(channelInfo.BlowfishKey);
+
                     channelProp.SetValue(currentSite.SiteSettings, channelInfo.Channel);
-                    keyProp.SetValue(currentSite.SiteSettings, SecureConfig.Encrypt(channelInfo.BlowfishKey));
+                    keyProp.SetValue(currentSite.SiteSettings, keyToStore);
                 }
                 channelIndex++;
                 if (channelIndex > 20) break;
@@ -1748,7 +1772,7 @@ namespace RaceTrade
                         existingSiteConfig.Affils = currentSite.Affils;
                         // Serialize and save
                         var updatedJsonContent = JsonConvert.SerializeObject(existingSiteConfig, Formatting.Indented);
-                        File.WriteAllText(currentSiteFilePath, updatedJsonContent);
+                        AtomicFile.WriteAllText(currentSiteFilePath, updatedJsonContent);
 
                         LogManager.Success("Site configuration saved");
                     }
@@ -1761,7 +1785,7 @@ namespace RaceTrade
                 {
                     // If no existing file, save the currentSite as new
                     var newJsonContent = JsonConvert.SerializeObject(currentSite, Formatting.Indented);
-                    File.WriteAllText(currentSiteFilePath, newJsonContent);
+                    AtomicFile.WriteAllText(currentSiteFilePath, newJsonContent);
                     MessageBox.Show("Site configuration saved as new!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -2345,7 +2369,7 @@ namespace RaceTrade
                 }
 
                 // Save the updated JSON
-                File.WriteAllText(
+                AtomicFile.WriteAllText(
                     currentSiteFilePath,
                     JsonConvert.SerializeObject(siteData, Formatting.Indented));
             }
@@ -2691,6 +2715,16 @@ namespace RaceTrade
     {
         public string Channel { get; set; }
         public string BlowfishKey { get; set; }
+
+        /// <summary>
+        /// The exact value as stored in the JSON. Kept so that a key we could not
+        /// decrypt (e.g. DPAPI blob from another Windows user/machine) is written back
+        /// untouched instead of being silently wiped on the next save.
+        /// </summary>
+        public string StoredValue { get; set; }
+
+        /// <summary>True when the stored value could not be decrypted.</summary>
+        public bool DecryptFailed { get; set; }
 
         // Display only channel name in listbox
         public override string ToString()

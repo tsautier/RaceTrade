@@ -22,6 +22,12 @@ public static class RaceHelper
     private static readonly ConcurrentDictionary<string, bool> InProgressReleases = new();
     private static readonly List<JObject> allSiteConfigs = new List<JObject>();
     private static readonly object configLock = new();
+
+    /// <summary>
+    /// Guard against catastrophic backtracking in user/config supplied patterns.
+    /// Without this a pathological trigger/blacklist regex can hang the filter thread.
+    /// </summary>
+    private static readonly TimeSpan RegexSafeTimeout = TimeSpan.FromMilliseconds(250);
     // NOTE: RulesEngine holds per-evaluation state (_sectionRules/_tagRules), so it is
     // NOT shared statically anymore — each racing path creates its own instance and
     // loads rules immediately before evaluating (avoids stale rules + concurrency races).
@@ -68,7 +74,7 @@ public static class RaceHelper
                         regexPattern = pattern;
                     }
 
-                    if (Regex.IsMatch(releaseName, regexPattern, RegexOptions.IgnoreCase))
+                    if (Regex.IsMatch(releaseName, regexPattern, RegexOptions.IgnoreCase, RegexSafeTimeout))
                     {
                         matchedPattern = pattern;
                         return true;
@@ -235,7 +241,16 @@ public static class RaceHelper
 
         try
         {
-            if (allSiteConfigs == null || !allSiteConfigs.Any())
+            // Snapshot the configs under the lock. LoadAllSiteConfigs/ClearCaches mutate
+            // this list from another thread; iterating it directly threw "Collection was
+            // modified" mid-race, which was swallowed and silently dropped the release.
+            List<JObject> siteConfigsSnapshot;
+            lock (configLock)
+            {
+                siteConfigsSnapshot = allSiteConfigs.ToList();
+            }
+
+            if (!siteConfigsSnapshot.Any())
                 return FilterResult.Error(releaseName, "No site configurations loaded");
 
             var allowedSites = new List<string>();
@@ -243,7 +258,7 @@ public static class RaceHelper
             // Per-call engine: rules are (re)loaded per site immediately before Evaluate.
             var rulesEngine = new RulesEngine();
 
-            foreach (var siteConfig in allSiteConfigs)
+            foreach (var siteConfig in siteConfigsSnapshot)
             {
                 string siteName = siteConfig["site_settings"]?["sitename"]?.ToString();
                 bool disableSite = siteConfig["site_settings"]?["disable_site"]?.ToObject<bool>() ?? true;
@@ -619,14 +634,24 @@ public static class RaceHelper
                 // Check trigger regex
                 if (!string.IsNullOrEmpty(triggerRegex))
                 {
-                    bool isCaseInsensitive = triggerRegex.EndsWith("/i");
-                    string regexPattern = triggerRegex.Trim('/').TrimEnd('i').Trim('/');
+                    // Only strip delimiters/flags when the value is actually in /pattern/
+                    // or /pattern/i form. The old code did Trim('/').TrimEnd('i'), which
+                    // silently turned a bare pattern like "multi" into "mult".
+                    string regexPattern = triggerRegex.Trim();
+                    bool isCaseInsensitive = false;
+
+                    var delimited = Regex.Match(regexPattern, @"^/(?<pat>.*)/(?<flags>[a-zA-Z]*)$", RegexOptions.Singleline);
+                    if (delimited.Success)
+                    {
+                        regexPattern = delimited.Groups["pat"].Value;
+                        isCaseInsensitive = delimited.Groups["flags"].Value.IndexOf('i') >= 0;
+                    }
 
                     try
                     {
                         RegexOptions options = isCaseInsensitive ? RegexOptions.IgnoreCase : RegexOptions.None;
 
-                        if (!Regex.IsMatch(releaseName, regexPattern, options))
+                        if (!Regex.IsMatch(releaseName, regexPattern, options, RegexSafeTimeout))
                         {
                             if (MainApp.DebugEnabled)
                             {
