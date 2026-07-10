@@ -83,6 +83,11 @@ BUG FIXES & THEMING:
   - Fixed centered text on Pre Manager action buttons
   - Fixed Clear Log button clipping in the Pre Manager
 
+- Site editor settings persistence
+  - Fixed TVMaze/IMDB section settings being lost after saving the Site Editor
+  - Preserved section-level imdb/tvmaze config in the site model
+  - Aligned TVMaze/IMDB settings file path with the Site Editor sites folder
+
 
 Version 1.0.7b (Beta)
 ----------------------
