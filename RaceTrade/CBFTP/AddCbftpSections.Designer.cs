@@ -31,11 +31,12 @@
             this.List_cbftp_sections = new System.Windows.Forms.ListBox();
             this.Delete_cbftp_Section = new System.Windows.Forms.Button();
             this.Add_cbftp_Section = new System.Windows.Forms.Button();
+            this.Exit_cbftp_Section = new System.Windows.Forms.Button();
             this.cbftp_Section_name_field = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
-            // 
+            //
             // List_cbftp_sections
-            // 
+            //
             this.List_cbftp_sections.FormattingEnabled = true;
             this.List_cbftp_sections.ItemHeight = 17;
             this.List_cbftp_sections.Location = new System.Drawing.Point(12, 12);
@@ -67,6 +68,18 @@
             this.Add_cbftp_Section.UseVisualStyleBackColor = false;
             this.Add_cbftp_Section.Click += new System.EventHandler(this.Add_Section_cbftp_Click);
             // 
+            // Exit_cbftp_Section
+            // 
+            this.Exit_cbftp_Section.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
+            this.Exit_cbftp_Section.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.Exit_cbftp_Section.Location = new System.Drawing.Point(12, 358);
+            this.Exit_cbftp_Section.Name = "Exit_cbftp_Section";
+            this.Exit_cbftp_Section.Size = new System.Drawing.Size(160, 25);
+            this.Exit_cbftp_Section.TabIndex = 9;
+            this.Exit_cbftp_Section.Text = "Exit";
+            this.Exit_cbftp_Section.UseVisualStyleBackColor = false;
+            this.Exit_cbftp_Section.Click += new System.EventHandler(this.Exit_cbftp_Section_Click);
+            // 
             // cbftp_Section_name_field
             // 
             this.cbftp_Section_name_field.Location = new System.Drawing.Point(12, 294);
@@ -80,10 +93,11 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DimGray;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.ClientSize = new System.Drawing.Size(185, 359);
+            this.ClientSize = new System.Drawing.Size(185, 393);
             this.Controls.Add(this.List_cbftp_sections);
             this.Controls.Add(this.Delete_cbftp_Section);
             this.Controls.Add(this.Add_cbftp_Section);
+            this.Controls.Add(this.Exit_cbftp_Section);
             this.Controls.Add(this.cbftp_Section_name_field);
             this.Font = new System.Drawing.Font("Cascadia Mono", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -104,6 +118,7 @@
         private System.Windows.Forms.ListBox List_cbftp_sections;
         private System.Windows.Forms.Button Delete_cbftp_Section;
         private System.Windows.Forms.Button Add_cbftp_Section;
+        private System.Windows.Forms.Button Exit_cbftp_Section;
         private System.Windows.Forms.TextBox cbftp_Section_name_field;
     }
 }

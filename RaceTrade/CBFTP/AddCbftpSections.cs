@@ -165,6 +165,11 @@ namespace RaceTrade
             }
         }
 
+        private void Exit_cbftp_Section_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
         private void SaveCbftpSections()
         {
             try
