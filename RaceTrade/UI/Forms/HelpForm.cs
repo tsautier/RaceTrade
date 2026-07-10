@@ -47,6 +47,7 @@ TABLE OF CONTENTS
 Version 1.0.8b (Current - Beta)
 --------------------------------
 Released: July 9, 2026
+Updated: July 10, 2026
 
 BUG FIXES & THEMING:
 
@@ -87,6 +88,41 @@ BUG FIXES & THEMING:
   - Fixed TVMaze/IMDB section settings being lost after saving the Site Editor
   - Preserved section-level imdb/tvmaze config in the site model
   - Aligned TVMaze/IMDB settings file path with the Site Editor sites folder
+
+- Save/persistence audit fixes
+  - Added atomic config writes with temp-file replacement and .bak backup support
+  - Converted config saves to AtomicFile writes to avoid truncated/corrupt JSON files
+  - Fixed AddSite save wiping Blowfish keys when DPAPI decrypt failed
+  - Preserved original encrypted Blowfish ciphertext unless a new key is entered
+  - Fixed AddSite save losing release_prefix and release_suffix values
+  - Fixed preBot editor save rebuilding SiteSettings and wiping hidden fields
+  - Fixed preBot password and Blowfish key load/save encryption handling
+  - Fixed SettingsForm save wiping unrelated settings like docked log layout
+
+- Race filtering and concurrency fixes
+  - Fixed RaceHelper iterating site configs while reloads could modify the list
+  - Fixed RequestAutoFillManager polling loop crashes from concurrent site list updates
+  - Added synchronized TVMaze and IMDB rate limiting to avoid concurrent API bursts
+  - Added regex timeouts for trigger, blacklist, and wildcard rule checks
+
+- IRC / FiSH fixes
+  - Chat IRC now joins configured channels Chan1 through Chan20
+  - Normalized channel names when loading Blowfish keys
+  - Unified FiSH and PM key dictionary locking to prevent runtime dictionary races
+  - Made FiSH key dictionaries case-insensitive for IRC nick/channel matching
+  - Fixed DH1080 key decode to choose the valid Base64 variant by key length
+  - Kept existing ZNC-compatible PASS/NICK/USER ordering unchanged
+
+- Rules and matching fixes
+  - Fixed trigger regex parsing so patterns ending in i are not mangled
+  - Fixed isin rules to use exact list membership instead of substring matching
+  - Fixed rules whose value is literally ALLOW, DROP, or EXCEPT
+  - Fixed MULTI detection to require a delimited release tag
+
+- Log and small form fixes
+  - Added Exit button to the CBFTP Sections form
+  - Matched log window width to the main window while preserving height auto-resize
+  - Aligned docked log windows with the main frame and added an 8px dock gap
 
 
 Version 1.0.7b (Beta)
