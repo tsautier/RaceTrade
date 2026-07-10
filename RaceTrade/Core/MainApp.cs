@@ -1347,7 +1347,7 @@ namespace RaceTrade
             _isPositioningLogs = true;
             try
             {
-                int spacing = 2;
+                int spacing = 8;
                 int minLogHeight = 80; // minimal height for logs so they don't collapse completely
 
                 // Screen work area
@@ -1358,6 +1358,9 @@ namespace RaceTrade
                 int mainY = this.Location.Y;
                 int mainWidth = this.Width;
                 int mainHeight = this.Height;
+                const int logFrameCompensation = 8;
+                int logX = mainX - logFrameCompensation;
+                int logWidth = mainWidth + (logFrameCompensation * 2);
 
                 // Base (ideal) heights
                 int appBaseHeight = 250;
@@ -1453,8 +1456,8 @@ namespace RaceTrade
                 if (appVisible && appHeight > 0)
                 {
                     applicationLog.StartPosition = FormStartPosition.Manual;
-                    applicationLog.Size = new Size(mainWidth, appHeight);
-                    applicationLog.Location = new Point(mainX, mainY - spacing - appHeight);
+                    applicationLog.Size = new Size(logWidth, appHeight);
+                    applicationLog.Location = new Point(logX, mainY - spacing - appHeight);
                 }
 
                 // Logs below main – we start from bottom edge of main
@@ -1463,24 +1466,24 @@ namespace RaceTrade
                 if (raceVisible && bottomHeights.TryGetValue(raceLog, out int raceHeight) && raceHeight > 0)
                 {
                     raceLog.StartPosition = FormStartPosition.Manual;
-                    raceLog.Size = new Size(mainWidth, raceHeight);
-                    raceLog.Location = new Point(mainX, currentY);
+                    raceLog.Size = new Size(logWidth, raceHeight);
+                    raceLog.Location = new Point(logX, currentY);
                     currentY += raceHeight + spacing;
                 }
 
                 if (cbftpVisible && bottomHeights.TryGetValue(cbftpLog, out int cbftpHeight) && cbftpHeight > 0)
                 {
                     cbftpLog.StartPosition = FormStartPosition.Manual;
-                    cbftpLog.Size = new Size(mainWidth, cbftpHeight);
-                    cbftpLog.Location = new Point(mainX, currentY);
+                    cbftpLog.Size = new Size(logWidth, cbftpHeight);
+                    cbftpLog.Location = new Point(logX, currentY);
                     currentY += cbftpHeight + spacing;
                 }
 
                 if (ircVisible && bottomHeights.TryGetValue(logOutput, out int ircHeight) && ircHeight > 0)
                 {
                     logOutput.StartPosition = FormStartPosition.Manual;
-                    logOutput.Size = new Size(mainWidth, ircHeight);
-                    logOutput.Location = new Point(mainX, currentY);
+                    logOutput.Size = new Size(logWidth, ircHeight);
+                    logOutput.Location = new Point(logX, currentY);
                 }
             }
             finally
