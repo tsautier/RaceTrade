@@ -85,7 +85,7 @@ namespace RaceTrader
                     var ratingText = testMovie.ImdbRating.HasValue
                     ? testMovie.ImdbRating.Value.ToString("F1")
     :               "N/A";
-                    statusLabel.Text = $"✓ Success! Test: {testMovie.Title} ({testMovie.Year}) - Rating: {testMovie.ImdbRating}/10";
+                    statusLabel.Text = $"✓ Success! Test: {testMovie.Title} ({testMovie.Year}) - Rating: {ratingText}/10";
                     statusLabel.ForeColor = Color.LimeGreen;
                     MessageBox.Show(
                         $"Connection successful!\n\n" +

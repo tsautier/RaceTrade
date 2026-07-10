@@ -96,8 +96,10 @@ namespace RaceTrade
         }
 
         // split race vs chat IRC clients
-        private readonly Dictionary<string, IRCClient> raceIrcClients = new Dictionary<string, IRCClient>();
-        private readonly Dictionary<string, ChatIrcClient> chatIrcClients = new Dictionary<string, ChatIrcClient>();
+        // ConcurrentDictionary: entries are added from parallel Task.Run bodies while the
+        // UI thread enumerates/clears — a plain Dictionary corrupts under concurrent writes.
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, IRCClient> raceIrcClients = new System.Collections.Concurrent.ConcurrentDictionary<string, IRCClient>();
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ChatIrcClient> chatIrcClients = new System.Collections.Concurrent.ConcurrentDictionary<string, ChatIrcClient>();
 
         private static MainApp _instance;
 
@@ -1605,6 +1607,10 @@ namespace RaceTrade
                 }
 
                 LogManager.Success($"Configuration file '{filePath}' loaded successfully.");
+
+                // Keep the racer's in-memory server list in sync — otherwise added/edited
+                // cbftp servers are only picked up after an application restart.
+                CbftpRacer.ReloadConfiguration();
             }
             catch (Exception ex)
             {
@@ -1911,14 +1917,22 @@ namespace RaceTrade
 
                 RaceHelper.LoadAllSiteConfigs();
 
-                RequestAutoFillRunner.StartForAllSites(siteConfigs.Values);
+                // siteConfigs is (re)populated in the loop below; the auto-fill runner is
+                // started AFTER the loop — starting it here always passed an empty list,
+                // which silently disabled request auto-fill entirely.
 
                 // reset CTS before starting
                 cancellationTokenSource?.Cancel();
                 cancellationTokenSource?.Dispose();
                 cancellationTokenSource = new CancellationTokenSource();
 
+                // Capture a local — StopTrader disposes/nulls the field, and the Task.Run
+                // bodies below may not have started yet when that happens (NRE/ODE).
+                var startCts = cancellationTokenSource;
+
                 isTraderRunning = true;
+
+                siteConfigs.Clear(); // rebuilt below; don't keep sites removed since last start
 
                 var siteTasks = new List<Task>();
                 var connectedPrebots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1940,11 +1954,19 @@ namespace RaceTrade
                         continue;
                     }
 
-                    if (siteConfig.SiteSettings?.DisableSite == true)
+                    if (siteConfig.SiteSettings == null)
+                    {
+                        LogManager.Warning($"Skipping Site '{siteName}': No site_settings section in the configuration.");
+                        continue;
+                    }
+
+                    if (siteConfig.SiteSettings.DisableSite == true)
                     {
                         LogManager.Warning($"Skipping Site '{siteName}': Site is disabled in the configuration.");
                         continue;
                     }
+
+                    siteConfigs[siteName] = siteConfig;
 
                     // ---------- Global PreBot handling ----------
                     if (siteConfig.SiteSettings.PreOrSite?.StartsWith("Global PreBot",
@@ -2097,7 +2119,7 @@ namespace RaceTrade
                                     siteConfigForPrebot,
                                     prebotName,
                                     logOutput,
-                                    cancellationTokenSource.Token
+                                    startCts.Token
                                 );
 
                                 raceIrcClients[prebotName] = prebotClient;
@@ -2109,7 +2131,7 @@ namespace RaceTrade
                             {
                                 LogManager.Error($"Error connecting to PreBot '{prebotName}': {ex.Message}");
                             }
-                        }, cancellationTokenSource.Token);
+                        }, startCts.Token);
 
                         siteTasks.Add(prebotTask);
                     }
@@ -2161,7 +2183,7 @@ namespace RaceTrade
                                 siteConfig,
                                 siteName,
                                 logOutput,
-                                cancellationTokenSource.Token
+                                startCts.Token
                             );
 
                             raceIrcClients[siteName] = ircClient;
@@ -2175,16 +2197,22 @@ namespace RaceTrade
                             {
                                 LogManager.Error($"Error connecting to IRC for Site '{siteName}': {ex.Message}");
                             }
-                        }, cancellationTokenSource.Token);
+                        }, startCts.Token);
 
                         siteTasks.Add(siteTask);
                     }
                 }
 
+                // Start request auto-fill now that siteConfigs is populated
+                // (WhenAll below blocks until the trader stops).
+                RequestAutoFillRunner.StartForAllSites(siteConfigs.Values);
+
                 try
                 {
+                    // WhenAll completes only when every connection loop has exited — i.e.
+                    // when the trader is stopping, NOT when it finished connecting.
                     await Task.WhenAll(siteTasks);
-                    LogManager.Success("Successfully connected to all IRC servers.");
+                    LogManager.Info("All trader connection tasks have ended.");
                 }
                 catch (Exception ex)
                 {
@@ -2198,8 +2226,30 @@ namespace RaceTrade
             }
             finally
             {
-                // This becomes false when the connection tasks exit (e.g. after StopTrader cancel)
-                isTraderRunning = false;
+                // The connection tasks have all exited. Either the user pressed Stop
+                // (StopTrader already ran → isTraderRunning=false) or every connection
+                // dropped on its own. In the latter case isTraderRunning is still true and
+                // the button still says "Stop" while nothing is running — reconcile state,
+                // tear down the dead clients, and refresh the button on the UI thread.
+                Action reconcile = () =>
+                {
+                    if (isTraderRunning)
+                    {
+                        LogManager.Warning("All trader connections ended on their own; stopping trader.");
+                        StopTrader(); // clears clients, cancels/disposes CTS, sets flag false
+                    }
+                    UpdateTraderButton();
+                };
+
+                if (IsHandleCreated && !IsDisposed)
+                {
+                    try { BeginInvoke(reconcile); }
+                    catch { isTraderRunning = false; }
+                }
+                else
+                {
+                    isTraderRunning = false;
+                }
             }
         }
 
@@ -2789,6 +2839,10 @@ namespace RaceTrade
                 chatCancellationTokenSource?.Dispose();
                 chatCancellationTokenSource = new CancellationTokenSource();
 
+                // Local capture — the field can be disposed/nulled by StopChatClients
+                // before the Task.Run bodies below have started.
+                var chatCts = chatCancellationTokenSource;
+
                 var siteTasks = new List<Task>();
 
                 foreach (var item in GetAllSiteFiles())
@@ -2819,7 +2873,7 @@ namespace RaceTrade
                             siteName,
                             (category, release) => { }, // not used for chat
                             logOutput,
-                            chatCancellationTokenSource.Token
+                            chatCts.Token
                         );
 
                         chatClient.SetChatOnlyMode(true);
@@ -2939,7 +2993,7 @@ namespace RaceTrade
                             }
                             catch { }
                         }
-                    }, chatCancellationTokenSource.Token);
+                    }, chatCts.Token);
 
                     siteTasks.Add(siteTask);
                 }

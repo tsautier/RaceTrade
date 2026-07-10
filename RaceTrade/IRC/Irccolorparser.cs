@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -11,6 +12,25 @@ namespace RaceTrade
     public static class IrcColorParser
     {
         private static readonly Color ReadableBlack = Color.FromArgb(184, 193, 210);
+
+        // Cache one Font per (base font, style) — allocating a new GDI+ Font for every
+        // text run of every message leaks native handles (10k GDI limit kills the UI).
+        private static readonly Dictionary<string, Font> FontCache =
+            new Dictionary<string, Font>();
+
+        private static Font GetStyledFont(Font baseFont, FontStyle style)
+        {
+            string key = $"{baseFont.FontFamily.Name}|{baseFont.Size}|{(int)style}";
+            lock (FontCache)
+            {
+                if (!FontCache.TryGetValue(key, out var font))
+                {
+                    font = new Font(baseFont, style);
+                    FontCache[key] = font;
+                }
+                return font;
+            }
+        }
 
         // mIRC color palette (0-15)
         private static readonly Color[] IrcColors = new Color[]
@@ -171,7 +191,7 @@ namespace RaceTrade
                 if (isItalic) fontStyle |= FontStyle.Italic;
                 if (isUnderline) fontStyle |= FontStyle.Underline;
 
-                richTextBox.SelectionFont = new Font(richTextBox.Font, fontStyle);
+                richTextBox.SelectionFont = GetStyledFont(richTextBox.Font, fontStyle);
                 richTextBox.AppendText(textRun);
             }
         }

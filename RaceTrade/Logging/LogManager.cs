@@ -424,8 +424,10 @@ namespace RaceTrade
 
     public class LogManagerCore
     {
-        private static LogManagerCore _instance;
-        public static LogManagerCore Instance => _instance ?? (_instance = new LogManagerCore());
+        // Static initialization is thread-safe; the previous lazy "?? =" pattern could
+        // create two instances when first touched from two threads at once.
+        private static readonly LogManagerCore _instance = new LogManagerCore();
+        public static LogManagerCore Instance => _instance;
 
         public event EventHandler<LogEntry> LogEntryAdded;
 
@@ -743,7 +745,8 @@ namespace RaceTrade
 
         public static void Error(string message)
         {
-            if (DisableApplicationLog) return;
+            // Errors always reach the core buffer; DisableApplicationLog only
+            // suppresses UI display (gated in OnLogEntryAdded).
             Core.LogApplication(message, LogLevel.Error);
         }
 
@@ -756,8 +759,7 @@ namespace RaceTrade
 
         public static void Exception(Exception ex, string context = null)
         {
-            if (DisableApplicationLog) return;
-
+            // Exceptions always reach the core buffer (see Error).
             var message = context != null ? $"{context}: {ex.Message}" : ex.Message;
             Core.LogApplication(message, LogLevel.Error);
             if (DebugEnabled && ex.StackTrace != null)

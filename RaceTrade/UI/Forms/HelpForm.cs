@@ -124,6 +124,25 @@ BUG FIXES & THEMING:
   - Matched log window width to the main window while preserving height auto-resize
   - Aligned docked log windows with the main frame and added an 8px dock gap
 
+- Bugfix audit updates
+  - Made atomic file saves use unique temp files so concurrent saves do not collide
+  - Added DPAPI entropy for newly encrypted secrets while keeping legacy decrypt fallback
+  - Reloaded CBFTP racer config immediately after CBFTP server edits
+  - Fixed request auto-fill startup so it receives the populated site list
+  - Added request auto-fill in-flight tracking to prevent duplicate fill jobs
+  - Fixed CBFTP transfer handling for ABORTED jobs and undocumented 2xx spreadjob responses
+  - Stored plain release names in race history so duplicate detection works again
+  - Fixed Pre Spread FXP to post jobs to the source CBFTP server with explicit credentials
+  - Made Pre Spread completion checks fail closed when source listings cannot be verified
+  - Fixed IRC PASS/NICK/USER ordering for ZNC and kept bot processing from blocking PINGs
+  - Reloaded FiSH keys on reconnect and tightened chat user-list locking
+  - Fixed DH1080 CBC key parsing and rejected degenerate DH public keys
+  - Fixed IMDB search hits by fetching full title records before caching/filtering
+  - Fixed TVMaze episode cache writes to stay inside the active transaction
+  - Fixed FXP browser UTF-8 basic auth, symlink delete safety, and image viewer disposal
+  - Made LogManager singleton initialization thread-safe and preserved errors in the core log
+  - Added Test Release guards against double Enter runs and disposed dialog updates
+
 
 Version 1.0.7b (Beta)
 ----------------------

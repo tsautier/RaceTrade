@@ -135,7 +135,7 @@ public static class SQLiteHelper
             command.Parameters.AddWithValue("@ReleaseName", releaseName);
             command.Parameters.AddWithValue("@Category", category);
             command.Parameters.AddWithValue("@SiteName", siteName);
-            command.Parameters.AddWithValue("@DateProcessed", DateTimeOffset.Now.ToUnixTimeSeconds());
+            command.Parameters.AddWithValue("@DateProcessed", dateProcessed);
             command.Parameters.AddWithValue("@Pretime", pretime);
 
             command.ExecuteNonQuery();

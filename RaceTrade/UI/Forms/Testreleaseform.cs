@@ -82,7 +82,10 @@ namespace RaceTrader
             releaseNameTextBox.KeyPress += (s, e) => {
                 if (e.KeyChar == (char)Keys.Enter)
                 {
-                    TestButton_Click(null, null);
+                    // Respect the disabled button — otherwise Enter starts a second
+                    // concurrent test while the first is still awaiting HTTP calls.
+                    if (testButton != null && testButton.Enabled)
+                        TestButton_Click(null, null);
                     e.Handled = true;
                 }
             };
@@ -493,8 +496,11 @@ namespace RaceTrader
             }
             finally
             {
-                testButton.Enabled = true;
-                testButton.Text = "Run Full Test";
+                if (!IsDisposed && !Disposing && testButton != null && !testButton.IsDisposed)
+                {
+                    testButton.Enabled = true;
+                    testButton.Text = "Run Full Test";
+                }
             }
         }
 
@@ -698,6 +704,10 @@ namespace RaceTrader
 
         private void AppendResult(string text, Color color)
         {
+            // The async test can complete after the dialog was closed and disposed.
+            if (IsDisposed || Disposing || resultsTextBox == null || resultsTextBox.IsDisposed)
+                return;
+
             resultsTextBox.SelectionStart = resultsTextBox.TextLength;
             resultsTextBox.SelectionLength = 0;
             resultsTextBox.SelectionColor = color;

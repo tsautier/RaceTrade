@@ -43,7 +43,9 @@ public static class RaceHelper
     {
         lock (blacklistLock)
         {
-            globalBlacklist = patterns ?? new List<string>();
+            // Copy — the caller (MainApp) keeps mutating its own list on the UI thread,
+            // and sharing the reference would defeat blacklistLock entirely.
+            globalBlacklist = patterns != null ? new List<string>(patterns) : new List<string>();
         }
     }
 
@@ -88,6 +90,37 @@ public static class RaceHelper
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Wildcard blacklist matching shared by the global and per-site blacklists:
+    /// * and ? act as wildcards; anything else is matched as a literal substring.
+    /// </summary>
+    private static bool MatchesBlacklistPattern(string releaseName, string pattern)
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+            return false;
+
+        try
+        {
+            string regexPattern;
+
+            if (pattern.Contains("*") || pattern.Contains("?"))
+            {
+                regexPattern = "^" + Regex.Escape(pattern).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+            }
+            else
+            {
+                regexPattern = Regex.Escape(pattern);
+            }
+
+            return Regex.IsMatch(releaseName, regexPattern, RegexOptions.IgnoreCase, RegexSafeTimeout);
+        }
+        catch (Exception ex)
+        {
+            LogManager.Error($"Invalid blacklist pattern '{pattern}': {ex.Message}");
+            return false;
+        }
     }
 
     /// <summary>
@@ -477,8 +510,11 @@ public static class RaceHelper
                         continue;
                     }
 
+                    // Same wildcard semantics as the global blacklist: * and ? are
+                    // wildcards (Regex.Escape alone made them literal, so entries like
+                    // "*French*" could never match anything).
                     if (blacklist != null && blacklist.Any(bl =>
-                        Regex.IsMatch(releaseName, Regex.Escape(bl), RegexOptions.IgnoreCase)))
+                        MatchesBlacklistPattern(releaseName, bl)))
                     {
                         LogManager.Warning($"[{siteName}] blacklisted for [{LogColors.Orange(releaseName)}]");
                         continue;
@@ -563,20 +599,65 @@ public static class RaceHelper
 
                 if (section != null)
                 {
-                    // Get first tag's mapped CBFTP section
+                    // Evaluate each tag's trigger_regex (same as the regular-site path
+                    // below) — unconditionally taking tags[0] sent e.g. x265 releases
+                    // to the x264 CBFTP section whenever a section had multiple tags.
                     var tags = section["tags"] as JArray;
                     if (tags != null && tags.Any())
                     {
-                        var firstTag = tags[0];
-                        string cbftpSection = firstTag["map_cbftp_section"]?.ToString();
+                        string fallback = null;
 
-                        if (!string.IsNullOrEmpty(cbftpSection))
+                        foreach (var tag in tags)
+                        {
+                            string cbftpSection = tag["map_cbftp_section"]?.ToString();
+                            if (string.IsNullOrEmpty(cbftpSection))
+                                continue;
+
+                            string triggerRegex = tag["trigger_regex"]?.ToString();
+
+                            if (string.IsNullOrEmpty(triggerRegex))
+                            {
+                                // tag without trigger = fallback if nothing matches
+                                if (fallback == null)
+                                    fallback = cbftpSection;
+                                continue;
+                            }
+
+                            string regexPattern = triggerRegex.Trim();
+                            bool isCaseInsensitive = false;
+
+                            var delimited = Regex.Match(regexPattern, @"^/(?<pat>.*)/(?<flags>[a-zA-Z]*)$", RegexOptions.Singleline);
+                            if (delimited.Success)
+                            {
+                                regexPattern = delimited.Groups["pat"].Value;
+                                isCaseInsensitive = delimited.Groups["flags"].Value.IndexOf('i') >= 0;
+                            }
+
+                            try
+                            {
+                                RegexOptions options = isCaseInsensitive ? RegexOptions.IgnoreCase : RegexOptions.None;
+                                if (Regex.IsMatch(releaseName, regexPattern, options, RegexSafeTimeout))
+                                {
+                                    if (MainApp.DebugEnabled)
+                                    {
+                                        LogManager.Debug($"PreBot: Mapped IRC [{strippedSection}] → CBFTP [{cbftpSection}] (trigger '{regexPattern}')");
+                                    }
+                                    return cbftpSection;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogManager.Error($"PreBot: Invalid trigger_regex '{triggerRegex}': {ex.Message}");
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(fallback))
                         {
                             if (MainApp.DebugEnabled)
                             {
-                                LogManager.Debug($"PreBot: Mapped IRC [{strippedSection}] → CBFTP [{cbftpSection}]");
+                                LogManager.Debug($"PreBot: Mapped IRC [{strippedSection}] → CBFTP [{fallback}] (fallback tag)");
                             }
-                            return cbftpSection;
+                            return fallback;
                         }
                     }
                 }

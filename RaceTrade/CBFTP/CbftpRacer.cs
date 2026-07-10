@@ -562,9 +562,11 @@ public class CbftpRacer
                     //);
                     break;
                 }
-                else if (status == "FAILED" || status == "TIMEOUT")
+                else if (status == "FAILED" || status == "TIMEOUT" || status == "ABORTED")
                 {
-                    string reason = status == "TIMEOUT" ? "CBFTP transfer timeout" : "CBFTP transfer failed";
+                    string reason = status == "TIMEOUT" ? "CBFTP transfer timeout"
+                                  : status == "ABORTED" ? "CBFTP transfer aborted"
+                                  : "CBFTP transfer failed";
 
                     string failMsg =
                         $"✗ {reason} | Size(est): {FormatSize(stats.BytesTransferred)} | Time: {stats.TimeElapsed:mm\\:ss}";
@@ -610,6 +612,16 @@ public class CbftpRacer
             len = len / 1024;
         }
         return $"{len:0.##} {sizes[order]}";
+    }
+
+    /// <summary>
+    /// Re-reads cbftp/cbftp_config.json. Call after servers are added/edited/deleted
+    /// in the UI so racing does not keep using a stale server list until restart.
+    /// </summary>
+    public static void ReloadConfiguration()
+    {
+        CBFTP_CONFIGS.Clear();
+        LoadConfiguration();
     }
 
     private static void LoadConfiguration()
@@ -756,9 +768,16 @@ public class CbftpRacer
             {
                 var jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseText);
 
-                bool started = jsonResponse != null &&
-                              jsonResponse.ContainsKey("state") &&
-                              jsonResponse["state"].ToString().Equals("STARTED", StringComparison.OrdinalIgnoreCase);
+                // The cbftp API doc does not document the POST /spreadjobs response body.
+                // Treat any 2xx as started unless the response explicitly reports a
+                // non-STARTED state — otherwise a working job would be logged as failed
+                // and the next cbftp server would be tried (duplicate job).
+                string state = jsonResponse != null && jsonResponse.ContainsKey("state")
+                    ? jsonResponse["state"]?.ToString()
+                    : null;
+
+                bool started = state == null ||
+                               state.Equals("STARTED", StringComparison.OrdinalIgnoreCase);
 
                 if (started)
                 {
@@ -780,8 +799,6 @@ public class CbftpRacer
                 }
                 else
                 {
-                    string state = jsonResponse?.ContainsKey("state") == true ? jsonResponse["state"].ToString() : "UNKNOWN";
-
                     LogManager.LogCBFTP(
                         CBFTPEventType.SpreadJobFailed,
                         $"Spreadjob not started. State: {state}",
@@ -1002,11 +1019,12 @@ public class CbftpRacer
                         );
                     }
 
-                    string dbLogEntry =
-                        $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] :: [{section}] :: [{string.Join(",", allowedSites)}] :: {release}";
-
+                    // Store the PLAIN release name — IsReleaseProcessedAsync does an exact
+                    // match on it, so a decorated string kills duplicate detection entirely
+                    // (re-announces would be raced again). Timestamp/section/sites have
+                    // their own columns.
                     SQLiteHelper.LogProcessedRelease(
-                        releaseName: dbLogEntry,
+                        releaseName: release,
                         category: section,
                         siteName: string.Join(",", allowedSites),
                         dateProcessed: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
@@ -1179,11 +1197,30 @@ public class CbftpRacer
             return TransferResult.Failed("NO_CONFIG", "No CBFTP configuration available");
         }
 
-        string host = config.Host;
-        string port = config.Port;
-        string password = config.Password;
-        string serverName = config.Name;
+        return await StartTransferJobFxp(
+            srcSite, srcSectionOrPath, srcIsSection,
+            dstSite, dstPath, releaseName,
+            (string)config.Host, (string)config.Port, (string)config.Password, (string)config.Name);
+    }
 
+    /// <summary>
+    /// Same as above but posts the FXP job to an explicitly given cbftp instance
+    /// (host/port/password) instead of the first one from cbftp_config.json.
+    /// Used by the Pre manager, which keeps its own cbftp server list.
+    /// The given instance must know BOTH srcSite and dstSite.
+    /// </summary>
+    public static async Task<TransferResult> StartTransferJobFxp(
+        string srcSite,
+        string srcSectionOrPath,
+        bool srcIsSection,
+        string dstSite,
+        string dstPath,
+        string releaseName,
+        string host,
+        string port,
+        string password,
+        string serverName)
+    {
         // Build payload exactly as in cbftp docs for an FXP job
         var payload = new Dictionary<string, object>
         {

@@ -449,7 +449,7 @@ namespace RaceTrader
                         {
                             // Delete old episodes for this show
                             var deleteQuery = "DELETE FROM tvmaze_episodes WHERE show_id = @show_id";
-                            using (var cmd = new SqliteCommand(deleteQuery, connection))
+                            using (var cmd = new SqliteCommand(deleteQuery, connection, transaction))
                             {
                                 cmd.Parameters.AddWithValue("@show_id", showId);
                                 cmd.ExecuteNonQuery();
@@ -467,7 +467,7 @@ namespace RaceTrader
 
                             foreach (var episode in episodes)
                             {
-                                using (var cmd = new SqliteCommand(insertQuery, connection))
+                                using (var cmd = new SqliteCommand(insertQuery, connection, transaction))
                                 {
                                     cmd.Parameters.AddWithValue("@episode_id", episode.Id);
                                     cmd.Parameters.AddWithValue("@show_id", showId);

@@ -412,62 +412,46 @@ namespace RaceTrade
             }
         }
 
-        private async Task<List<string>> ListRemoteDirectoryAsync(PreCbftpServer server, string siteName, string remotePath)
+        /// <summary>
+        /// Builds the base https endpoint for a cbftp server ("host[:port]" or full URL).
+        /// </summary>
+        private static string BuildEndpoint(PreCbftpServer server)
         {
-            string endpoint = server.Host.Contains("://")
+            return server.Host.Contains("://")
                 ? (server.Host.EndsWith($":{server.Port}") ? server.Host : $"{server.Host}:{server.Port}")
                 : $"https://{server.Host}:{server.Port}";
+        }
 
-            using var handler = new HttpClientHandler
+        /// <summary>
+        /// Creates an HttpClient with basic auth for a cbftp server.
+        /// Disposing the client also disposes its handler.
+        /// </summary>
+        private static HttpClient CreateCbftpClient(PreCbftpServer server, int timeoutSeconds)
+        {
+            var handler = new HttpClientHandler
             {
+                // cbftp uses a self-signed certificate
                 ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
             };
 
-            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(60) };
+            var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(timeoutSeconds) };
 
             var password = SecureConfig.Decrypt(server.Password);
-            var byteArray = Encoding.ASCII.GetBytes(":" + password);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+            var byteArray = Encoding.UTF8.GetBytes(":" + password);
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 
-            string apiUrl = $"{endpoint}/path?site={Uri.EscapeDataString(siteName)}&path={Uri.EscapeDataString(remotePath)}&timeout=30";
+            return client;
+        }
 
-            var response = await client.GetAsync(apiUrl);
-            var responseText = await response.Content.ReadAsStringAsync();
+        private async Task<List<string>> ListRemoteDirectoryAsync(PreCbftpServer server, string siteName, string remotePath)
+        {
+            var items = await GetDirectoryListingAsync(server, siteName, remotePath);
 
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new Exception($"Failed to list directory: {response.StatusCode}");
-            }
-
-            var directories = new List<string>();
-
-            try
-            {
-                var listing = JArray.Parse(responseText);
-
-                foreach (var item in listing)
-                {
-                    var obj = item as JObject;
-                    if (obj == null) continue;
-
-                    string itemType = obj["type"]?.ToString();
-                    string itemName = obj["name"]?.ToString();
-
-                    if (itemType == "DIR" && !string.IsNullOrEmpty(itemName))
-                    {
-                        if (itemName != "." && itemName != "..")
-                        {
-                            directories.Add(itemName);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogManager.Error($"Error parsing directory listing: {ex.Message}");
-            }
-
-            return directories;
+            return items
+                .Where(i => i.IsDirectory && i.Name != "." && i.Name != "..")
+                .Select(i => i.Name)
+                .ToList();
         }
 
         private void ListBoxReleases_SelectedIndexChanged(object sender, EventArgs e)
@@ -560,6 +544,7 @@ namespace RaceTrade
             }
 
             string sourcePath = source.AffilDirectory.TrimEnd('/');
+            string sourcePassword = SecureConfig.Decrypt(sourceServer.Password);
 
             foreach (var destSite in destinations)
             {
@@ -569,33 +554,49 @@ namespace RaceTrade
                     if (destServer == null)
                     {
                         LogManager.Error($"CBFTP server not found for {destSite.Name}");
-                        continue;
+                        continue; // finally still advances the progress bar
+                    }
+
+                    // The FXP job is posted to the SOURCE site's cbftp instance, so that
+                    // instance must also have the destination site configured.
+                    if (destServer.Id != sourceServer.Id)
+                    {
+                        LogManager.Warning(
+                            $"{destSite.Name} is assigned to cbftp '{destServer.Name}' but the FXP job runs on " +
+                            $"'{sourceServer.Name}' (source) — make sure site '{destSite.Name}' exists there too.");
                     }
 
                     string destPath = destSite.AffilDirectory.TrimEnd('/');
 
-                    var ok = await CbftpRacer.StartRequestTransferJob(
+                    var result = await CbftpRacer.StartTransferJobFxp(
                         srcSite: source.Name,
+                        srcSectionOrPath: sourcePath,
+                        srcIsSection: false,
                         dstSite: destSite.Name,
                         dstPath: destPath,
                         releaseName: release,
-                        srcSectionOrPath: sourcePath,
-                        srcIsSection: false
+                        host: sourceServer.Host,
+                        port: sourceServer.Port,
+                        password: sourcePassword,
+                        serverName: sourceServer.Name
                     );
 
-                    if (ok)
+                    if (result.Success)
                     {
                         LogManager.Success($"Started FXP: {source.Name} → {destSite.Name}");
-                        progressBar.Value++;
                     }
                     else
                     {
-                        LogManager.Error($"Failed to start FXP to {destSite.Name}");
+                        LogManager.Error($"Failed to start FXP to {destSite.Name}: {result.ErrorMessage}");
                     }
                 }
                 catch (Exception ex)
                 {
                     LogManager.Error($"Error distributing to {destSite.Name}: {ex.Message}");
+                }
+                finally
+                {
+                    progressBar.Value++;
                 }
             }
         }
@@ -697,7 +698,7 @@ namespace RaceTrade
 
             try
             {
-                string sourcePath = $"{sourceSite.AffilDirectory}/{release}";
+                string sourcePath = $"{sourceSite.AffilDirectory.TrimEnd('/')}/{release}";
 
                 LogCompletion($"Listing files on source ({sourceSite.Name})...", Color.Yellow);
 
@@ -705,10 +706,13 @@ namespace RaceTrade
 
                 if (!sourceFiles.Any())
                 {
-                    LogCompletion($"No files found on source", Color.Yellow);
+                    // An empty result usually means the source listing failed (network,
+                    // wrong path, timeout). Never report "complete" on that basis —
+                    // it would enable SITE PRE against unverified sites.
+                    LogCompletion($"No files found on source — cannot verify completion", Color.Red);
                     foreach (var site in sites)
                     {
-                        results[site.Name] = true;
+                        results[site.Name] = false;
                     }
                     return results;
                 }
@@ -727,7 +731,7 @@ namespace RaceTrade
                             continue;
                         }
 
-                        string destPath = $"{site.AffilDirectory}/{release}";
+                        string destPath = $"{site.AffilDirectory.TrimEnd('/')}/{release}";
 
                         LogCompletion($"Checking {site.Name}...", Color.Yellow);
 
@@ -796,27 +800,18 @@ namespace RaceTrade
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LogManager.Error($"Error listing {remotePath} on {siteName}: {ex.Message}");
+            }
 
             return allFiles;
         }
 
         private async Task<List<FileInfo>> GetDirectoryListingAsync(PreCbftpServer server, string siteName, string remotePath)
         {
-            string endpoint = server.Host.Contains("://")
-                ? (server.Host.EndsWith($":{server.Port}") ? server.Host : $"{server.Host}:{server.Port}")
-                : $"https://{server.Host}:{server.Port}";
-
-            using var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
-            };
-
-            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(60) };
-
-            var password = SecureConfig.Decrypt(server.Password);
-            var byteArray = Encoding.ASCII.GetBytes(":" + password);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+            string endpoint = BuildEndpoint(server);
+            using var client = CreateCbftpClient(server, 60);
 
             string apiUrl = $"{endpoint}/path?site={Uri.EscapeDataString(siteName)}&path={Uri.EscapeDataString(remotePath)}&timeout=30";
 
@@ -904,20 +899,8 @@ namespace RaceTrade
 
         private async Task<bool> CheckPathExistsAsync(PreCbftpServer server, string siteName, string remotePath)
         {
-            string endpoint = server.Host.Contains("://")
-                ? (server.Host.EndsWith($":{server.Port}") ? server.Host : $"{server.Host}:{server.Port}")
-                : $"https://{server.Host}:{server.Port}";
-
-            using var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
-            };
-
-            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
-
-            var password = SecureConfig.Decrypt(server.Password);
-            var byteArray = Encoding.ASCII.GetBytes(":" + password);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+            string endpoint = BuildEndpoint(server);
+            using var client = CreateCbftpClient(server, 30);
 
             var payload = new
             {
@@ -1025,7 +1008,7 @@ namespace RaceTrade
                             continue;
                         }
 
-                        string remotePath = $"{site.AffilDirectory}/{selectedRelease}";
+                        string remotePath = $"{site.AffilDirectory.TrimEnd('/')}/{selectedRelease}";
 
                         bool success = await DeleteRemoteDirectoryAsync(server, site.Name, remotePath);
 
@@ -1070,20 +1053,8 @@ namespace RaceTrade
 
         private async Task<bool> DeleteRemoteDirectoryAsync(PreCbftpServer server, string siteName, string remotePath)
         {
-            string endpoint = server.Host.Contains("://")
-                ? (server.Host.EndsWith($":{server.Port}") ? server.Host : $"{server.Host}:{server.Port}")
-                : $"https://{server.Host}:{server.Port}";
-
-            using var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
-            };
-
-            using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
-
-            var password = SecureConfig.Decrypt(server.Password);
-            var byteArray = Encoding.ASCII.GetBytes(":" + password);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+            string endpoint = BuildEndpoint(server);
+            using var client = CreateCbftpClient(server, 30);
 
             var payload = new
             {
@@ -1213,20 +1184,8 @@ namespace RaceTrade
         {
             try
             {
-                string endpoint = server.Host.Contains("://")
-                    ? (server.Host.EndsWith($":{server.Port}") ? server.Host : $"{server.Host}:{server.Port}")
-                    : $"https://{server.Host}:{server.Port}";
-
-                using var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
-                };
-
-                using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
-
-                var password = SecureConfig.Decrypt(server.Password);
-                var byteArray = Encoding.ASCII.GetBytes(":" + password);
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+                string endpoint = BuildEndpoint(server);
+                using var client = CreateCbftpClient(server, 30);
 
                 var payload = new
                 {

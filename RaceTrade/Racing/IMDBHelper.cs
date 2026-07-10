@@ -187,7 +187,21 @@ namespace RaceTrader
                             bestMatch = results[0];
                         }
 
-                        // Parse the matched movie directly from search result
+                        // Search hits are SPARSE (no languages/countries/directors) -
+                        // caching them as full records made only_english/only_us_country
+                        // filters block everything for 30 days. Fetch the full record.
+                        var matchedId = (bestMatch as JObject)?["id"]?.ToString();
+                        if (!string.IsNullOrEmpty(matchedId))
+                        {
+                            var detailed = await LookupByImdb(matchedId, cacheDays);
+                            if (detailed != null)
+                            {
+                                IMDBCache.CacheSearch(title, year, detailed.ImdbID);
+                                return detailed;
+                            }
+                        }
+
+                        // Fallback: parse the sparse search result directly
                         var movie = ParseImdbApiResponse(bestMatch as JObject);
 
                         if (movie != null)

@@ -52,7 +52,6 @@ public class ChatIrcClient
     new Dictionary<string, Dictionary<string, char>>(StringComparer.OrdinalIgnoreCase);
 
     private readonly object fishLock = new object();
-    private volatile bool isDisconnecting = false;
     private CancellationTokenSource localCancellationTokenSource;
     private Task listeningTask;
     private TcpClient currentTcpClient;
@@ -169,19 +168,30 @@ public class ChatIrcClient
 
         if (chatOnly)
         {
-            // Collect ALL channels (Chan1-3 + chat_keys)
-            var allChannels = new List<string>
+            // Collect ALL configured channels (Chan1..Chan20, same as the constructor —
+            // limiting to Chan1-3 here silently reintroduced the "only 3 channels" bug)
+            // plus any chat_keys channels, normalized and deduped case-insensitively.
+            var allChannels = new List<string>();
+
+            for (int i = 1; i <= 20; i++)
             {
-                siteConfig.SiteSettings.Chan1,
-                siteConfig.SiteSettings.Chan2,
-                siteConfig.SiteSettings.Chan3
-            }.Where(c => !string.IsNullOrEmpty(c)).ToList();
+                var chanProp = siteConfig.SiteSettings.GetType().GetProperty($"Chan{i}");
+                var chanValue = chanProp?.GetValue(siteConfig.SiteSettings) as string;
+
+                if (string.IsNullOrWhiteSpace(chanValue))
+                    continue;
+
+                chanValue = NormalizeKeyName(chanValue);
+
+                if (!allChannels.Contains(chanValue, StringComparer.OrdinalIgnoreCase))
+                    allChannels.Add(chanValue);
+            }
 
             // Add chat_keys channels
             if (siteConfig.SiteSettings.ChatKeys != null)
             {
                 var chatChannels = siteConfig.SiteSettings.ChatKeys.Keys
-                    .Where(k => k.StartsWith("#") && !allChannels.Contains(k))
+                    .Where(k => k.StartsWith("#") && !allChannels.Contains(k, StringComparer.OrdinalIgnoreCase))
                     .ToList();
                 allChannels.AddRange(chatChannels);
             }
@@ -238,50 +248,31 @@ public class ChatIrcClient
 
         var siteSettings = config.SiteSettings;
 
-        // 1) Load chan1..chan20 / blowfish_key1..20
-        for (int i = 1; i <= 20; i++)
+        // Reloadable at connect time — take fishLock so a not-yet-stopped listener from
+        // a previous connection can't read the dictionary mid-rebuild.
+        lock (fishLock)
         {
-            var chanProp = siteSettings.GetType().GetProperty($"Chan{i}");
-            var keyProp = siteSettings.GetType().GetProperty($"BlowfishKey{i}");
+            // Rebuild from scratch so stale channels don't linger across a reconnect.
+            fishDecryptors.Clear();
 
-            if (chanProp == null || keyProp == null)
-                continue;
-
-            var chanValue = chanProp.GetValue(siteSettings) as string;
-            var encKey = keyProp.GetValue(siteSettings) as string;
-
-            if (string.IsNullOrWhiteSpace(chanValue) || string.IsNullOrWhiteSpace(encKey))
-                continue;
-
-            // Normalize like SetChannelKey does, so a channel written without '#'
-            // (or with different casing) still matches the server's channel name.
-            chanValue = NormalizeKeyName(chanValue);
-
-            try
+            // 1) Load chan1..chan20 / blowfish_key1..20
+            for (int i = 1; i <= 20; i++)
             {
-                var plainKey = SecureConfig.Decrypt(encKey);
+                var chanProp = siteSettings.GetType().GetProperty($"Chan{i}");
+                var keyProp = siteSettings.GetType().GetProperty($"BlowfishKey{i}");
 
-                if (!string.IsNullOrWhiteSpace(plainKey))
-                {
-                    fishDecryptors[chanValue] = new FishDecryptor(plainKey);
-                }
-            }
-            catch (Exception ex)
-            {
-                AppendOutput($"[ERROR] Failed to load Blowfish key for {chanValue}: {ex.Message}", Color.Red);
-            }
-        }
-
-        // 2) Load chat-only keys from site_settings.chat_keys
-        if (siteSettings.ChatKeys != null)
-        {
-            foreach (var kvp in siteSettings.ChatKeys)
-            {
-                var channel = kvp.Key;
-                var encKey = kvp.Value;
-
-                if (string.IsNullOrWhiteSpace(channel) || string.IsNullOrWhiteSpace(encKey))
+                if (chanProp == null || keyProp == null)
                     continue;
+
+                var chanValue = chanProp.GetValue(siteSettings) as string;
+                var encKey = keyProp.GetValue(siteSettings) as string;
+
+                if (string.IsNullOrWhiteSpace(chanValue) || string.IsNullOrWhiteSpace(encKey))
+                    continue;
+
+                // Normalize like SetChannelKey does, so a channel written without '#'
+                // (or with different casing) still matches the server's channel name.
+                chanValue = NormalizeKeyName(chanValue);
 
                 try
                 {
@@ -289,19 +280,50 @@ public class ChatIrcClient
 
                     if (!string.IsNullOrWhiteSpace(plainKey))
                     {
-                        fishDecryptors[channel] = new FishDecryptor(plainKey);
+                        fishDecryptors[chanValue] = new FishDecryptor(plainKey);
                     }
                 }
                 catch (Exception ex)
                 {
-                    AppendOutput($"[ERROR] Failed to load chat key for {channel}: {ex.Message}", Color.Red);
+                    AppendOutput($"[ERROR] Failed to load Blowfish key for {chanValue}: {ex.Message}", Color.Red);
+                }
+            }
+
+            // 2) Load chat-only keys from site_settings.chat_keys
+            if (siteSettings.ChatKeys != null)
+            {
+                foreach (var kvp in siteSettings.ChatKeys)
+                {
+                    var channel = kvp.Key;
+                    var encKey = kvp.Value;
+
+                    if (string.IsNullOrWhiteSpace(channel) || string.IsNullOrWhiteSpace(encKey))
+                        continue;
+
+                    try
+                    {
+                        var plainKey = SecureConfig.Decrypt(encKey);
+
+                        if (!string.IsNullOrWhiteSpace(plainKey))
+                        {
+                            fishDecryptors[channel] = new FishDecryptor(plainKey);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendOutput($"[ERROR] Failed to load chat key for {channel}: {ex.Message}", Color.Red);
+                    }
                 }
             }
         }
 
-        var channelKeys = fishDecryptors.Keys
-            .Where(k => k.StartsWith("#"))
-            .ToList();
+        List<string> channelKeys;
+        lock (fishLock)
+        {
+            channelKeys = fishDecryptors.Keys
+                .Where(k => k.StartsWith("#"))
+                .ToList();
+        }
 
         if (channelKeys.Any())
         {
@@ -535,6 +557,12 @@ public class ChatIrcClient
     {
 
         Interlocked.Exchange(ref _disconnecting, 0);
+
+        // Disconnect() clears fishDecryptors/pmFishKeys/pendingKeyExchanges; reload the
+        // channel keys so a reconnect on the same instance can still decrypt (PM key
+        // exchanges necessarily have to be renegotiated by the peer).
+        LoadChannelKeys(siteConfig);
+
         TcpClient tcpClient = null;
         SslStream sslStream = null;
 
@@ -556,9 +584,11 @@ public class ChatIrcClient
             await sslStream.AuthenticateAsClientAsync(host);
             AppendOutput("[INFO] SSL/TLS authentication successful.", Color.Green);
 
-            await SendMessageAsync(sslStream, $"USER {username} 0 * :{username}");
-            await SendMessageAsync(sslStream, $"NICK {username}");
+            // PASS must be sent BEFORE NICK/USER (RFC 1459 / ZNC) — after registration
+            // completes the server rejects it with 462 ERR_ALREADYREGISTRED.
             await SendMessageAsync(sslStream, $"PASS {password}");
+            await SendMessageAsync(sslStream, $"NICK {username}");
+            await SendMessageAsync(sslStream, $"USER {username} 0 * :{username}");
 
             foreach (var channel in channels)
             {
@@ -627,7 +657,7 @@ public class ChatIrcClient
 
                     if (line.StartsWith("PING"))
                     {
-                        string pongResponse = line.Replace("PING", "PONG");
+                        string pongResponse = "PONG" + line.Substring(4); // only rewrite the command, not e.g. a token containing "PING"
                         await SendMessageAsync(sslStream, pongResponse);
                         continue;
                     }
@@ -695,13 +725,15 @@ public class ChatIrcClient
                 if (username.Equals(thisNick, StringComparison.OrdinalIgnoreCase))
                     return;
 
-                if (!channelUsers.ContainsKey(channel))
-                    channelUsers[channel] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                lock (userTrackingLock)
+                {
+                    if (!channelUsers.ContainsKey(channel))
+                        channelUsers[channel] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                if (channelUsers[channel].Contains(username))
-                    return;
+                    if (!channelUsers[channel].Add(username))
+                        return; // already known
+                }
 
-                channelUsers[channel].Add(username);
                 SafeTabbedLogAction(t => t.AddUser(siteName, channel, username));
                 SafeTabbedLogAction(t => t?.AppendChannelMessage(siteName, channel, $"*** {username} has joined {channel}", Color.Gray));
                 return;
@@ -715,8 +747,16 @@ public class ChatIrcClient
                 string username = NormalizeNick(rawUsername);
                 string channel = partMatch.Groups[2].Value;
 
-                if (channelUserPrefixes.ContainsKey(channel))
-                    channelUserPrefixes[channel].Remove(username);
+                lock (userTrackingLock)
+                {
+                    // also remove from channelUsers, otherwise a re-join is ignored
+                    // by the JOIN handler's "already known" guard forever
+                    if (channelUsers.TryGetValue(channel, out var users))
+                        users.Remove(username);
+
+                    if (channelUserPrefixes.ContainsKey(channel))
+                        channelUserPrefixes[channel].Remove(username);
+                }
 
                 SafeTabbedLogAction(t => t.RemoveUser(siteName, channel, username));
                 SafeTabbedLogAction(t => t?.AppendChannelMessage(siteName, channel, $"*** {username} has left {channel}", Color.Gray));
@@ -730,17 +770,24 @@ public class ChatIrcClient
                 string rawUsername = quitMatch.Groups[1].Value;
                 string username = NormalizeNick(rawUsername);
 
-                foreach (var channel in channelUsers.Keys.ToList())
+                var quitChannels = new List<string>();
+                lock (userTrackingLock)
                 {
-                    if (channelUsers[channel].Contains(username))
+                    foreach (var channel in channelUsers.Keys.ToList())
                     {
-                        channelUsers[channel].Remove(username);
-
-                        if (channelUserPrefixes.ContainsKey(channel))
-                            channelUserPrefixes[channel].Remove(username);
-                        SafeTabbedLogAction(t => t.RemoveUser(siteName, channel, username));
-                        SafeTabbedLogAction(t => t?.AppendChannelMessage(siteName, channel, $"*** {username} has quit", Color.Gray));
+                        if (channelUsers[channel].Remove(username))
+                        {
+                            if (channelUserPrefixes.ContainsKey(channel))
+                                channelUserPrefixes[channel].Remove(username);
+                            quitChannels.Add(channel);
+                        }
                     }
+                }
+
+                foreach (var channel in quitChannels)
+                {
+                    SafeTabbedLogAction(t => t.RemoveUser(siteName, channel, username));
+                    SafeTabbedLogAction(t => t?.AppendChannelMessage(siteName, channel, $"*** {username} has quit", Color.Gray));
                 }
                 return;
             }
@@ -753,32 +800,38 @@ public class ChatIrcClient
                 string oldNick = NormalizeNick(rawOldNick);
                 string newNick = NormalizeNick(nickMatch.Groups[2].Value);
 
-                foreach (var channel in channelUsers.Keys.ToList())
+                var renamedChannels = new List<string>();
+                lock (userTrackingLock)
                 {
-                    if (channelUsers[channel].Contains(oldNick))
+                    foreach (var channel in channelUsers.Keys.ToList())
                     {
-                        // Update the main user list
-                        channelUsers[channel].Remove(oldNick);
-                        channelUsers[channel].Add(newNick);
-
-                        // 🔹 Also move the prefix (~ & @ % +) from oldNick → newNick
-                        if (channelUserPrefixes.TryGetValue(channel, out var prefixes) &&
-                            prefixes.TryGetValue(oldNick, out var prefixChar))
+                        if (channelUsers[channel].Remove(oldNick))
                         {
-                            prefixes.Remove(oldNick);
-                            prefixes[newNick] = prefixChar;
-                        }
+                            channelUsers[channel].Add(newNick);
 
-                        // Update UI
-                        SafeTabbedLogAction(t => t.RemoveUser(siteName, channel, oldNick));
-                        SafeTabbedLogAction(t => t.AddUser(siteName, channel, newNick));
-                        SafeTabbedLogAction(t => t?.AppendChannelMessage(
-                            siteName,
-                            channel,
-                            $"*** {oldNick} is now known as {newNick}",
-                            Color.Gray
-                        ));
+                            // 🔹 Also move the prefix (~ & @ % +) from oldNick → newNick
+                            if (channelUserPrefixes.TryGetValue(channel, out var prefixes) &&
+                                prefixes.TryGetValue(oldNick, out var prefixChar))
+                            {
+                                prefixes.Remove(oldNick);
+                                prefixes[newNick] = prefixChar;
+                            }
+
+                            renamedChannels.Add(channel);
+                        }
                     }
+                }
+
+                foreach (var channel in renamedChannels)
+                {
+                    SafeTabbedLogAction(t => t.RemoveUser(siteName, channel, oldNick));
+                    SafeTabbedLogAction(t => t.AddUser(siteName, channel, newNick));
+                    SafeTabbedLogAction(t => t?.AppendChannelMessage(
+                        siteName,
+                        channel,
+                        $"*** {oldNick} is now known as {newNick}",
+                        Color.Gray
+                    ));
                 }
 
                 string oldPmKey = $"PM:{oldNick}";
@@ -815,14 +868,17 @@ public class ChatIrcClient
                 string channel = namesMatch.Groups[2].Value;
                 string userList = namesMatch.Groups[3].Value;
 
-                if (!pendingNamesLists.ContainsKey(channel))
-                    pendingNamesLists[channel] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
                 var users = userList.Split(' ').Where(u => !string.IsNullOrWhiteSpace(u)).ToList();
 
-                foreach (var user in users)
+                lock (userTrackingLock)
                 {
-                    pendingNamesLists[channel].Add(user);
+                    if (!pendingNamesLists.ContainsKey(channel))
+                        pendingNamesLists[channel] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (var user in users)
+                    {
+                        pendingNamesLists[channel].Add(user);
+                    }
                 }
 
                 return;
@@ -834,45 +890,54 @@ public class ChatIrcClient
             {
                 string channel = endOfNamesMatch.Groups[2].Value;
 
-                if (pendingNamesLists.ContainsKey(channel))
+                List<string> allUsersRaw = null;
+
+                lock (userTrackingLock)
                 {
-                    var allUsersRaw = pendingNamesLists[channel].ToList();
-
-                    if (!channelUsers.ContainsKey(channel))
-                        channelUsers[channel] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                    if (!channelUserPrefixes.ContainsKey(channel))
-                        channelUserPrefixes[channel] = new Dictionary<string, char>(StringComparer.OrdinalIgnoreCase);
-
-                    channelUsers[channel].Clear();
-                    channelUserPrefixes[channel].Clear();
-
-                    foreach (var userRaw in allUsersRaw)
+                    if (pendingNamesLists.ContainsKey(channel))
                     {
-                        if (string.IsNullOrWhiteSpace(userRaw))
-                            continue;
+                        allUsersRaw = pendingNamesLists[channel].ToList();
 
-                        var u = userRaw.Trim();
+                        if (!channelUsers.ContainsKey(channel))
+                            channelUsers[channel] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                        char prefix = '\0';
-                        if ("~&@%+".IndexOf(u[0]) >= 0)
+                        if (!channelUserPrefixes.ContainsKey(channel))
+                            channelUserPrefixes[channel] = new Dictionary<string, char>(StringComparer.OrdinalIgnoreCase);
+
+                        channelUsers[channel].Clear();
+                        channelUserPrefixes[channel].Clear();
+
+                        foreach (var userRaw in allUsersRaw)
                         {
-                            prefix = u[0];
-                            u = u.Substring(1); // strip prefix from display nick
+                            if (string.IsNullOrWhiteSpace(userRaw))
+                                continue;
+
+                            var u = userRaw.Trim();
+
+                            char prefix = '\0';
+                            if ("~&@%+".IndexOf(u[0]) >= 0)
+                            {
+                                prefix = u[0];
+                                u = u.Substring(1); // strip prefix from display nick
+                            }
+
+                            string cleanUser = NormalizeNick(u);
+                            channelUsers[channel].Add(cleanUser);
+
+                            if (prefix != '\0')
+                            {
+                                channelUserPrefixes[channel][cleanUser] = prefix;
+                            }
                         }
 
-                        string cleanUser = NormalizeNick(u);
-                        channelUsers[channel].Add(cleanUser);
-
-                        if (prefix != '\0')
-                        {
-                            channelUserPrefixes[channel][cleanUser] = prefix;
-                        }
+                        pendingNamesLists.Remove(channel);
                     }
+                }
 
+                if (allUsersRaw != null)
+                {
                     // still send the raw list (with prefixes) to the UI for the user list
                     SafeTabbedLogAction(t => t.UpdateUserList(siteName, channel, allUsersRaw));
-                    pendingNamesLists.Remove(channel);
                 }
 
                 return;
@@ -886,7 +951,8 @@ public class ChatIrcClient
                 {
                     string rawUsername = dhMatch.Groups[1].Value;
                     string username = NormalizeNick(rawUsername);
-                    string theirPublicKeyRaw = dhMatch.Groups[4].Value.Trim();
+                    // CBC-mode FiSH clients send "DH1080_INIT <pubkey> CBC" — keep only the key
+                    string theirPublicKeyRaw = dhMatch.Groups[4].Value.Trim().Split(' ')[0];
 
                     string thisNick = NormalizeNick(this.username);
                     if (username.Equals(thisNick, StringComparison.OrdinalIgnoreCase))
@@ -929,7 +995,8 @@ public class ChatIrcClient
                 {
                     string rawUsername = dhMatch.Groups[1].Value;
                     string username = NormalizeNick(rawUsername);
-                    string theirPublicKeyRaw = dhMatch.Groups[4].Value.Trim();
+                    // CBC-mode FiSH clients append " CBC" — keep only the key
+                    string theirPublicKeyRaw = dhMatch.Groups[4].Value.Trim().Split(' ')[0];
 
                     string thisNick = NormalizeNick(this.username);
                     if (username.Equals(thisNick, StringComparison.OrdinalIgnoreCase))
@@ -994,7 +1061,7 @@ public class ChatIrcClient
                         fishDecryptors.TryGetValue(target, out decryptor);
                     }
 
-                    if (isDisconnecting)
+                    if (IsDisconnecting)
                         return;
 
                     if (decryptor != null)
@@ -1040,7 +1107,7 @@ public class ChatIrcClient
                         }
                     }
 
-                    if (isDisconnecting)
+                    if (IsDisconnecting)
                         return;
 
                     if (pmDecryptor != null && (message.StartsWith("+OK ") || message.StartsWith("mcps")))
@@ -1110,7 +1177,7 @@ public class ChatIrcClient
                 fishDecryptors.TryGetValue(keyName, out decryptor);
             }
 
-            if (isDisconnecting)
+            if (IsDisconnecting)
                 return;
 
             if (decryptor != null)

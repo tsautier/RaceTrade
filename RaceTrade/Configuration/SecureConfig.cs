@@ -13,6 +13,13 @@ namespace RaceTrade
         // Prefix to identify encrypted data
         private const string ENCRYPTED_PREFIX = "ENC:";
 
+        // App-specific DPAPI entropy. Without it, ANY process running as the same Windows
+        // user can Unprotect these secrets; with it, an attacker also needs this constant.
+        // Legacy data was written with null entropy — Decrypt falls back to that so old
+        // configs keep working (see Decrypt).
+        private static readonly byte[] Entropy =
+            Encoding.UTF8.GetBytes("RaceTrade.SecureConfig.v1.entropy");
+
         /// <summary>
         /// Encrypts a plaintext string using Windows DPAPI.
         /// </summary>
@@ -30,10 +37,10 @@ namespace RaceTrade
                 // Convert string to bytes
                 byte[] data = Encoding.UTF8.GetBytes(plainText);
 
-                // Encrypt using DPAPI (CurrentUser scope)
+                // Encrypt using DPAPI (CurrentUser scope) with app-specific entropy.
                 byte[] encryptedData = ProtectedData.Protect(
                     data,
-                    null, // No additional entropy
+                    Entropy,
                     DataProtectionScope.CurrentUser // Only this user can decrypt
                 );
 
@@ -60,32 +67,52 @@ namespace RaceTrade
                 return encryptedText;
             }
 
-            // If not encrypted, return as-is (backward compatibility)
+            // If not encrypted, return as-is (backward compatibility with plaintext
+            // configs). Surface it at Debug so an unmigrated secret is at least traceable
+            // without flooding the log on every key/password load.
             if (!encryptedText.StartsWith(ENCRYPTED_PREFIX))
             {
+                LogManager.Debug("SecureConfig.Decrypt: value is not encrypted (plaintext passthrough).");
                 return encryptedText;
             }
 
+            // Remove prefix and decode from Base64. If the payload isn't valid Base64 it
+            // was never our ciphertext (e.g. a genuine password that happens to start with
+            // "ENC:") — return the original string as plaintext instead of throwing.
+            string base64Data = encryptedText.Substring(ENCRYPTED_PREFIX.Length);
+            byte[] encryptedData;
             try
             {
-                // Remove prefix and decode from Base64
-                string base64Data = encryptedText.Substring(ENCRYPTED_PREFIX.Length);
-                byte[] encryptedData = Convert.FromBase64String(base64Data);
+                encryptedData = Convert.FromBase64String(base64Data);
+            }
+            catch (FormatException)
+            {
+                LogManager.Debug("SecureConfig.Decrypt: ENC-prefixed value is not valid Base64; treating as plaintext.");
+                return encryptedText;
+            }
 
-                // Decrypt using DPAPI
+            // Try current (entropy) first, then legacy (null entropy) for data written
+            // before entropy was introduced. Only a genuine failure of BOTH throws.
+            try
+            {
                 byte[] decryptedData = ProtectedData.Unprotect(
-                    encryptedData,
-                    null,
-                    DataProtectionScope.CurrentUser
-                );
-
-                // Convert bytes back to string
+                    encryptedData, Entropy, DataProtectionScope.CurrentUser);
                 return Encoding.UTF8.GetString(decryptedData);
             }
-            catch (Exception ex)
+            catch (CryptographicException)
             {
-                LogManager.Error($"Decryption failed: {ex.Message}");
-                throw new CryptographicException("Failed to decrypt data. Data may be corrupted or encrypted by another user.", ex);
+                try
+                {
+                    byte[] legacy = ProtectedData.Unprotect(
+                        encryptedData, null, DataProtectionScope.CurrentUser);
+                    return Encoding.UTF8.GetString(legacy);
+                }
+                catch (Exception ex)
+                {
+                    LogManager.Error($"Decryption failed: {ex.Message}");
+                    throw new CryptographicException(
+                        "Failed to decrypt data. Data may be corrupted or encrypted by another user.", ex);
+                }
             }
         }
 

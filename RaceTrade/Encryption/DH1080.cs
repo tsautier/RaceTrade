@@ -102,6 +102,11 @@ public class DH1080
 
         BigInteger otherPub = BigEndianToBigInteger(otherBytes);
 
+        // Reject degenerate public keys (0, 1, p-1, >=p) — they force an
+        // attacker-predictable shared secret (small-subgroup confinement).
+        if (otherPub <= BigInteger.One || otherPub >= Prime - BigInteger.One)
+            throw new ArgumentException("Invalid DH1080 public key (degenerate value).", nameof(otherPublicKey));
+
         // sharedSecret = otherPub ^ privateKey mod Prime
         BigInteger shared = BigInteger.ModPow(otherPub, privateKey, Prime);
 

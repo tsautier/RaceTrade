@@ -33,6 +33,17 @@ namespace RaceTrader
     public static class RequestAutoFillManager
     {
         /// <summary>
+        /// Requests we are currently filling (key: dstSite|requestId|name). A request
+        /// stays listed by SITE REQUESTS until REQFILLED is sent, so without this every
+        /// poll cycle would start ANOTHER identical transferjob for the same request.
+        /// </summary>
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> InFlightFills =
+            new System.Collections.Concurrent.ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
+
+        private static string FillKey(string dstName, RequestEntry req) =>
+            $"{dstName}|{req?.Id}|{req?.Name}";
+
+        /// <summary>
         /// Parse SITE REQUESTS output using the site's template settings.
         /// NO site-specific regex is hardcoded here – everything comes from SiteSettings.
         /// </summary>
@@ -80,6 +91,11 @@ namespace RaceTrader
 
                 var m = lineRegex.Match(line);
                 if (!m.Success)
+                    continue;
+
+                // Skip requests already marked complete/filled (RequestCompletePattern),
+                // otherwise they get re-fill attempts on every poll.
+                if (IsLineMarkedComplete(site, line))
                     continue;
 
                 string id = null;
@@ -478,7 +494,7 @@ namespace RaceTrader
                             return;
                         }
 
-                        if (status == "FAILED" || status == "TIMEOUT")
+                        if (status == "FAILED" || status == "TIMEOUT" || status == "ABORTED")
                         {
                             LogManager.LogCBFTP(
                                 CBFTPEventType.SpreadJobFailed,
@@ -499,6 +515,12 @@ namespace RaceTrader
             catch (Exception ex)
             {
                 LogManager.Error($"[RequestAutoFill] Error while waiting for transferjob '{jobName}' to finish: {ex.Message}");
+            }
+            finally
+            {
+                // Allow this request to be picked up again (retried or re-verified)
+                // on a future poll now that the waiter is done.
+                InFlightFills.TryRemove(FillKey(dstName, req), out _);
             }
         }
 
@@ -541,6 +563,15 @@ namespace RaceTrader
                 var originalName = req.Name;
                 if (string.IsNullOrWhiteSpace(originalName))
                     continue;
+
+                // Skip requests that already have a fill in flight — SITE REQUESTS keeps
+                // listing them until REQFILLED, so every poll would otherwise start
+                // another identical transferjob.
+                if (InFlightFills.ContainsKey(FillKey(dstName, req)))
+                {
+                    LogManager.Debug($"[RequestAutoFill] Fill already in progress for '{originalName}' on '{dstName}', skipping.");
+                    continue;
+                }
 
                 // normalize ONLY for searching; keep original for dst path / logging if you want
                 var searchName = NormalizeReleaseNameForSearch(originalName);
@@ -619,6 +650,9 @@ namespace RaceTrader
                             $"[RequestAutoFill] Transferjob failed to START for '{originalName}' from '{srcName}' -> '{dstName}'. Trying next source...");
                         continue;
                     }
+
+                    // Mark this request as in flight until the waiter finishes.
+                    InFlightFills.TryAdd(FillKey(dstName, req), 0);
 
                     // Do NOT REQFILL here.
                     // Start a background waiter that will REQFILL when cbftp reports status DONE.

@@ -654,7 +654,7 @@ namespace RaceTrader
                 using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(60) };
 
                 // Basic auth: username ignored, password required => ":password"
-                var byteArray = Encoding.ASCII.GetBytes(":" + config.Password);
+                var byteArray = Encoding.UTF8.GetBytes(":" + config.Password); // UTF8: ASCII mangles non-ASCII passwords to "?"
                 client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -1028,10 +1028,15 @@ namespace RaceTrader
                 {
                     try
                     {
-                        string fullPath = ResolveItemPath(currentPath, item);
+                        // NEVER resolve symlinks when deleting — ResolveItemPath returns the
+                        // link TARGET, so deleting a symlink would recursively wipe the real
+                        // directory it points at. Delete the link entry itself instead.
+                        string fullPath = item.IsSymlink
+                            ? ResolveRemotePath(currentPath, item.Name)
+                            : ResolveItemPath(currentPath, item);
 
-                        // Always delete directories recursively
-                        if (item.IsDirectory)
+                        // Always delete directories recursively (but never through a symlink)
+                        if (item.IsDirectory && !item.IsSymlink)
                         {
                             LogToConsole($"Deleting directory (recursive): {item.Name}", Color.Yellow);
                             bool deleted = await DeleteDirectoryRecursive(siteName, fullPath, endpoint, config);
@@ -1057,7 +1062,7 @@ namespace RaceTrader
                         };
 
                         using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
-                        var byteArray = Encoding.ASCII.GetBytes(":" + config.Password);
+                        var byteArray = Encoding.UTF8.GetBytes(":" + config.Password); // UTF8: ASCII mangles non-ASCII passwords to "?"
                         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 
                         // Use DELETE /path API endpoint
@@ -1132,7 +1137,7 @@ namespace RaceTrader
                 };
 
                 using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
-                var byteArray = Encoding.ASCII.GetBytes(":" + config.Password);
+                var byteArray = Encoding.UTF8.GetBytes(":" + config.Password); // UTF8: ASCII mangles non-ASCII passwords to "?"
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 
                 // Use DELETE /path endpoint with type=OWN to delete only our files
@@ -1643,7 +1648,7 @@ namespace RaceTrader
             };
 
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(60) };
-            var byteArray = Encoding.ASCII.GetBytes(":" + config.Password);
+            var byteArray = Encoding.UTF8.GetBytes(":" + config.Password); // UTF8: ASCII mangles non-ASCII passwords to "?"
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 
             var url = $"{endpoint}/file?site={Uri.EscapeDataString(siteName)}&path={Uri.EscapeDataString(filePath)}&timeout=30";
@@ -1776,7 +1781,7 @@ namespace RaceTrader
             };
 
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(60) };
-            var byteArray = Encoding.ASCII.GetBytes(":" + config.Password);
+            var byteArray = Encoding.UTF8.GetBytes(":" + config.Password); // UTF8: ASCII mangles non-ASCII passwords to "?"
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 
             // Use CBFTP's /file endpoint to fetch file content
@@ -1810,10 +1815,20 @@ namespace RaceTrader
                 BackColor = Color.FromArgb(13, 16, 24)
             };
 
+            // GDI+ requires the stream to stay alive for the Image's lifetime — disposing
+            // it here caused "A generic error occurred in GDI+" on repaint. Clone into a
+            // Bitmap instead so nothing else needs to be kept alive.
             using (var ms = new System.IO.MemoryStream(imageBytes))
+            using (var img = Image.FromStream(ms))
             {
-                pictureBox.Image = Image.FromStream(ms);
+                pictureBox.Image = new Bitmap(img);
             }
+
+            viewerForm.FormClosed += (s, args) =>
+            {
+                pictureBox.Image?.Dispose();
+                pictureBox.Dispose();
+            };
 
             viewerForm.Controls.Add(pictureBox);
             viewerForm.Show();

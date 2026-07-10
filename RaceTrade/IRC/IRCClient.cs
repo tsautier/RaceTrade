@@ -55,7 +55,6 @@ public class IRCClient
 
 
     private readonly object fishLock = new object();
-    private volatile bool isDisconnecting = false;
     private Task listeningTask;
     private CancellationTokenSource localCancellationTokenSource;
     private TcpClient currentTcpClient;
@@ -326,53 +325,33 @@ public class IRCClient
 
         var siteSettings = config.SiteSettings;
 
-        // 1) Load chan1..chan20 / blowfish_key1..20
-        for (int i = 1; i <= 20; i++)
+        // Reloadable at connect time — take fishLock so a not-yet-stopped listener from
+        // a previous connection can't read the dictionary mid-rebuild.
+        lock (fishLock)
         {
-            var chanProp = siteSettings.GetType().GetProperty($"Chan{i}");
-            var keyProp = siteSettings.GetType().GetProperty($"BlowfishKey{i}");
+            // Rebuild from scratch so stale channels don't linger across a reconnect.
+            fishDecryptors.Clear();
 
-            if (chanProp == null || keyProp == null)
-                continue;
-
-            var chanValue = (chanProp.GetValue(siteSettings) as string)?.Trim();
-            var encKey = keyProp.GetValue(siteSettings) as string;
-
-            if (string.IsNullOrWhiteSpace(chanValue) || string.IsNullOrWhiteSpace(encKey))
-                continue;
-
-            // Normalize the channel name the SAME way SetChannelKey (chatbox) does,
-            // so JSON/editor keys match the server's channel name regardless of a
-            // missing '#' or different casing.
-            if (!chanValue.StartsWith("#") && !chanValue.StartsWith("PM:"))
-                chanValue = "#" + chanValue.TrimStart('#');
-
-            try
+            // 1) Load chan1..chan20 / blowfish_key1..20
+            for (int i = 1; i <= 20; i++)
             {
-                var plainKey = SecureConfig.Decrypt(encKey);
+                var chanProp = siteSettings.GetType().GetProperty($"Chan{i}");
+                var keyProp = siteSettings.GetType().GetProperty($"BlowfishKey{i}");
 
-                if (!string.IsNullOrWhiteSpace(plainKey))
-                {
-                    // overwrite if already present, that's fine
-                    fishDecryptors[chanValue] = new FishDecryptor(plainKey);
-                }
-            }
-            catch (Exception ex)
-            {
-                AppendOutput($"[ERROR] Failed to load Blowfish key for {chanValue}: {ex.Message}", Color.Red);
-            }
-        }
-
-        // 2) Load chat-only keys from site_settings.chat_keys
-        if (siteSettings.ChatKeys != null)
-        {
-            foreach (var kvp in siteSettings.ChatKeys)
-            {
-                var channel = kvp.Key;
-                var encKey = kvp.Value;
-
-                if (string.IsNullOrWhiteSpace(channel) || string.IsNullOrWhiteSpace(encKey))
+                if (chanProp == null || keyProp == null)
                     continue;
+
+                var chanValue = (chanProp.GetValue(siteSettings) as string)?.Trim();
+                var encKey = keyProp.GetValue(siteSettings) as string;
+
+                if (string.IsNullOrWhiteSpace(chanValue) || string.IsNullOrWhiteSpace(encKey))
+                    continue;
+
+                // Normalize the channel name the SAME way SetChannelKey (chatbox) does,
+                // so JSON/editor keys match the server's channel name regardless of a
+                // missing '#' or different casing.
+                if (!chanValue.StartsWith("#") && !chanValue.StartsWith("PM:"))
+                    chanValue = "#" + chanValue.TrimStart('#');
 
                 try
                 {
@@ -380,20 +359,52 @@ public class IRCClient
 
                     if (!string.IsNullOrWhiteSpace(plainKey))
                     {
-                        fishDecryptors[channel] = new FishDecryptor(plainKey);
+                        // overwrite if already present, that's fine
+                        fishDecryptors[chanValue] = new FishDecryptor(plainKey);
                     }
                 }
                 catch (Exception ex)
                 {
-                    AppendOutput($"[ERROR] Failed to load chat key for {channel}: {ex.Message}", Color.Red);
+                    AppendOutput($"[ERROR] Failed to load Blowfish key for {chanValue}: {ex.Message}", Color.Red);
+                }
+            }
+
+            // 2) Load chat-only keys from site_settings.chat_keys
+            if (siteSettings.ChatKeys != null)
+            {
+                foreach (var kvp in siteSettings.ChatKeys)
+                {
+                    var channel = kvp.Key;
+                    var encKey = kvp.Value;
+
+                    if (string.IsNullOrWhiteSpace(channel) || string.IsNullOrWhiteSpace(encKey))
+                        continue;
+
+                    try
+                    {
+                        var plainKey = SecureConfig.Decrypt(encKey);
+
+                        if (!string.IsNullOrWhiteSpace(plainKey))
+                        {
+                            fishDecryptors[channel] = new FishDecryptor(plainKey);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendOutput($"[ERROR] Failed to load chat key for {channel}: {ex.Message}", Color.Red);
+                    }
                 }
             }
         }
 
         // 3) Final log
-        var channelKeys = fishDecryptors.Keys
-            .Where(k => k.StartsWith("#"))
-            .ToList();
+        List<string> channelKeys;
+        lock (fishLock)
+        {
+            channelKeys = fishDecryptors.Keys
+                .Where(k => k.StartsWith("#"))
+                .ToList();
+        }
 
         if (channelKeys.Any())
         {
@@ -485,6 +496,11 @@ public class IRCClient
     public async Task ConnectToZNCAsync()
     {
         Interlocked.Exchange(ref _disconnecting, 0);
+
+        // Disconnect() clears fishDecryptors, and the ctor is the only other place that
+        // loaded them — so a reconnect on the same instance would leave every channel
+        // without a key and silently ignore all encrypted announces. Reload here.
+        LoadChannelKeys(siteConfig);
 
         TcpClient tcpClient = null;
         SslStream sslStream = null;
@@ -652,14 +668,21 @@ public class IRCClient
 
                     if (line.StartsWith("PING"))
                     {
-                        string pongResponse = line.Replace("PING", "PONG");
+                        string pongResponse = "PONG" + line.Substring(4); // only rewrite the command, not e.g. a token containing "PING"
                         await SendMessageAsync(sslStream, pongResponse);
                         continue;
                     }
 
                     if (!string.IsNullOrEmpty(botName) && line.Contains($":{botName}!"))
                     {
-                        await ProcessBotMessageAsync(line, sslStream);
+                        // Dispatch WITHOUT awaiting: release/IMDB/TVMaze/pretime lookups and
+                        // the cbftp spreadjob can take seconds, and awaiting them here would
+                        // stall the read loop — PINGs go unanswered (server ping-timeout) and
+                        // later announces queue up. Writes are serialized by _sendGate, and
+                        // ProcessBotMessageAsync wraps its whole body in try/catch, so this is
+                        // safe. Capture the line in a local for the closure.
+                        string lineCopy = line;
+                        _ = Task.Run(() => ProcessBotMessageAsync(lineCopy, sslStream));
                     }
                 }
 
@@ -730,9 +753,14 @@ public class IRCClient
             // detect both - FishDecryptor.DecryptMessage already strips either one.
             string decryptedMessage;
 
-            int startIdx = line.IndexOf("+OK ", StringComparison.Ordinal);
+            // Look for the marker at the start of the trailing parameter (" :+OK ...")
+            // rather than anywhere in the raw line — otherwise a plaintext announce
+            // that merely CONTAINS "+OK " is fed to the decryptor and dropped on failure.
+            int startIdx = line.IndexOf(" :+OK ", StringComparison.Ordinal);
             if (startIdx == -1)
-                startIdx = line.IndexOf("mcps ", StringComparison.Ordinal);
+                startIdx = line.IndexOf(" :mcps ", StringComparison.Ordinal);
+            if (startIdx != -1)
+                startIdx += 2; // skip the " :" separator
 
             if (startIdx != -1)
             {
@@ -750,7 +778,7 @@ public class IRCClient
                         return;
                     }
                 }
-                if (isDisconnecting)
+                if (IsDisconnecting)
                     return;
 
                 decryptedMessage = fishDecryptor.DecryptMessage(encryptedMessage);
@@ -1150,6 +1178,7 @@ public class IRCClient
 
     private string StripIrcColors(string text)
     {
-        return Regex.Replace(text, @"(\x03\d{0,2}(,\d{0,2})?|[\x02\x0F\x16\x1F\x14])", "");
+        // \x1D italic and \x1E strikethrough included (they corrupted release-name parsing); \x14 is not an mIRC code
+        return Regex.Replace(text, @"(\x03\d{0,2}(,\d{0,2})?|[\x02\x0F\x16\x1D\x1E\x1F])", "");
     }
 }

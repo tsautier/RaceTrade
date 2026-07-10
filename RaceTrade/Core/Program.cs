@@ -15,6 +15,11 @@ namespace WinFormsTraderApp
         [STAThread]  // Required for Windows Forms applications
         static void Main()
         {
+            // All config/db paths in the app are relative ("sites", "cbftp", "db", ...).
+            // Anchor them to the exe directory so launching from a shortcut/console with
+            // a different working directory doesn't create a second empty config tree.
+            System.IO.Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             ConfigureAntdUi();
