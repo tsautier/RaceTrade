@@ -724,10 +724,16 @@ public class IRCClient
                 return;
             }
 
-            // Encrypted or plain text handling
+            // Encrypted or plain text handling.
+            // FiSH encrypted payloads are prefixed with either "+OK " or "mcps "
+            // (Mircryption). Some networks/bots only ever use "mcps ", so we must
+            // detect both - FishDecryptor.DecryptMessage already strips either one.
             string decryptedMessage;
 
             int startIdx = line.IndexOf("+OK ", StringComparison.Ordinal);
+            if (startIdx == -1)
+                startIdx = line.IndexOf("mcps ", StringComparison.Ordinal);
+
             if (startIdx != -1)
             {
                 // ENCRYPTED MESSAGE
