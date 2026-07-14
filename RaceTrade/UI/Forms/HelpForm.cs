@@ -108,6 +108,12 @@ BUG FIXES & THEMING:
   - Fixed RequestAutoFillManager polling loop crashes from concurrent site list updates
   - Added synchronized TVMaze and IMDB rate limiting to avoid concurrent API bursts
   - Added regex timeouts for trigger, blacklist, and wildcard rule checks
+  - Fixed IMDb title search so stale not-found cache entries no longer block new lookups
+  - Added IMDb search query variants and support for alternate API response shapes
+  - Changed IMDb API test buttons to verify live title-search instead of cached fixed-ID lookup
+  - Enforced IMDb quick filters for No Documentary, No Music, No Comedy, and Movies Only
+  - Fixed TVMaze filters to block when rating or show type is missing but that filter is configured
+  - Updated Test Release validation to show IMDb search title/year and TVMaze show type results
 
 - IRC / FiSH fixes
   - Chat IRC now joins configured channels Chan1 through Chan20

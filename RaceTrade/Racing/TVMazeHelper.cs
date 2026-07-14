@@ -603,7 +603,8 @@ namespace RaceTrader
                 {
                     if (releaseInfo.Show.Genres == null || !releaseInfo.Show.Genres.Any())
                     {
-                        if (!config.FallbackOnError) return false;
+                        LogManager.Info("❌ No genre data available while genre allow-list is configured");
+                        return false;
                     }
                     else
                     {
@@ -640,6 +641,11 @@ namespace RaceTrader
                         return false;
                     }
                 }
+                else if (config.MinRating > 0)
+                {
+                    LogManager.Info($"❌ No rating available while minimum {config.MinRating} is configured");
+                    return false;
+                }
 
                 // Check networks
                 if (config.AllowedNetworks != null && config.AllowedNetworks.Any())
@@ -648,6 +654,22 @@ namespace RaceTrader
                     if (string.IsNullOrEmpty(network) || !config.AllowedNetworks.Contains(network, StringComparer.OrdinalIgnoreCase))
                     {
                         LogManager.Info($"❌ Network '{network}' not in allowed list");
+                        return false;
+                    }
+                }
+
+                if (config.AllowedShowTypes != null && config.AllowedShowTypes.Any())
+                {
+                    var showType = releaseInfo.Show.Type ?? "";
+                    if (string.IsNullOrWhiteSpace(showType))
+                    {
+                        LogManager.Info($"❌ Show type missing while allowed types are configured: {string.Join(", ", config.AllowedShowTypes)}");
+                        return false;
+                    }
+
+                    if (!config.AllowedShowTypes.Contains(showType, StringComparer.OrdinalIgnoreCase))
+                    {
+                        LogManager.Info($"❌ Show type '{showType}' not in allowed list");
                         return false;
                     }
                 }
@@ -957,6 +979,7 @@ namespace RaceTrader
         public List<string> BlockedGenres { get; set; }
         public double MinRating { get; set; }
         public List<string> AllowedNetworks { get; set; }
+        public List<string> AllowedShowTypes { get; set; }
         public int CacheDurationDays { get; set; }
         public bool FallbackOnError { get; set; }
 

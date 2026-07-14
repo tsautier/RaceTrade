@@ -509,6 +509,10 @@ namespace RaceTrader
         {
             try
             {
+                var parsedTitle = IMDBHelper.ExtractTitleFromRelease(releaseName);
+                var parsedYear = IMDBHelper.ExtractYearFromRelease(releaseName);
+                AppendResult($"  Search: {parsedTitle} ({parsedYear?.ToString() ?? "unknown year"})", Color.Gray);
+
                 var releaseInfo = await IMDBHelper.EnrichReleaseInfo(releaseName);
 
                 if (releaseInfo?.Movie == null)
@@ -528,7 +532,12 @@ namespace RaceTrader
                 bool passed = true;
 
                 double minRating = config["min_rating"]?.Value<double>() ?? 0;
-                if (minRating > 0 && movie.ImdbRating.HasValue)
+                if (minRating > 0 && !movie.ImdbRating.HasValue)
+                {
+                    AppendResult($"    FAIL: No IMDb rating available while minimum {minRating} is configured", Color.Red);
+                    passed = false;
+                }
+                else if (minRating > 0 && movie.ImdbRating.HasValue)
                 {
                     if (movie.ImdbRating.Value >= minRating)
                         AppendResult($"    CHECK: Rating {movie.ImdbRating.Value} >= {minRating}", Color.Green);
@@ -540,7 +549,12 @@ namespace RaceTrader
                 }
 
                 int minVotes = config["min_votes"]?.Value<int>() ?? 0;
-                if (minVotes > 0 && movie.ImdbVotes.HasValue)
+                if (minVotes > 0 && !movie.ImdbVotes.HasValue)
+                {
+                    AppendResult($"    FAIL: No IMDb vote count available while minimum {minVotes:N0} is configured", Color.Red);
+                    passed = false;
+                }
+                else if (minVotes > 0 && movie.ImdbVotes.HasValue)
                 {
                     if (movie.ImdbVotes.Value >= minVotes)
                         AppendResult($"    CHECK: Votes {movie.ImdbVotes.Value:N0} >= {minVotes:N0}", Color.Green);
@@ -574,15 +588,46 @@ namespace RaceTrader
                 }
 
                 var allowedGenres = config["allowed_genres"]?.ToObject<List<string>>() ?? new List<string>();
-                if (allowedGenres.Any() && movie.Genres != null)
+                if (allowedGenres.Any())
                 {
-                    if (movie.Genres.Any(g => allowedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
+                    if (movie.Genres == null || !movie.Genres.Any())
+                    {
+                        AppendResult("    FAIL: No genre data available while genre allow-list is configured", Color.Red);
+                        passed = false;
+                    }
+                    else if (movie.Genres.Any(g => allowedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
                         AppendResult($"    CHECK: Genre allowed", Color.Green);
                     else
                     {
                         AppendResult($"    FAIL: Genre not allowed", Color.Red);
                         passed = false;
                     }
+                }
+
+                if (config["no_documentary"]?.Value<bool>() == true && HasGenre(movie.Genres, "Documentary"))
+                {
+                    AppendResult("    FAIL: Documentary genre blocked", Color.Red);
+                    passed = false;
+                }
+
+                if (config["no_music"]?.Value<bool>() == true &&
+                    (HasGenre(movie.Genres, "Music") || HasGenre(movie.Genres, "Musical")))
+                {
+                    AppendResult("    FAIL: Music/Musical genre blocked", Color.Red);
+                    passed = false;
+                }
+
+                if (config["no_comedy"]?.Value<bool>() == true && HasGenre(movie.Genres, "Comedy"))
+                {
+                    AppendResult("    FAIL: Comedy genre blocked", Color.Red);
+                    passed = false;
+                }
+
+                if (config["no_show"]?.Value<bool>() == true &&
+                    !string.Equals(movie.Type, "movie", StringComparison.OrdinalIgnoreCase))
+                {
+                    AppendResult($"    FAIL: IMDb title type '{movie.Type}' blocked by movies-only filter", Color.Red);
+                    passed = false;
                 }
 
                 var blockedGenres = config["blocked_genres"]?.ToObject<List<string>>() ?? new List<string>();
@@ -627,6 +672,7 @@ namespace RaceTrader
                 AppendResult($"  Found: {show.Name}", Color.Green);
                 AppendResult($"    TVMaze ID: {show.Id} | Status: {show.Status}", Color.White);
                 AppendResult($"    Rating: {show.Rating?.Average?.ToString("F1") ?? "N/A"}", Color.White);
+                AppendResult($"    Type: {show.Type ?? "N/A"}", Color.White);
                 AppendResult($"    Genres: {string.Join(", ", show.Genres ?? new List<string>())}", Color.White);
                 AppendResult($"    Network: {show.Network?.Name ?? show.WebChannel?.Name ?? "N/A"}", Color.White);
 
@@ -643,7 +689,12 @@ namespace RaceTrader
                 }
 
                 double minRating = config["min_rating"]?.Value<double>() ?? 0;
-                if (minRating > 0 && show.Rating?.Average != null)
+                if (minRating > 0 && show.Rating?.Average == null)
+                {
+                    AppendResult($"    FAIL: No TVMaze rating available while minimum {minRating} is configured", Color.Red);
+                    passed = false;
+                }
+                else if (minRating > 0 && show.Rating?.Average != null)
                 {
                     if (show.Rating.Average >= minRating)
                         AppendResult($"    CHECK: Rating {show.Rating.Average:F1} >= {minRating}", Color.Green);
@@ -655,9 +706,14 @@ namespace RaceTrader
                 }
 
                 var allowedGenres = config["allowed_genres"]?.ToObject<List<string>>() ?? new List<string>();
-                if (allowedGenres.Any() && show.Genres != null)
+                if (allowedGenres.Any())
                 {
-                    if (show.Genres.Any(g => allowedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
+                    if (show.Genres == null || !show.Genres.Any())
+                    {
+                        AppendResult("    FAIL: No genre data available while genre allow-list is configured", Color.Red);
+                        passed = false;
+                    }
+                    else if (show.Genres.Any(g => allowedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
                         AppendResult($"    CHECK: Genre allowed", Color.Green);
                     else
                     {
@@ -691,6 +747,26 @@ namespace RaceTrader
                     }
                 }
 
+                var allowedShowTypes = GetStringList(config, "allowed_show_types", "show_types", "allowed_types", "allowed_showtypes");
+                if (allowedShowTypes.Any())
+                {
+                    var showType = show.Type ?? "";
+                    if (string.IsNullOrWhiteSpace(showType))
+                    {
+                        AppendResult($"    FAIL: Show type missing while allowed types are configured: {string.Join(", ", allowedShowTypes)}", Color.Red);
+                        passed = false;
+                    }
+                    else if (allowedShowTypes.Contains(showType, StringComparer.OrdinalIgnoreCase))
+                    {
+                        AppendResult($"    CHECK: Show type '{showType}' allowed", Color.Green);
+                    }
+                    else
+                    {
+                        AppendResult($"    FAIL: Show type '{showType}' not allowed", Color.Red);
+                        passed = false;
+                    }
+                }
+
                 AppendResult($"  Result: {(passed ? "PASS" : "FAIL")}", passed ? Color.LimeGreen : Color.Red);
                 return passed;
             }
@@ -700,6 +776,39 @@ namespace RaceTrader
                 bool fallback = config["fallback_on_error"]?.Value<bool>() ?? true;
                 return fallback;
             }
+        }
+
+        private static bool HasGenre(IEnumerable<string> genres, string genre)
+        {
+            return genres?.Any(g => g.Equals(genre, StringComparison.OrdinalIgnoreCase)) == true;
+        }
+
+        private static List<string> GetStringList(JObject config, params string[] keys)
+        {
+            if (config == null)
+                return new List<string>();
+
+            foreach (var key in keys)
+            {
+                var token = config[key];
+                if (token == null)
+                    continue;
+
+                if (token is JArray)
+                    return token.ToObject<List<string>>() ?? new List<string>();
+
+                var single = token.ToString();
+                if (!string.IsNullOrWhiteSpace(single))
+                {
+                    return single
+                        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToList();
+                }
+            }
+
+            return new List<string>();
         }
 
         private void AppendResult(string text, Color color)

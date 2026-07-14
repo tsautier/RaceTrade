@@ -1035,8 +1035,9 @@ namespace RaceTrader
             testIMDBButton.Text = "Testing...";
             try
             {
-                // Test with The Dark Knight
-                var testMovie = await IMDBHelper.LookupByImdb("tt0468569");
+                // Race filtering uses title search, so test that live path instead
+                // of proving only that a fixed IMDb ID exists in cache.
+                var testMovie = await IMDBHelper.SearchMovie("Back to the Future", 1985, 0);
 
                 if (testMovie != null)
                 {
@@ -1046,7 +1047,7 @@ namespace RaceTrader
                         : "N/A";
 
                     var message = $"✓ IMDbAPI!\n\n" +
-                                  $"Test Movie: {testMovie.Title} ({testMovie.Year})\n" +
+                                  $"Title-search test: {testMovie.Title} ({testMovie.Year})\n" +
                                   $"Rating: {ratingText}\n" +
                                   $"Votes: {testMovie.ImdbVotes:N0}\n" +
                                   $"Genres: {string.Join(", ", testMovie.Genres ?? new List<string>())}\n" +
@@ -1059,9 +1060,9 @@ namespace RaceTrader
                 }
                 else
                 {
-                    MessageBox.Show("Could not connect to IMDbAPI.\n\n",
+                    MessageBox.Show("IMDb title-search failed.\n\nRace filters use title search, so cached IMDb ID tests are not enough. Check internet/DNS or imdbapi.dev availability.",
                         "Test Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    LogManager.Warning("IMDbAPI test failed - check connection or site");
+                    LogManager.Warning("IMDbAPI title-search test failed - check internet/DNS or imdbapi.dev");
                 }
             }
             catch (Exception ex)
@@ -1090,6 +1091,7 @@ namespace RaceTrader
                 {
                     var message = $"✓ TVMaze API is working!\n\n" +
                                   $"Test Show: {testShow.Name}\n" +
+                                  $"Type: {testShow.Type ?? "N/A"}\n" +
                                   $"Status: {testShow.Status}\n" +
                                   $"Genres: {string.Join(", ", testShow.Genres ?? new List<string>())}\n" +
                                   $"Rating: {testShow.Rating?.Average ?? 0}\n" +

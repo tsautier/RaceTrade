@@ -76,8 +76,9 @@ namespace RaceTrader
 
             try
             {
-                // Test the new FREE API 
-                var testMovie = await IMDBHelper.LookupByImdb("tt0468569"); // The Dark Knight
+                // Race filtering uses title search, so test that live path instead
+                // of proving only that a fixed IMDb ID exists in cache.
+                var testMovie = await IMDBHelper.SearchMovie("Back to the Future", 1985, 0);
 
                 if (testMovie != null)
                 {
@@ -89,7 +90,7 @@ namespace RaceTrader
                     statusLabel.ForeColor = Color.LimeGreen;
                     MessageBox.Show(
                         $"Connection successful!\n\n" +
-                        $"Test movie: {testMovie.Title} ({testMovie.Year})\n" +
+                        $"Title-search test: {testMovie.Title} ({testMovie.Year})\n" +
                         $"Rating: {ratingText}/10\n" +
                         $"Votes: {testMovie.ImdbVotes:N0}\n\n" +
                         $"✅ imdbapi.dev is working!",
@@ -102,7 +103,7 @@ namespace RaceTrader
                     statusLabel.Text = "✗ Failed - Could not connect to imdbapi.dev";
                     statusLabel.ForeColor = Color.Red;
                     MessageBox.Show(
-                        "Connection failed!\n\nPlease check your internet connection.",
+                        "IMDb title-search failed.\n\nRace filters use title search, so cached IMDb ID tests are not enough. Check internet/DNS or imdbapi.dev availability.",
                         "Test Failed",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);

@@ -1122,6 +1122,42 @@ public static class RaceHelper
 
 
     /// <summary>
+    /// Checks a parsed genre list using case-insensitive exact matching.
+    /// </summary>
+    private static bool HasGenre(IEnumerable<string> genres, string genre)
+    {
+        return genres?.Any(g => g.Equals(genre, StringComparison.OrdinalIgnoreCase)) == true;
+    }
+
+    private static List<string> GetStringList(JObject config, params string[] keys)
+    {
+        if (config == null)
+            return new List<string>();
+
+        foreach (var key in keys)
+        {
+            var token = config[key];
+            if (token == null)
+                continue;
+
+            if (token is JArray)
+                return token.ToObject<List<string>>() ?? new List<string>();
+
+            var single = token.ToString();
+            if (!string.IsNullOrWhiteSpace(single))
+            {
+                return single
+                    .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList();
+            }
+        }
+
+        return new List<string>();
+    }
+
+    /// <summary>
     /// Validates release against IMDB filters
     /// </summary>
     private static async Task<bool> ValidateIMDB(string releaseName, JObject config, string siteName)
@@ -1144,6 +1180,11 @@ public static class RaceHelper
             LogManager.Info($"[{siteName}] [IMDB] {movie.Title} ({movie.Year}) - {movie.ImdbRating}/10 ({movie.ImdbVotes:N0} votes)");
 
             double minRating = config["min_rating"]?.Value<double>() ?? 0;
+            if (minRating > 0 && !movie.ImdbRating.HasValue)
+            {
+                LogManager.Warning($"[{siteName}] [IMDB] ❌ No rating available while minimum {minRating} is configured");
+                return false;
+            }
             if (minRating > 0 && movie.ImdbRating.HasValue && movie.ImdbRating.Value < minRating)
             {
                 LogManager.Warning($"[{siteName}] [IMDB] ❌ Rating {movie.ImdbRating.Value} < {minRating}");
@@ -1151,6 +1192,11 @@ public static class RaceHelper
             }
 
             int minVotes = config["min_votes"]?.Value<int>() ?? 0;
+            if (minVotes > 0 && !movie.ImdbVotes.HasValue)
+            {
+                LogManager.Warning($"[{siteName}] [IMDB] ❌ No vote count available while minimum {minVotes:N0} is configured");
+                return false;
+            }
             if (minVotes > 0 && movie.ImdbVotes.HasValue && movie.ImdbVotes.Value < minVotes)
             {
                 LogManager.Warning($"[{siteName}] [IMDB] ❌ Votes {movie.ImdbVotes.Value:N0} < {minVotes:N0}");
@@ -1176,8 +1222,14 @@ public static class RaceHelper
             }
 
             var allowedGenres = config["allowed_genres"]?.ToObject<List<string>>() ?? new List<string>();
-            if (allowedGenres.Any() && movie.Genres != null)
+            if (allowedGenres.Any())
             {
+                if (movie.Genres == null || !movie.Genres.Any())
+                {
+                    LogManager.Warning($"[{siteName}] [IMDB] ❌ No genre data available while genre allow-list is configured");
+                    return false;
+                }
+
                 if (!movie.Genres.Any(g => allowedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
                 {
                     LogManager.Warning($"[{siteName}] [IMDB] ❌ Genre not allowed: {string.Join(", ", movie.Genres)}");
@@ -1193,6 +1245,32 @@ public static class RaceHelper
                     LogManager.Warning($"[{siteName}] [IMDB] ❌ Genre blocked: {string.Join(", ", movie.Genres)}");
                     return false;
                 }
+            }
+
+            if (config["no_documentary"]?.Value<bool>() == true && HasGenre(movie.Genres, "Documentary"))
+            {
+                LogManager.Warning($"[{siteName}] [IMDB] ❌ Documentary genre blocked");
+                return false;
+            }
+
+            if (config["no_music"]?.Value<bool>() == true &&
+                (HasGenre(movie.Genres, "Music") || HasGenre(movie.Genres, "Musical")))
+            {
+                LogManager.Warning($"[{siteName}] [IMDB] ❌ Music/Musical genre blocked");
+                return false;
+            }
+
+            if (config["no_comedy"]?.Value<bool>() == true && HasGenre(movie.Genres, "Comedy"))
+            {
+                LogManager.Warning($"[{siteName}] [IMDB] ❌ Comedy genre blocked");
+                return false;
+            }
+
+            if (config["no_show"]?.Value<bool>() == true &&
+                !string.Equals(movie.Type, "movie", StringComparison.OrdinalIgnoreCase))
+            {
+                LogManager.Warning($"[{siteName}] [IMDB] ❌ IMDb title type '{movie.Type}' blocked by movies-only filter");
+                return false;
             }
 
             return true;
@@ -1235,6 +1313,11 @@ public static class RaceHelper
             }
 
             double minRating = config["min_rating"]?.Value<double>() ?? 0;
+            if (minRating > 0 && show.Rating?.Average == null)
+            {
+                LogManager.Warning($"[{siteName}] [TVMaze] ❌ No rating available while minimum {minRating} is configured");
+                return false;
+            }
             if (minRating > 0 && show.Rating?.Average != null && show.Rating.Average < minRating)
             {
                 LogManager.Warning($"[{siteName}] [TVMaze] ❌ Rating {show.Rating.Average:F1} < {minRating}");
@@ -1242,8 +1325,14 @@ public static class RaceHelper
             }
 
             var allowedGenres = config["allowed_genres"]?.ToObject<List<string>>() ?? new List<string>();
-            if (allowedGenres.Any() && show.Genres != null)
+            if (allowedGenres.Any())
             {
+                if (show.Genres == null || !show.Genres.Any())
+                {
+                    LogManager.Warning($"[{siteName}] [TVMaze] ❌ No genre data available while genre allow-list is configured");
+                    return false;
+                }
+
                 if (!show.Genres.Any(g => allowedGenres.Contains(g, StringComparer.OrdinalIgnoreCase)))
                 {
                     LogManager.Warning($"[{siteName}] [TVMaze] ❌ Genre not allowed: {string.Join(", ", show.Genres)}");
@@ -1272,10 +1361,16 @@ public static class RaceHelper
                 }
             }
 
-            var allowedShowTypes = config["allowed_show_types"]?.ToObject<List<string>>() ?? new List<string>();
+            var allowedShowTypes = GetStringList(config, "allowed_show_types", "show_types", "allowed_types", "allowed_showtypes");
             if (allowedShowTypes.Any())
             {
                 var showType = show.Type ?? "";
+                if (string.IsNullOrWhiteSpace(showType))
+                {
+                    LogManager.Warning($"[{siteName}] [TVMaze] ❌ Show type missing while allowed types are configured: {string.Join(", ", allowedShowTypes)}");
+                    return false;
+                }
+
                 if (!allowedShowTypes.Contains(showType, StringComparer.OrdinalIgnoreCase))
                 {
                     LogManager.Warning($"[{siteName}] [TVMaze] ❌ Show type '{showType}' not allowed");

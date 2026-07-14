@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -28,6 +29,7 @@ namespace RaceTrader
 
         static IMDBHelper()
         {
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
             httpClient.DefaultRequestHeaders.Add("User-Agent", "RaceTrader/1.0");
             httpClient.Timeout = TimeSpan.FromSeconds(15);
         }
@@ -131,12 +133,7 @@ namespace RaceTrader
             if (string.IsNullOrEmpty(title))
                 return null;
 
-            // Check if recently not found
             var searchKey = year.HasValue ? $"{title}|{year}" : title;
-            if (IMDBCache.IsRecentlyNotFound(searchKey, 7))
-            {
-                return null;
-            }
 
             // Try cache first
             var cached = IMDBCache.GetCachedMovieByTitle(title, year, cacheDays);
@@ -145,47 +142,28 @@ namespace RaceTrader
                 return cached;
             }
 
-            try
+            foreach (var query in BuildSearchQueries(title, year))
             {
-                await RateLimitDelay();
-
-                // imdbapi.dev search endpoint: GET /search/titles?query={query}&limit={limit}
-                var url = $"{IMDB_API_BASE}/search/titles?query={Uri.EscapeDataString(title)}&limit=10";
-                var response = await httpClient.GetAsync(url);
-
-                if (response.IsSuccessStatusCode)
+                try
                 {
+                    await RateLimitDelay();
+
+                    // imdbapi.dev search endpoint: GET /search/titles?query={query}&limit={limit}
+                    var url = $"{IMDB_API_BASE}/search/titles?query={Uri.EscapeDataString(query)}&limit=20";
+                    var response = await httpClient.GetAsync(url);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        LogManager.Warning($"IMDB search for '{query}' failed: {response.StatusCode}");
+                        continue;
+                    }
+
                     var json = await response.Content.ReadAsStringAsync();
                     var result = JObject.Parse(json);
-
-                    // Get search results array
-                    var results = result["titles"] as JArray;
+                    var results = ExtractSearchResults(result);
                     if (results != null && results.Any())
                     {
-                        // Find best match (prefer exact year match if provided)
-                        JToken bestMatch = null;
-
-                        if (year.HasValue)
-                        {
-                            bestMatch = results.FirstOrDefault(r =>
-                            {
-                                var resultYear = r["startYear"]?.ToObject<int?>();
-                                return resultYear == year;
-                            });
-                        }
-
-                        // If no year match or no year specified, take first movie result
-                        if (bestMatch == null)
-                        {
-                            bestMatch = results.FirstOrDefault(r =>
-                                r["type"]?.ToString().Equals("movie", StringComparison.OrdinalIgnoreCase) == true);
-                        }
-
-                        // Fall back to first result if no movie found
-                        if (bestMatch == null)
-                        {
-                            bestMatch = results[0];
-                        }
+                        var bestMatch = PickBestMovieMatch(results, title, year);
 
                         // Search hits are SPARSE (no languages/countries/directors) -
                         // caching them as full records made only_english/only_us_country
@@ -213,18 +191,154 @@ namespace RaceTrader
                     }
                     else
                     {
-                        // Cache not found
-                        IMDBCache.CacheNotFound(searchKey);
+                        LogManager.Debug($"IMDB search returned no titles for '{query}'");
                     }
                 }
+                catch (Exception ex)
+                {
+                    var inner = ex.InnerException != null ? $" Inner: {ex.InnerException.Message}" : "";
+                    LogManager.Error($"Error searching for movie '{query}': {ex.Message}{inner}");
+                }
+            }
 
-                return null;
-            }
-            catch (Exception ex)
+            IMDBCache.CacheNotFound(searchKey);
+            return null;
+        }
+
+        private static IEnumerable<string> BuildSearchQueries(string title, int? year)
+        {
+            var queries = new List<string>();
+            AddQuery(title);
+
+            if (year.HasValue)
+                AddQuery($"{title} {year.Value}");
+
+            var compact = Regex.Replace(title, @"[^\w\s]", " ");
+            compact = Regex.Replace(compact, @"\s+", " ").Trim();
+            AddQuery(compact);
+
+            return queries;
+
+            void AddQuery(string query)
             {
-                LogManager.Error($"Error searching for movie '{title}': {ex.Message}");
-                return null;
+                if (!string.IsNullOrWhiteSpace(query) &&
+                    !queries.Contains(query, StringComparer.OrdinalIgnoreCase))
+                {
+                    queries.Add(query.Trim());
+                }
             }
+        }
+
+        private static JArray ExtractSearchResults(JObject result)
+        {
+            if (result == null)
+                return null;
+
+            var direct = result["titles"] as JArray
+                         ?? result["results"] as JArray
+                         ?? result["items"] as JArray
+                         ?? result["data"] as JArray
+                         ?? result["data"]?["titles"] as JArray
+                         ?? result["data"]?["results"] as JArray;
+
+            if (direct != null)
+                return direct;
+
+            return FindTitleArray(result);
+        }
+
+        private static JArray FindTitleArray(JToken token)
+        {
+            if (token is JArray array &&
+                array.OfType<JObject>().Any(IsTitleSearchObject))
+            {
+                return array;
+            }
+
+            foreach (var child in token.Children())
+            {
+                var found = FindTitleArray(child);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
+        }
+
+        private static bool IsTitleSearchObject(JObject obj)
+        {
+            return obj != null &&
+                   obj["id"] != null &&
+                   (obj["primaryTitle"] != null ||
+                    obj["originalTitle"] != null ||
+                    obj["title"] != null ||
+                    obj["name"] != null);
+        }
+
+        private static JToken PickBestMovieMatch(JArray results, string requestedTitle, int? requestedYear)
+        {
+            var objects = results.OfType<JObject>().ToList();
+            if (!objects.Any())
+                return results[0];
+
+            var normalizedRequested = NormalizeTitle(requestedTitle);
+
+            if (requestedYear.HasValue)
+            {
+                var exactYearMovie = objects.FirstOrDefault(r =>
+                    IsMovieType(r) && GetStartYear(r) == requestedYear.Value);
+                if (exactYearMovie != null)
+                    return exactYearMovie;
+
+                var exactYear = objects.FirstOrDefault(r => GetStartYear(r) == requestedYear.Value);
+                if (exactYear != null)
+                    return exactYear;
+            }
+
+            var exactTitleMovie = objects.FirstOrDefault(r =>
+                IsMovieType(r) &&
+                string.Equals(NormalizeTitle(GetTitle(r)), normalizedRequested, StringComparison.OrdinalIgnoreCase));
+            if (exactTitleMovie != null)
+                return exactTitleMovie;
+
+            var firstMovie = objects.FirstOrDefault(IsMovieType);
+            return firstMovie ?? objects[0];
+        }
+
+        private static bool IsMovieType(JObject item)
+        {
+            var type = item["type"]?.ToString()
+                       ?? item["titleType"]?.ToString()
+                       ?? item["kind"]?.ToString();
+
+            return string.IsNullOrEmpty(type) ||
+                   type.Equals("movie", StringComparison.OrdinalIgnoreCase) ||
+                   type.Equals("feature", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static int? GetStartYear(JObject item)
+        {
+            return item["startYear"]?.ToObject<int?>()
+                   ?? item["year"]?.ToObject<int?>()
+                   ?? item["releaseYear"]?["year"]?.ToObject<int?>();
+        }
+
+        private static string GetTitle(JObject item)
+        {
+            return item["primaryTitle"]?.ToString()
+                   ?? item["originalTitle"]?.ToString()
+                   ?? item["title"]?.ToString()
+                   ?? item["titleText"]?["text"]?.ToString()
+                   ?? item["name"]?.ToString();
+        }
+
+        private static string NormalizeTitle(string title)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+                return string.Empty;
+
+            var normalized = Regex.Replace(title, @"[^\w]+", " ").Trim().ToLowerInvariant();
+            return Regex.Replace(normalized, @"\s+", " ");
         }
 
         /// <summary>
@@ -238,11 +352,17 @@ namespace RaceTrader
             var movie = new IMDBMovie
             {
                 ImdbID = json["id"]?.ToString(),
-                Title = json["primaryTitle"]?.ToString(),
-                Year = json["startYear"]?.ToString(),
+                Title = json["primaryTitle"]?.ToString()
+                        ?? json["originalTitle"]?.ToString()
+                        ?? json["title"]?.ToString()
+                        ?? json["titleText"]?["text"]?.ToString()
+                        ?? json["name"]?.ToString(),
+                Year = json["startYear"]?.ToString()
+                       ?? json["year"]?.ToString()
+                       ?? json["releaseYear"]?["year"]?.ToString(),
                 Runtime = ConvertRuntimeToString(json["runtimeSeconds"]?.ToObject<int?>()),
                 Plot = json["plot"]?.ToString(),
-                Poster = json["primaryImage"]?["url"]?.ToString(),
+                Poster = json["primaryImage"]?["url"]?.ToString() ?? json["primaryImage"]?.ToString(),
                 Type = json["type"]?.ToString() ?? "movie"
             };
 
@@ -589,6 +709,11 @@ namespace RaceTrader
                         return false;
                     }
                 }
+                else if (config.MinRating > 0)
+                {
+                    LogManager.Warning($"  ❌ No IMDb rating available while minimum {config.MinRating} is configured");
+                    return false;
+                }
 
                 // Check votes
                 if (config.MinVotes > 0 && movie.ImdbVotes.HasValue)
@@ -598,6 +723,11 @@ namespace RaceTrader
                         LogManager.Warning($"  ❌ Votes {movie.ImdbVotes.Value} below minimum {config.MinVotes}");
                         return false;
                     }
+                }
+                else if (config.MinVotes > 0)
+                {
+                    LogManager.Warning($"  ❌ No IMDb vote count available while minimum {config.MinVotes} is configured");
+                    return false;
                 }
 
                 // Check genres - allowed
@@ -630,6 +760,30 @@ namespace RaceTrader
                         LogManager.Warning($"  ❌ Genre is blocked: {string.Join(", ", movie.Genres)}");
                         return false;
                     }
+                }
+
+                if (config.NoDocumentary && HasGenre(movie, "Documentary"))
+                {
+                    LogManager.Warning("  ❌ Documentary genre blocked");
+                    return false;
+                }
+
+                if (config.NoMusic && (HasGenre(movie, "Music") || HasGenre(movie, "Musical")))
+                {
+                    LogManager.Warning("  ❌ Music/Musical genre blocked");
+                    return false;
+                }
+
+                if (config.NoComedy && HasGenre(movie, "Comedy"))
+                {
+                    LogManager.Warning("  ❌ Comedy genre blocked");
+                    return false;
+                }
+
+                if (config.NoShow && !string.Equals(movie.Type, "movie", StringComparison.OrdinalIgnoreCase))
+                {
+                    LogManager.Warning($"  ❌ IMDb title type '{movie.Type}' blocked by movies-only filter");
+                    return false;
                 }
 
                 // Check language - only English
@@ -773,6 +927,11 @@ namespace RaceTrader
             }
 
             return true;
+        }
+
+        private static bool HasGenre(IMDBMovie movie, string genre)
+        {
+            return movie?.Genres?.Any(g => g.Equals(genre, StringComparison.OrdinalIgnoreCase)) == true;
         }
 
         #endregion
