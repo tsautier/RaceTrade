@@ -83,6 +83,9 @@ BUG FIXES & THEMING:
   - Fixed Affil Spread & Pre Manager button spacing
   - Fixed centered text on Pre Manager action buttons
   - Fixed Clear Log button clipping in the Pre Manager
+  - Fixed Add Affil text contrast in the Site Editor
+  - Added working Release Skiplist editor for Site Editor sections
+  - Applied section skiplists to release-name wildcard filtering before racing
 
 - Site editor settings persistence
   - Fixed TVMaze/IMDB section settings being lost after saving the Site Editor

@@ -227,6 +227,9 @@
     <Compile Include="Sites\AddSite.Designer.cs">
       <DependentUpon>AddSite.cs</DependentUpon>
     </Compile>
+    <Compile Include="Sites\ReleaseSkiplistForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Logging\IrcLog.cs">
       <SubType>Form</SubType>
     </Compile>

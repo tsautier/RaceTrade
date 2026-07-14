@@ -124,6 +124,82 @@ public static class RaceHelper
     }
 
     /// <summary>
+    /// Section release skiplist matching. This is intentionally about the announce
+    /// release name, not CBFTP file or directory names.
+    /// </summary>
+    private static bool MatchesReleaseSkiplist(string releaseName, IEnumerable<string> patterns, out string matchedPattern)
+    {
+        matchedPattern = null;
+
+        if (string.IsNullOrWhiteSpace(releaseName) || patterns == null)
+            return false;
+
+        foreach (var pattern in patterns)
+        {
+            if (MatchesReleaseNamePattern(releaseName, pattern))
+            {
+                matchedPattern = pattern;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool MatchesReleaseNamePattern(string releaseName, string pattern)
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+            return false;
+
+        pattern = pattern.Trim();
+
+        if (pattern.Contains("*") || pattern.Contains("?"))
+        {
+            return WildcardMatch(releaseName, pattern);
+        }
+
+        return releaseName.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private static bool WildcardMatch(string value, string pattern)
+    {
+        int valueIndex = 0;
+        int patternIndex = 0;
+        int starIndex = -1;
+        int retryIndex = 0;
+
+        while (valueIndex < value.Length)
+        {
+            if (patternIndex < pattern.Length &&
+                (pattern[patternIndex] == '?' ||
+                 char.ToUpperInvariant(pattern[patternIndex]) == char.ToUpperInvariant(value[valueIndex])))
+            {
+                patternIndex++;
+                valueIndex++;
+            }
+            else if (patternIndex < pattern.Length && pattern[patternIndex] == '*')
+            {
+                starIndex = patternIndex++;
+                retryIndex = valueIndex;
+            }
+            else if (starIndex != -1)
+            {
+                patternIndex = starIndex + 1;
+                valueIndex = ++retryIndex;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        while (patternIndex < pattern.Length && pattern[patternIndex] == '*')
+            patternIndex++;
+
+        return patternIndex == pattern.Length;
+    }
+
+    /// <summary>
     /// Loads all site configurations from disk.
     /// Now properly clears caches before reloading.
     /// </summary>
@@ -367,6 +443,15 @@ public static class RaceHelper
                     // Priority 1: Section-level pretime
                     var configSection = siteConfig["sections"]?.FirstOrDefault(s =>
                         string.Equals((string)s["irc_name"], ircSectionToCheck, StringComparison.OrdinalIgnoreCase));
+
+                    var releaseSkiplists = configSection?["skiplists"]?.ToObject<List<string>>() ?? new List<string>();
+                    if (MatchesReleaseSkiplist(releaseName, releaseSkiplists, out var skipPattern))
+                    {
+                        LogManager.LogCBFTP(
+                            CBFTPEventType.Info,
+                            $"[{LogColors.Magenta(siteName)}] Release skiplist matched [{LogColors.Yellow(skipPattern)}], skipping [{LogColors.Orange(releaseName)}]");
+                        continue;
+                    }
 
                     if (configSection?["pretime"]?.Value<int?>() is int sectionPretime && sectionPretime > 0)
                     {

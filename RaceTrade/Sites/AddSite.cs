@@ -36,6 +36,10 @@ namespace RaceTrade
             InitializeComponent();
             RaceTrade.ThemeManager.ApplyTheme(this);
 
+            Add_affil_textbox.BackColor = ThemeManager.Colors.BackgroundDark;
+            Add_affil_textbox.ForeColor = Color.Gray;
+            listBox_affils_sites.BackColor = ThemeManager.Colors.BackgroundDark;
+            listBox_affils_sites.ForeColor = ThemeManager.Colors.Foreground;
 
             // In constructor, after InitializeComponent():
             Add_affil_textbox.Text = "Enter group name (e.g., GROUPiSO)";
@@ -45,7 +49,7 @@ namespace RaceTrade
                 if (Add_affil_textbox.Text == "Enter group name (e.g., GROUPiSO)")
                 {
                     Add_affil_textbox.Text = "";
-                    Add_affil_textbox.ForeColor = Color.Black;
+                    Add_affil_textbox.ForeColor = ThemeManager.Colors.Foreground;
                 }
             };
 
@@ -121,8 +125,8 @@ namespace RaceTrade
             remove_affil_button.Click += remove_affil_button_Click;
             btnEnableRaceSection.Click += btnEnableRaceSection_Click;
             btnDisableRaceSection.Click += btnDisableRaceSection_Click;
-            listBox_affils_sites.BackColor = Color.FromArgb(22, 26, 36);
-            listBox_affils_sites.ForeColor = Color.White;
+            button1.Text = "Release Skiplist";
+            button1.Click += ReleaseSkiplistButton_Click;
             ListBox2.SelectedIndexChanged += ListBox2_SelectedIndexChanged;
             ListBox2.DrawMode = DrawMode.OwnerDrawFixed;
             ListBox2.DrawItem += ListBox2_DrawItem;
@@ -352,6 +356,88 @@ namespace RaceTrade
             SaveSiteConfiguration();
 
             LogManager.Success($"Removed affil group: {selectedGroup}");
+        }
+
+        private void ReleaseSkiplistButton_Click(object sender, EventArgs e)
+        {
+            if (currentSite?.Sections == null || !currentSite.Sections.Any())
+            {
+                MessageBox.Show("No sections are loaded for this site.",
+                    "Release Skiplist", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var sectionName = GetSelectedSkiplistSectionName();
+            if (string.IsNullOrWhiteSpace(sectionName))
+            {
+                MessageBox.Show("Select an IRC section or race section first.",
+                    "Release Skiplist", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var section = currentSite.Sections.FirstOrDefault(s =>
+                string.Equals(s.IrcName, sectionName, StringComparison.OrdinalIgnoreCase));
+
+            if (section == null)
+            {
+                MessageBox.Show($"Section '{sectionName}' was not found in this site.",
+                    "Release Skiplist", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var mapping = raceMappings.FirstOrDefault(m =>
+                string.Equals(m.IrcName, sectionName, StringComparison.OrdinalIgnoreCase));
+
+            var currentPatterns = mapping?.Skiplists ?? section.Skiplists ?? new List<string>();
+
+            using (var form = new ReleaseSkiplistForm(sectionName, currentPatterns))
+            {
+                form.StartPosition = FormStartPosition.CenterParent;
+                if (form.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                var patterns = form.Patterns
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .Select(p => p.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                section.Skiplists = patterns;
+
+                if (mapping == null)
+                {
+                    mapping = new RaceMapping
+                    {
+                        IrcName = sectionName,
+                        Mappings = new List<Mapping>(),
+                        Rules = section.Rules ?? new List<string>(),
+                        Skiplists = patterns,
+                        DupeRules = section.DupeRules
+                    };
+                    raceMappings.Add(mapping);
+                }
+                else
+                {
+                    mapping.Skiplists = patterns;
+                }
+
+                SaveSiteConfiguration();
+                LogManager.Success($"Saved release skiplist for section '{sectionName}' ({patterns.Count} pattern(s)).");
+            }
+        }
+
+        private string GetSelectedSkiplistSectionName()
+        {
+            if (ListBox2.SelectedItem is SectionItem selectedRaceSection)
+                return selectedRaceSection.SectionName;
+
+            if (ListBox1.SelectedItem != null)
+                return ListBox1.SelectedItem.ToString();
+
+            if (currentSite?.Sections?.Count == 1)
+                return currentSite.Sections[0].IrcName;
+
+            return null;
         }
 
 
