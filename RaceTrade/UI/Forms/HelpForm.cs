@@ -85,6 +85,7 @@ BUG FIXES & THEMING:
   - Fixed Clear Log button clipping in the Pre Manager
   - Fixed Add Affil text contrast in the Site Editor
   - Added working Release Skiplist editor for Site Editor sections
+  - Added inline Release Skiplist explanation and wildcard examples
   - Applied section skiplists to release-name wildcard filtering before racing
 
 - Site editor settings persistence

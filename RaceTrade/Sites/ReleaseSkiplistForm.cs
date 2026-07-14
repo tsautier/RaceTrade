@@ -53,10 +53,12 @@ namespace RaceTrade
 
             var hintLabel = new Label
             {
-                Text = "Matches release names only. Use plain text or wildcards (* and ?).",
+                Text = "Checks the announce release name before racing. Case-insensitive.\r\n" +
+                       "Plain text contains-match: FRENCH   Wildcards: *FRENCH* or TV-?080P*\r\n" +
+                       "This is not the CBFTP file/dir skiplist.",
                 AutoSize = false,
                 Location = new Point(16, 38),
-                Size = new Size(512, 20),
+                Size = new Size(512, 50),
                 ForeColor = ThemeManager.Colors.ForegroundMuted,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleLeft
@@ -66,8 +68,8 @@ namespace RaceTrade
             patternListBox = new ListBox
             {
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                Location = new Point(16, 64),
-                Size = new Size(512, 212),
+                Location = new Point(16, 96),
+                Size = new Size(512, 180),
                 BackColor = ThemeManager.Colors.BackgroundDark,
                 ForeColor = ThemeManager.Colors.Foreground,
                 BorderStyle = BorderStyle.FixedSingle,
