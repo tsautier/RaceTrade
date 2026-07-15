@@ -111,6 +111,10 @@ BUG FIXES & THEMING:
   - Fixed IMDb title search so stale not-found cache entries no longer block new lookups
   - Added IMDb search query variants and support for alternate API response shapes
   - Changed IMDb API test buttons to verify live title-search instead of cached fixed-ID lookup
+  - Added encrypted TMDb API key setting for IMDb title-search fallback
+  - Added TMDb fallback lookup that finds the movie and IMDb ID when imdbapi.dev search is unavailable
+  - Kept IMDb rating strict: TMDb ratings are never used as IMDb ratings
+  - Made API tests report TMDb fallback/no IMDb rating instead of passing on cached data
   - Enforced IMDb quick filters for No Documentary, No Music, No Comedy, and Movies Only
   - Fixed TVMaze filters to block when rating or show type is missing but that filter is configured
   - Updated Test Release validation to show IMDb search title/year and TVMaze show type results

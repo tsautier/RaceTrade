@@ -1177,7 +1177,10 @@ public static class RaceHelper
             }
 
             var movie = releaseInfo.Movie;
-            LogManager.Info($"[{siteName}] [IMDB] {movie.Title} ({movie.Year}) - {movie.ImdbRating}/10 ({movie.ImdbVotes:N0} votes)");
+            var ratingText = movie.ImdbRating.HasValue ? movie.ImdbRating.Value.ToString("F1") : "N/A";
+            var votesText = movie.ImdbVotes.HasValue ? movie.ImdbVotes.Value.ToString("N0") : "N/A";
+            var sourceText = string.IsNullOrWhiteSpace(movie.DataSource) ? "IMDb" : movie.DataSource;
+            LogManager.Info($"[{siteName}] [IMDB] {movie.Title} ({movie.Year}) - Rating: {ratingText}/10 ({votesText} votes) - Source: {sourceText}");
 
             double minRating = config["min_rating"]?.Value<double>() ?? 0;
             if (minRating > 0 && !movie.ImdbRating.HasValue)

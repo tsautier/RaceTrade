@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -23,6 +24,8 @@ namespace RaceTrader
     {
         private static readonly HttpClient httpClient = new HttpClient();
         private const string IMDB_API_BASE = "https://api.imdbapi.dev";
+        private const string TMDB_API_BASE = "https://api.themoviedb.org/3";
+        private const string SETTINGS_FILE = "settings/settings.json";
 
         private static DateTime lastRequestTime = DateTime.MinValue;
         private static readonly TimeSpan minRequestInterval = TimeSpan.FromMilliseconds(500);
@@ -77,7 +80,7 @@ namespace RaceTrader
             }
 
             // Try cache first
-            var cached = IMDBCache.GetCachedMovieByImdb(imdbId, cacheDays);
+            var cached = cacheDays > 0 ? IMDBCache.GetCachedMovieByImdb(imdbId, cacheDays) : null;
             if (cached != null)
             {
                 return cached;
@@ -130,16 +133,31 @@ namespace RaceTrader
         /// </summary>
         public static async Task<IMDBMovie> SearchMovie(string title, int? year = null, int cacheDays = 30)
         {
-            if (string.IsNullOrEmpty(title))
-                return null;
+            var result = await SearchMovieDetailed(title, year, cacheDays);
+            return result.Movie;
+        }
 
+        public static async Task<MovieSearchResult> SearchMovieDetailed(string title, int? year = null, int cacheDays = 30)
+        {
+            if (string.IsNullOrEmpty(title))
+                return MovieSearchResult.Failed(title, year, "Empty title");
+
+            var searchResult = new MovieSearchResult
+            {
+                RequestedTitle = title,
+                RequestedYear = year
+            };
             var searchKey = year.HasValue ? $"{title}|{year}" : title;
 
             // Try cache first
-            var cached = IMDBCache.GetCachedMovieByTitle(title, year, cacheDays);
+            var cached = cacheDays > 0 ? IMDBCache.GetCachedMovieByTitle(title, year, cacheDays) : null;
             if (cached != null)
             {
-                return cached;
+                searchResult.Movie = cached;
+                searchResult.Source = "IMDb cache";
+                searchResult.UsedCache = true;
+                searchResult.Message = $"Cache hit for {title} ({year})";
+                return searchResult;
             }
 
             foreach (var query in BuildSearchQueries(title, year))
@@ -154,6 +172,8 @@ namespace RaceTrader
 
                     if (!response.IsSuccessStatusCode)
                     {
+                        searchResult.ImdbApiFailed = true;
+                        searchResult.AddMessage($"imdbapi.dev search '{query}' failed: {response.StatusCode}");
                         LogManager.Warning($"IMDB search for '{query}' failed: {response.StatusCode}");
                         continue;
                     }
@@ -175,34 +195,64 @@ namespace RaceTrader
                             if (detailed != null)
                             {
                                 IMDBCache.CacheSearch(title, year, detailed.ImdbID);
-                                return detailed;
+                                searchResult.Movie = detailed;
+                                searchResult.Source = "imdbapi.dev";
+                                searchResult.Message = $"IMDb match {detailed.Title} ({detailed.Year})";
+                                return searchResult;
                             }
+
+                            searchResult.ImdbApiFailed = true;
+                            searchResult.AddMessage($"imdbapi.dev details failed for {matchedId}");
                         }
 
-                        // Fallback: parse the sparse search result directly
+                        // Only use a sparse search hit if it already contains a real
+                        // IMDb rating. Otherwise continue to TMDb so we can at least
+                        // resolve the correct movie/IMDb id without caching bad data.
                         var movie = ParseImdbApiResponse(bestMatch as JObject);
 
-                        if (movie != null)
+                        if (movie != null && movie.ImdbRating.HasValue)
                         {
                             IMDBCache.CacheMovie(movie);
                             IMDBCache.CacheSearch(title, year, movie.ImdbID);
-                            return movie;
+                            movie.DataSource = "imdbapi.dev search";
+                            searchResult.Movie = movie;
+                            searchResult.Source = "imdbapi.dev search";
+                            searchResult.Message = $"Sparse IMDb match {movie.Title} ({movie.Year})";
+                            return searchResult;
                         }
+
+                        searchResult.AddMessage("imdbapi.dev search hit was incomplete; trying TMDb fallback");
                     }
                     else
                     {
+                        searchResult.AddMessage($"imdbapi.dev returned no titles for '{query}'");
                         LogManager.Debug($"IMDB search returned no titles for '{query}'");
                     }
                 }
                 catch (Exception ex)
                 {
                     var inner = ex.InnerException != null ? $" Inner: {ex.InnerException.Message}" : "";
+                    searchResult.ImdbApiFailed = true;
+                    searchResult.AddMessage($"imdbapi.dev search '{query}' error: {ex.Message}{inner}");
                     LogManager.Error($"Error searching for movie '{query}': {ex.Message}{inner}");
                 }
             }
 
+            var tmdbMovie = await SearchMovieViaTmdb(title, year, cacheDays, searchResult);
+            if (tmdbMovie != null)
+            {
+                searchResult.Movie = tmdbMovie;
+                if (string.IsNullOrWhiteSpace(searchResult.Source))
+                    searchResult.Source = tmdbMovie.DataSource ?? "TMDb fallback";
+                if (string.IsNullOrWhiteSpace(searchResult.Message))
+                    searchResult.Message = $"TMDb fallback matched {tmdbMovie.Title} ({tmdbMovie.Year})";
+                return searchResult;
+            }
+
             IMDBCache.CacheNotFound(searchKey);
-            return null;
+            if (string.IsNullOrWhiteSpace(searchResult.Message))
+                searchResult.Message = $"No IMDb/TMDb data found for {title} ({year})";
+            return searchResult;
         }
 
         private static IEnumerable<string> BuildSearchQueries(string title, int? year)
@@ -341,6 +391,263 @@ namespace RaceTrader
             return Regex.Replace(normalized, @"\s+", " ");
         }
 
+        private static async Task<IMDBMovie> SearchMovieViaTmdb(
+            string title,
+            int? year,
+            int cacheDays,
+            MovieSearchResult searchResult)
+        {
+            var apiKey = GetTmdbApiKey();
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                searchResult.AddMessage("TMDb fallback skipped: no TMDb API key configured in Settings");
+                return null;
+            }
+
+            try
+            {
+                var searchPath = $"/search/movie?query={Uri.EscapeDataString(title)}&include_adult=false&language=en-US&page=1";
+                if (year.HasValue)
+                    searchPath += $"&primary_release_year={year.Value}&year={year.Value}";
+
+                var searchJson = await SendTmdbGetAsync(searchPath, apiKey);
+                var tmdbResults = searchJson?["results"] as JArray;
+                if (tmdbResults == null || !tmdbResults.Any())
+                {
+                    searchResult.TmdbFailed = true;
+                    searchResult.AddMessage("TMDb fallback returned no movie results");
+                    return null;
+                }
+
+                var bestTmdbMatch = PickBestTmdbMatch(tmdbResults, title, year) as JObject;
+                var tmdbId = bestTmdbMatch?["id"]?.ToObject<int?>();
+                if (!tmdbId.HasValue)
+                {
+                    searchResult.TmdbFailed = true;
+                    searchResult.AddMessage("TMDb fallback result did not include a movie id");
+                    return null;
+                }
+
+                var details = await SendTmdbGetAsync($"/movie/{tmdbId.Value}?language=en-US", apiKey);
+                var tmdbMovie = ParseTmdbMovie(details ?? bestTmdbMatch);
+                if (tmdbMovie == null)
+                {
+                    searchResult.TmdbFailed = true;
+                    searchResult.AddMessage("TMDb fallback could not parse movie details");
+                    return null;
+                }
+
+                searchResult.TmdbUsed = true;
+                searchResult.Source = "TMDb fallback";
+
+                if (!string.IsNullOrWhiteSpace(tmdbMovie.ImdbID))
+                {
+                    var imdbDetailed = await LookupByImdb(tmdbMovie.ImdbID, cacheDays);
+                    if (imdbDetailed != null)
+                    {
+                        IMDBCache.CacheSearch(title, year, imdbDetailed.ImdbID);
+                        imdbDetailed.DataSource = "TMDb fallback -> imdbapi.dev";
+                        searchResult.Source = imdbDetailed.DataSource;
+                        searchResult.Message = $"TMDb found IMDb id {imdbDetailed.ImdbID}; IMDb rating loaded";
+                        return imdbDetailed;
+                    }
+
+                    searchResult.ImdbRatingUnavailable = true;
+                    searchResult.AddMessage($"TMDb found IMDb id {tmdbMovie.ImdbID}, but imdbapi.dev details are unavailable");
+                }
+                else
+                {
+                    searchResult.ImdbRatingUnavailable = true;
+                    searchResult.AddMessage("TMDb fallback found the movie but did not provide an IMDb id");
+                }
+
+                tmdbMovie.DataSource = "TMDb fallback metadata";
+                return tmdbMovie;
+            }
+            catch (Exception ex)
+            {
+                var inner = ex.InnerException != null ? $" Inner: {ex.InnerException.Message}" : "";
+                searchResult.TmdbFailed = true;
+                searchResult.AddMessage($"TMDb fallback error: {ex.Message}{inner}");
+                LogManager.Error($"TMDb fallback error for '{title}': {ex.Message}{inner}");
+                return null;
+            }
+        }
+
+        private static async Task<JObject> SendTmdbGetAsync(string pathAndQuery, string apiKey)
+        {
+            var useBearer = IsTmdbBearerToken(apiKey);
+            var url = TMDB_API_BASE + pathAndQuery;
+
+            if (!useBearer)
+            {
+                url += url.Contains("?") ? "&" : "?";
+                url += $"api_key={Uri.EscapeDataString(apiKey)}";
+            }
+
+            using (var request = new HttpRequestMessage(HttpMethod.Get, url))
+            {
+                if (useBearer)
+                {
+                    var token = apiKey.Trim();
+                    if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        token = token.Substring("Bearer ".Length).Trim();
+
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var response = await httpClient.SendAsync(request);
+                var json = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new HttpRequestException($"TMDb API error: {(int)response.StatusCode} {response.StatusCode} {TrimForLog(json)}");
+                }
+
+                return JObject.Parse(json);
+            }
+        }
+
+        private static bool IsTmdbBearerToken(string apiKey)
+        {
+            if (string.IsNullOrWhiteSpace(apiKey))
+                return false;
+
+            var key = apiKey.Trim();
+            return key.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ||
+                   key.StartsWith("eyJ", StringComparison.Ordinal);
+        }
+
+        private static string TrimForLog(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            value = Regex.Replace(value, @"\s+", " ").Trim();
+            return value.Length <= 180 ? value : value.Substring(0, 180) + "...";
+        }
+
+        private static JToken PickBestTmdbMatch(JArray results, string requestedTitle, int? requestedYear)
+        {
+            var objects = results.OfType<JObject>().ToList();
+            if (!objects.Any())
+                return results[0];
+
+            var normalizedRequested = NormalizeTitle(requestedTitle);
+
+            if (requestedYear.HasValue)
+            {
+                var yearMatch = objects.FirstOrDefault(r => GetTmdbYear(r) == requestedYear.Value);
+                if (yearMatch != null)
+                    return yearMatch;
+            }
+
+            var exactTitle = objects.FirstOrDefault(r =>
+                string.Equals(NormalizeTitle(GetTmdbTitle(r)), normalizedRequested, StringComparison.OrdinalIgnoreCase));
+            if (exactTitle != null)
+                return exactTitle;
+
+            return objects[0];
+        }
+
+        private static int? GetTmdbYear(JObject item)
+        {
+            var date = item["release_date"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(date) &&
+                date.Length >= 4 &&
+                int.TryParse(date.Substring(0, 4), out var year))
+            {
+                return year;
+            }
+
+            return null;
+        }
+
+        private static string GetTmdbTitle(JObject item)
+        {
+            return item["title"]?.ToString()
+                   ?? item["original_title"]?.ToString()
+                   ?? item["name"]?.ToString();
+        }
+
+        private static IMDBMovie ParseTmdbMovie(JObject json)
+        {
+            if (json == null)
+                return null;
+
+            var title = GetTmdbTitle(json);
+            if (string.IsNullOrWhiteSpace(title))
+                return null;
+
+            var movie = new IMDBMovie
+            {
+                ImdbID = json["imdb_id"]?.ToString(),
+                Title = title,
+                Year = GetTmdbYear(json)?.ToString(),
+                Plot = json["overview"]?.ToString(),
+                Type = "movie",
+                DataSource = "TMDb fallback metadata"
+            };
+
+            var runtime = json["runtime"]?.ToObject<int?>();
+            if (runtime.HasValue && runtime.Value > 0)
+                movie.Runtime = $"{runtime.Value} min";
+
+            var genres = json["genres"] as JArray;
+            if (genres != null && genres.Any())
+            {
+                movie.Genres = genres
+                    .Select(g => g["name"]?.ToString())
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .ToList();
+                movie.Genre = string.Join(", ", movie.Genres);
+            }
+
+            var spokenLanguages = json["spoken_languages"] as JArray;
+            if (spokenLanguages != null && spokenLanguages.Any())
+            {
+                movie.Languages = spokenLanguages
+                    .Select(l => l["english_name"]?.ToString() ?? l["name"]?.ToString())
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .ToList();
+                movie.Language = string.Join(", ", movie.Languages);
+            }
+
+            var productionCountries = json["production_countries"] as JArray;
+            if (productionCountries != null && productionCountries.Any())
+            {
+                movie.Countries = productionCountries
+                    .Select(c => c["name"]?.ToString())
+                    .Where(name => !string.IsNullOrWhiteSpace(name))
+                    .ToList();
+                movie.Country = string.Join(", ", movie.Countries);
+            }
+
+            return movie;
+        }
+
+        public static string GetTmdbApiKey()
+        {
+            try
+            {
+                if (!File.Exists(SETTINGS_FILE))
+                    return string.Empty;
+
+                var settings = JObject.Parse(File.ReadAllText(SETTINGS_FILE));
+                var stored = settings["tmdb_api_key"]?.ToString()
+                             ?? settings["tmdb_key"]?.ToString()
+                             ?? settings["tmdb_bearer_token"]?.ToString();
+
+                return string.IsNullOrWhiteSpace(stored)
+                    ? string.Empty
+                    : RaceTrade.SecureConfig.Decrypt(stored).Trim();
+            }
+            catch (Exception ex)
+            {
+                LogManager.Error($"Error loading TMDb API key: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
         /// <summary>
         /// Parse imdbapi.dev response into IMDBMovie object
         /// </summary>
@@ -363,7 +670,8 @@ namespace RaceTrader
                 Runtime = ConvertRuntimeToString(json["runtimeSeconds"]?.ToObject<int?>()),
                 Plot = json["plot"]?.ToString(),
                 Poster = json["primaryImage"]?["url"]?.ToString() ?? json["primaryImage"]?.ToString(),
-                Type = json["type"]?.ToString() ?? "movie"
+                Type = json["type"]?.ToString() ?? "movie",
+                DataSource = "imdbapi.dev"
             };
 
             // Parse rating
@@ -959,11 +1267,55 @@ namespace RaceTrader
         public string Type { get; set; }
         public double? ImdbRating { get; set; }
         public int? ImdbVotes { get; set; }
+        public string DataSource { get; set; }
 
         // Parsed lists
         public List<string> Genres { get; set; }
         public List<string> Languages { get; set; }
         public List<string> Countries { get; set; }
+    }
+
+    public class MovieSearchResult
+    {
+        private readonly List<string> messages = new List<string>();
+
+        public string RequestedTitle { get; set; }
+        public int? RequestedYear { get; set; }
+        public IMDBMovie Movie { get; set; }
+        public string Source { get; set; }
+        public bool UsedCache { get; set; }
+        public bool ImdbApiFailed { get; set; }
+        public bool TmdbUsed { get; set; }
+        public bool TmdbFailed { get; set; }
+        public bool ImdbRatingUnavailable { get; set; }
+
+        public string Message
+        {
+            get => messages.Count > 0 ? string.Join("; ", messages) : null;
+            set
+            {
+                messages.Clear();
+                if (!string.IsNullOrWhiteSpace(value))
+                    messages.Add(value);
+            }
+        }
+
+        public void AddMessage(string message)
+        {
+            if (!string.IsNullOrWhiteSpace(message))
+                messages.Add(message);
+        }
+
+        public static MovieSearchResult Failed(string title, int? year, string message)
+        {
+            var result = new MovieSearchResult
+            {
+                RequestedTitle = title,
+                RequestedYear = year
+            };
+            result.AddMessage(message);
+            return result;
+        }
     }
 
     public class MovieReleaseInfo

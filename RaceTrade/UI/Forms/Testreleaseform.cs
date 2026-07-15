@@ -526,6 +526,7 @@ namespace RaceTrader
                 var movie = releaseInfo.Movie;
                 AppendResult($"  Found: {movie.Title} ({movie.Year})", Color.Green);
                 AppendResult($"    IMDB: {movie.ImdbID} | Rating: {movie.ImdbRating}/10 | Votes: {movie.ImdbVotes:N0}", Color.White);
+                AppendResult($"    Source: {movie.DataSource ?? "IMDb"}", Color.White);
                 AppendResult($"    Genres: {string.Join(", ", movie.Genres ?? new List<string>())}", Color.White);
                 AppendResult($"    Language: {movie.Language} | Country: {movie.Country}", Color.White);
 

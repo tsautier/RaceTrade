@@ -1037,17 +1037,19 @@ namespace RaceTrader
             {
                 // Race filtering uses title search, so test that live path instead
                 // of proving only that a fixed IMDb ID exists in cache.
-                var testMovie = await IMDBHelper.SearchMovie("Back to the Future", 1985, 0);
+                var result = await IMDBHelper.SearchMovieDetailed("Back to the Future", 1985, 0);
+                var testMovie = result.Movie;
 
-                if (testMovie != null)
+                if (testMovie != null && testMovie.ImdbRating.HasValue)
                 {
                     // Format rating to 1 decimal place
                     var ratingText = testMovie.ImdbRating.HasValue
                         ? testMovie.ImdbRating.Value.ToString("F1")
                         : "N/A";
 
-                    var message = $"✓ IMDbAPI!\n\n" +
+                    var message = $"IMDbAPI OK\n\n" +
                                   $"Title-search test: {testMovie.Title} ({testMovie.Year})\n" +
+                                  $"Source: {result.Source}\n" +
                                   $"Rating: {ratingText}\n" +
                                   $"Votes: {testMovie.ImdbVotes:N0}\n" +
                                   $"Genres: {string.Join(", ", testMovie.Genres ?? new List<string>())}\n" +
@@ -1058,9 +1060,23 @@ namespace RaceTrader
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                     LogManager.Success("IMDbAPI test successful");
                 }
+                else if (testMovie != null)
+                {
+                    MessageBox.Show(
+                        $"TMDb fallback found the movie, but no IMDb rating was available.\n\n" +
+                        $"Movie: {testMovie.Title} ({testMovie.Year})\n" +
+                        $"IMDb ID: {testMovie.ImdbID ?? "N/A"}\n" +
+                        $"Source: {result.Source}\n\n" +
+                        $"{result.Message}\n\n" +
+                        $"TMDb ratings are not used as IMDb ratings.",
+                        "IMDb Rating Unavailable",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    LogManager.Warning("IMDbAPI test found TMDb fallback metadata but no IMDb rating");
+                }
                 else
                 {
-                    MessageBox.Show("IMDb title-search failed.\n\nRace filters use title search, so cached IMDb ID tests are not enough. Check internet/DNS or imdbapi.dev availability.",
+                    MessageBox.Show($"Live title-search failed.\n\n{result.Message}\n\nRace filters use title search, so cached IMDb ID tests are not enough. Check internet/DNS, imdbapi.dev availability, and the TMDb key.",
                         "Test Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     LogManager.Warning("IMDbAPI title-search test failed - check internet/DNS or imdbapi.dev");
                 }
