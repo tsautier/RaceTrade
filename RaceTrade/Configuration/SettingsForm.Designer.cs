@@ -19,6 +19,8 @@ namespace RaceTrader
         private Label titleLabel;
         private Label appNameLabel;
         private Label omdbLabel;
+        private Label movieProviderLabel;
+        private ComboBox movieProviderComboBox;
         private Label tmdbApiKeyLabel;
         private TextBox tmdbApiKeyTextBox;
         private LinkLabel getLinkLabel;
@@ -43,6 +45,8 @@ namespace RaceTrader
             this.testButton = new System.Windows.Forms.Button();
             this.getLinkLabel = new System.Windows.Forms.LinkLabel();
             this.omdbLabel = new System.Windows.Forms.Label();
+            this.movieProviderLabel = new System.Windows.Forms.Label();
+            this.movieProviderComboBox = new System.Windows.Forms.ComboBox();
             this.tmdbApiKeyLabel = new System.Windows.Forms.Label();
             this.tmdbApiKeyTextBox = new System.Windows.Forms.TextBox();
             this.statusLabel = new System.Windows.Forms.Label();
@@ -129,13 +133,15 @@ namespace RaceTrader
             this.apiGroupBox.Controls.Add(this.testButton);
             this.apiGroupBox.Controls.Add(this.getLinkLabel);
             this.apiGroupBox.Controls.Add(this.omdbLabel);
+            this.apiGroupBox.Controls.Add(this.movieProviderLabel);
+            this.apiGroupBox.Controls.Add(this.movieProviderComboBox);
             this.apiGroupBox.Controls.Add(this.tmdbApiKeyLabel);
             this.apiGroupBox.Controls.Add(this.tmdbApiKeyTextBox);
             this.apiGroupBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F, System.Drawing.FontStyle.Bold);
             this.apiGroupBox.ForeColor = System.Drawing.Color.White;
             this.apiGroupBox.Location = new System.Drawing.Point(20, 215);
             this.apiGroupBox.Name = "apiGroupBox";
-            this.apiGroupBox.Size = new System.Drawing.Size(480, 130);
+            this.apiGroupBox.Size = new System.Drawing.Size(480, 180);
             this.apiGroupBox.TabIndex = 2;
             this.apiGroupBox.TabStop = false;
             this.apiGroupBox.Text = "Movie APIs";
@@ -147,7 +153,7 @@ namespace RaceTrader
             this.testButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.testButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.testButton.ForeColor = System.Drawing.Color.White;
-            this.testButton.Location = new System.Drawing.Point(26, 96);
+            this.testButton.Location = new System.Drawing.Point(26, 146);
             this.testButton.Name = "testButton";
             this.testButton.Size = new System.Drawing.Size(150, 28);
             this.testButton.TabIndex = 0;
@@ -157,7 +163,7 @@ namespace RaceTrader
             // 
             // getLinkLabel
             // 
-            this.getLinkLabel.Location = new System.Drawing.Point(191, 101);
+            this.getLinkLabel.Location = new System.Drawing.Point(191, 151);
             this.getLinkLabel.Name = "getLinkLabel";
             this.getLinkLabel.Size = new System.Drawing.Size(264, 23);
             this.getLinkLabel.TabIndex = 2;
@@ -173,14 +179,41 @@ namespace RaceTrader
             this.omdbLabel.Name = "omdbLabel";
             this.omdbLabel.Size = new System.Drawing.Size(420, 20);
             this.omdbLabel.TabIndex = 4;
-            this.omdbLabel.Text = "Primary: imdbapi.dev | Fallback: TMDb lookup";
+            this.omdbLabel.Text = "Movie lookup provider";
+            //
+            // movieProviderLabel
+            //
+            this.movieProviderLabel.BackColor = System.Drawing.Color.Transparent;
+            this.movieProviderLabel.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
+            this.movieProviderLabel.ForeColor = System.Drawing.Color.White;
+            this.movieProviderLabel.Location = new System.Drawing.Point(23, 45);
+            this.movieProviderLabel.Name = "movieProviderLabel";
+            this.movieProviderLabel.Size = new System.Drawing.Size(180, 20);
+            this.movieProviderLabel.TabIndex = 7;
+            this.movieProviderLabel.Text = "Provider:";
+            //
+            // movieProviderComboBox
+            //
+            this.movieProviderComboBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
+            this.movieProviderComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.movieProviderComboBox.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.movieProviderComboBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
+            this.movieProviderComboBox.ForeColor = System.Drawing.Color.White;
+            this.movieProviderComboBox.FormattingEnabled = true;
+            this.movieProviderComboBox.Items.AddRange(new object[] {
+            "Tiffara",
+            "TMDb"});
+            this.movieProviderComboBox.Location = new System.Drawing.Point(26, 66);
+            this.movieProviderComboBox.Name = "movieProviderComboBox";
+            this.movieProviderComboBox.Size = new System.Drawing.Size(429, 25);
+            this.movieProviderComboBox.TabIndex = 8;
             //
             // tmdbApiKeyLabel
             //
             this.tmdbApiKeyLabel.BackColor = System.Drawing.Color.Transparent;
             this.tmdbApiKeyLabel.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.tmdbApiKeyLabel.ForeColor = System.Drawing.Color.White;
-            this.tmdbApiKeyLabel.Location = new System.Drawing.Point(23, 45);
+            this.tmdbApiKeyLabel.Location = new System.Drawing.Point(23, 96);
             this.tmdbApiKeyLabel.Name = "tmdbApiKeyLabel";
             this.tmdbApiKeyLabel.Size = new System.Drawing.Size(180, 20);
             this.tmdbApiKeyLabel.TabIndex = 5;
@@ -191,7 +224,7 @@ namespace RaceTrader
             this.tmdbApiKeyTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(38)))), ((int)(((byte)(50)))));
             this.tmdbApiKeyTextBox.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.tmdbApiKeyTextBox.ForeColor = System.Drawing.Color.White;
-            this.tmdbApiKeyTextBox.Location = new System.Drawing.Point(26, 66);
+            this.tmdbApiKeyTextBox.Location = new System.Drawing.Point(26, 117);
             this.tmdbApiKeyTextBox.Name = "tmdbApiKeyTextBox";
             this.tmdbApiKeyTextBox.PasswordChar = '*';
             this.tmdbApiKeyTextBox.Size = new System.Drawing.Size(429, 24);
@@ -202,7 +235,7 @@ namespace RaceTrader
             this.statusLabel.BackColor = System.Drawing.Color.Transparent;
             this.statusLabel.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.statusLabel.ForeColor = System.Drawing.Color.Yellow;
-            this.statusLabel.Location = new System.Drawing.Point(20, 350);
+            this.statusLabel.Location = new System.Drawing.Point(20, 400);
             this.statusLabel.Name = "statusLabel";
             this.statusLabel.Size = new System.Drawing.Size(480, 20);
             this.statusLabel.TabIndex = 3;
@@ -214,7 +247,7 @@ namespace RaceTrader
             this.cancelButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.cancelButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.cancelButton.ForeColor = System.Drawing.Color.White;
-            this.cancelButton.Location = new System.Drawing.Point(294, 555);
+            this.cancelButton.Location = new System.Drawing.Point(294, 605);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(100, 30);
             this.cancelButton.TabIndex = 4;
@@ -229,7 +262,7 @@ namespace RaceTrader
             this.saveButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.saveButton.Font = new System.Drawing.Font("Cascadia Mono", 8.25F);
             this.saveButton.ForeColor = System.Drawing.Color.White;
-            this.saveButton.Location = new System.Drawing.Point(400, 555);
+            this.saveButton.Location = new System.Drawing.Point(400, 605);
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(100, 30);
             this.saveButton.TabIndex = 5;
@@ -258,7 +291,7 @@ namespace RaceTrader
             this.groupBox1.Controls.Add(this.disableCbftpLogCheckBox);
             this.groupBox1.Controls.Add(this.disableRaceLogCheckBox);
             this.groupBox1.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.groupBox1.Location = new System.Drawing.Point(20, 375);
+            this.groupBox1.Location = new System.Drawing.Point(20, 425);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(480, 174);
             this.groupBox1.TabIndex = 6;
@@ -326,7 +359,7 @@ namespace RaceTrader
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
-            this.ClientSize = new System.Drawing.Size(520, 592);
+            this.ClientSize = new System.Drawing.Size(520, 642);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.titleLabel);
             this.Controls.Add(this.generalGroupBox);

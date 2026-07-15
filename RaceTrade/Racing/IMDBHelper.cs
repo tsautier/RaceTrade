@@ -16,16 +16,17 @@ using System.Globalization;
 namespace RaceTrader
 {
     /// <summary>
-    /// Helper class for IMDB API integration using imdbapi.dev (FREE)
+    /// Helper class for IMDB API integration.
     /// Provides movie lookup and information retrieval
-    /// API Documentation: https://imdbapi.dev/
     /// </summary>
     public static class IMDBHelper
     {
         private static readonly HttpClient httpClient = new HttpClient();
-        private const string IMDB_API_BASE = "https://api.imdbapi.dev";
+        private const string TIFFARA_API_BASE = "https://api.tiffara.com";
         private const string TMDB_API_BASE = "https://api.themoviedb.org/3";
         private const string SETTINGS_FILE = "settings/settings.json";
+        public const string ProviderTiffara = "tiffara";
+        public const string ProviderTmdb = "tmdb";
 
         private static DateTime lastRequestTime = DateTime.MinValue;
         private static readonly TimeSpan minRequestInterval = TimeSpan.FromMilliseconds(500);
@@ -65,6 +66,20 @@ namespace RaceTrader
 
         #region API Calls
 
+        private sealed class ImdbApiProvider
+        {
+            public string Key { get; set; }
+            public string Name { get; set; }
+            public string BaseUrl { get; set; }
+        }
+
+        private static readonly ImdbApiProvider TiffaraProvider = new ImdbApiProvider
+        {
+            Key = ProviderTiffara,
+            Name = "Tiffara",
+            BaseUrl = TIFFARA_API_BASE
+        };
+
         /// <summary>
         /// Lookup movie by IMDB ID (with caching)
         /// </summary>
@@ -79,19 +94,30 @@ namespace RaceTrader
                 imdbId = "tt" + imdbId;
             }
 
+            var selectedProvider = GetSelectedMovieProvider();
+
             // Try cache first
-            var cached = cacheDays > 0 ? IMDBCache.GetCachedMovieByImdb(imdbId, cacheDays) : null;
+            var cached = selectedProvider == ProviderTiffara && cacheDays > 0
+                ? IMDBCache.GetCachedMovieByImdb(imdbId, cacheDays)
+                : null;
             if (cached != null)
             {
                 return cached;
             }
 
+            return selectedProvider == ProviderTmdb
+                ? await LookupByImdbViaTmdb(imdbId)
+                : await LookupByImdbFromProvider(imdbId, TiffaraProvider);
+        }
+
+        private static async Task<IMDBMovie> LookupByImdbFromProvider(string imdbId, ImdbApiProvider provider)
+        {
             try
             {
                 await RateLimitDelay();
 
-                // imdbapi.dev endpoint: GET /titles/{titleId}
-                var url = $"{IMDB_API_BASE}/titles/{imdbId}";
+                // IMDb-compatible endpoint: GET /titles/{titleId}
+                var url = $"{provider.BaseUrl}/titles/{imdbId}";
                 var response = await httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -107,23 +133,24 @@ namespace RaceTrader
                         // Cache the result
                         if (movie != null)
                         {
+                            movie.DataSource = provider.Name;
                             IMDBCache.CacheMovie(movie);
                         }
 
                         return movie;
                     }
 
-                    LogManager.Warning($"Movie not found on IMDB: {imdbId}");
+                    LogManager.Warning($"Movie not found on {provider.Name}: {imdbId}");
                     IMDBCache.CacheNotFound(imdbId);
                     return null;
                 }
 
-                LogManager.Error($"IMDB API error: {response.StatusCode}");
+                LogManager.Error($"{provider.Name} API error: {response.StatusCode}");
                 return null;
             }
             catch (Exception ex)
             {
-                LogManager.Error($"Error looking up IMDB {imdbId}: {ex.Message}");
+                LogManager.Error($"Error looking up IMDb {imdbId} via {provider.Name}: {ex.Message}");
                 return null;
             }
         }
@@ -148,6 +175,24 @@ namespace RaceTrader
                 RequestedYear = year
             };
             var searchKey = year.HasValue ? $"{title}|{year}" : title;
+            var selectedProvider = GetSelectedMovieProvider();
+
+            if (selectedProvider == ProviderTmdb)
+            {
+                var tmdbOnlyMovie = await SearchMovieViaTmdb(title, year, cacheDays, searchResult, false);
+                if (tmdbOnlyMovie != null)
+                {
+                    searchResult.Movie = tmdbOnlyMovie;
+                    if (string.IsNullOrWhiteSpace(searchResult.Source))
+                        searchResult.Source = tmdbOnlyMovie.DataSource ?? "TMDb";
+                    return searchResult;
+                }
+
+                IMDBCache.CacheNotFound(searchKey);
+                if (string.IsNullOrWhiteSpace(searchResult.Message))
+                    searchResult.Message = $"No TMDb data found for {title} ({year})";
+                return searchResult;
+            }
 
             // Try cache first
             var cached = cacheDays > 0 ? IMDBCache.GetCachedMovieByTitle(title, year, cacheDays) : null;
@@ -160,21 +205,23 @@ namespace RaceTrader
                 return searchResult;
             }
 
+            var provider = TiffaraProvider;
             foreach (var query in BuildSearchQueries(title, year))
             {
                 try
                 {
                     await RateLimitDelay();
 
-                    // imdbapi.dev search endpoint: GET /search/titles?query={query}&limit={limit}
-                    var url = $"{IMDB_API_BASE}/search/titles?query={Uri.EscapeDataString(query)}&limit=20";
+                    // IMDb-compatible search endpoint:
+                    // GET /search/titles?query={query}&limit={limit}
+                    var url = $"{provider.BaseUrl}/search/titles?query={Uri.EscapeDataString(query)}&limit=20";
                     var response = await httpClient.GetAsync(url);
 
                     if (!response.IsSuccessStatusCode)
                     {
                         searchResult.ImdbApiFailed = true;
-                        searchResult.AddMessage($"imdbapi.dev search '{query}' failed: {response.StatusCode}");
-                        LogManager.Warning($"IMDB search for '{query}' failed: {response.StatusCode}");
+                        searchResult.AddMessage($"{provider.Name} search '{query}' failed: {response.StatusCode}");
+                        LogManager.Warning($"{provider.Name} search for '{query}' failed: {response.StatusCode}");
                         continue;
                     }
 
@@ -191,18 +238,18 @@ namespace RaceTrader
                         var matchedId = (bestMatch as JObject)?["id"]?.ToString();
                         if (!string.IsNullOrEmpty(matchedId))
                         {
-                            var detailed = await LookupByImdb(matchedId, cacheDays);
+                            var detailed = await LookupByImdbFromProvider(matchedId, provider);
                             if (detailed != null)
                             {
                                 IMDBCache.CacheSearch(title, year, detailed.ImdbID);
                                 searchResult.Movie = detailed;
-                                searchResult.Source = "imdbapi.dev";
-                                searchResult.Message = $"IMDb match {detailed.Title} ({detailed.Year})";
+                                searchResult.Source = provider.Name;
+                                searchResult.Message = $"{provider.Name} match {detailed.Title} ({detailed.Year})";
                                 return searchResult;
                             }
 
                             searchResult.ImdbApiFailed = true;
-                            searchResult.AddMessage($"imdbapi.dev details failed for {matchedId}");
+                            searchResult.AddMessage($"{provider.Name} details failed for {matchedId}");
                         }
 
                         // Only use a sparse search hit if it already contains a real
@@ -214,31 +261,31 @@ namespace RaceTrader
                         {
                             IMDBCache.CacheMovie(movie);
                             IMDBCache.CacheSearch(title, year, movie.ImdbID);
-                            movie.DataSource = "imdbapi.dev search";
+                            movie.DataSource = $"{provider.Name} search";
                             searchResult.Movie = movie;
-                            searchResult.Source = "imdbapi.dev search";
-                            searchResult.Message = $"Sparse IMDb match {movie.Title} ({movie.Year})";
+                            searchResult.Source = $"{provider.Name} search";
+                            searchResult.Message = $"Sparse IMDb match {movie.Title} ({movie.Year}) via {provider.Name}";
                             return searchResult;
                         }
 
-                        searchResult.AddMessage("imdbapi.dev search hit was incomplete; trying TMDb fallback");
+                        searchResult.AddMessage($"{provider.Name} search hit was incomplete; trying fallback");
                     }
                     else
                     {
-                        searchResult.AddMessage($"imdbapi.dev returned no titles for '{query}'");
-                        LogManager.Debug($"IMDB search returned no titles for '{query}'");
+                        searchResult.AddMessage($"{provider.Name} returned no titles for '{query}'");
+                        LogManager.Debug($"{provider.Name} search returned no titles for '{query}'");
                     }
                 }
                 catch (Exception ex)
                 {
                     var inner = ex.InnerException != null ? $" Inner: {ex.InnerException.Message}" : "";
                     searchResult.ImdbApiFailed = true;
-                    searchResult.AddMessage($"imdbapi.dev search '{query}' error: {ex.Message}{inner}");
-                    LogManager.Error($"Error searching for movie '{query}': {ex.Message}{inner}");
+                    searchResult.AddMessage($"{provider.Name} search '{query}' error: {ex.Message}{inner}");
+                    LogManager.Error($"Error searching {provider.Name} for movie '{query}': {ex.Message}{inner}");
                 }
             }
 
-            var tmdbMovie = await SearchMovieViaTmdb(title, year, cacheDays, searchResult);
+            var tmdbMovie = await SearchMovieViaTmdb(title, year, cacheDays, searchResult, true);
             if (tmdbMovie != null)
             {
                 searchResult.Movie = tmdbMovie;
@@ -391,16 +438,82 @@ namespace RaceTrader
             return Regex.Replace(normalized, @"\s+", " ");
         }
 
+        public static string NormalizeMovieProvider(string provider)
+        {
+            return string.Equals(provider, ProviderTmdb, StringComparison.OrdinalIgnoreCase)
+                ? ProviderTmdb
+                : ProviderTiffara;
+        }
+
+        public static string GetMovieProviderDisplayName(string provider)
+        {
+            return NormalizeMovieProvider(provider) == ProviderTmdb
+                ? "TMDb"
+                : "Tiffara";
+        }
+
+        public static string GetSelectedMovieProvider()
+        {
+            try
+            {
+                if (!File.Exists(SETTINGS_FILE))
+                    return ProviderTiffara;
+
+                var settings = JObject.Parse(File.ReadAllText(SETTINGS_FILE));
+                var provider = settings["movie_api_provider"]?.ToString()
+                               ?? settings["imdb_api_provider"]?.ToString();
+
+                return NormalizeMovieProvider(provider);
+            }
+            catch (Exception ex)
+            {
+                LogManager.Error($"Error loading movie API provider: {ex.Message}");
+                return ProviderTiffara;
+            }
+        }
+
+        private static async Task<IMDBMovie> LookupByImdbViaTmdb(string imdbId)
+        {
+            var apiKey = GetTmdbApiKey();
+            if (string.IsNullOrWhiteSpace(apiKey))
+                return null;
+
+            try
+            {
+                var findJson = await SendTmdbGetAsync(
+                    $"/find/{Uri.EscapeDataString(imdbId)}?external_source=imdb_id",
+                    apiKey);
+                var movieResults = findJson?["movie_results"] as JArray;
+                var tmdbMovieHit = movieResults?.OfType<JObject>().FirstOrDefault();
+                var tmdbId = tmdbMovieHit?["id"]?.ToObject<int?>();
+                if (!tmdbId.HasValue)
+                    return null;
+
+                var details = await SendTmdbGetAsync($"/movie/{tmdbId.Value}?language=en-US", apiKey);
+                var movie = ParseTmdbMovie(details ?? tmdbMovieHit);
+                if (movie != null && string.IsNullOrWhiteSpace(movie.ImdbID))
+                    movie.ImdbID = imdbId;
+
+                return movie;
+            }
+            catch (Exception ex)
+            {
+                LogManager.Error($"TMDb IMDb-id lookup error for '{imdbId}': {ex.Message}");
+                return null;
+            }
+        }
+
         private static async Task<IMDBMovie> SearchMovieViaTmdb(
             string title,
             int? year,
             int cacheDays,
-            MovieSearchResult searchResult)
+            MovieSearchResult searchResult,
+            bool allowTiffaraDetails)
         {
             var apiKey = GetTmdbApiKey();
             if (string.IsNullOrWhiteSpace(apiKey))
             {
-                searchResult.AddMessage("TMDb fallback skipped: no TMDb API key configured in Settings");
+                searchResult.AddMessage("TMDb skipped: no TMDb API key configured in Settings");
                 return null;
             }
 
@@ -438,30 +551,33 @@ namespace RaceTrader
                 }
 
                 searchResult.TmdbUsed = true;
-                searchResult.Source = "TMDb fallback";
+                searchResult.Source = allowTiffaraDetails ? "TMDb fallback" : "TMDb";
 
-                if (!string.IsNullOrWhiteSpace(tmdbMovie.ImdbID))
+                if (allowTiffaraDetails && !string.IsNullOrWhiteSpace(tmdbMovie.ImdbID))
                 {
-                    var imdbDetailed = await LookupByImdb(tmdbMovie.ImdbID, cacheDays);
+                    var imdbDetailed = await LookupByImdbFromProvider(tmdbMovie.ImdbID, TiffaraProvider);
                     if (imdbDetailed != null)
                     {
                         IMDBCache.CacheSearch(title, year, imdbDetailed.ImdbID);
-                        imdbDetailed.DataSource = "TMDb fallback -> imdbapi.dev";
+                        imdbDetailed.DataSource = "TMDb fallback -> Tiffara";
                         searchResult.Source = imdbDetailed.DataSource;
-                        searchResult.Message = $"TMDb found IMDb id {imdbDetailed.ImdbID}; IMDb rating loaded";
+                        searchResult.Message = $"TMDb found IMDb id {imdbDetailed.ImdbID}; Tiffara IMDb rating loaded";
                         return imdbDetailed;
                     }
 
                     searchResult.ImdbRatingUnavailable = true;
-                    searchResult.AddMessage($"TMDb found IMDb id {tmdbMovie.ImdbID}, but imdbapi.dev details are unavailable");
+                    searchResult.AddMessage($"TMDb found IMDb id {tmdbMovie.ImdbID}, but Tiffara details are unavailable");
                 }
                 else
                 {
                     searchResult.ImdbRatingUnavailable = true;
-                    searchResult.AddMessage("TMDb fallback found the movie but did not provide an IMDb id");
+                    searchResult.AddMessage(
+                        string.IsNullOrWhiteSpace(tmdbMovie.ImdbID)
+                            ? "TMDb found the movie but did not provide an IMDb id"
+                            : "TMDb selected: IMDb id found, but TMDb ratings are not used as IMDb ratings");
                 }
 
-                tmdbMovie.DataSource = "TMDb fallback metadata";
+                tmdbMovie.DataSource = allowTiffaraDetails ? "TMDb fallback metadata" : "TMDb metadata";
                 return tmdbMovie;
             }
             catch (Exception ex)
@@ -649,7 +765,7 @@ namespace RaceTrader
         }
 
         /// <summary>
-        /// Parse imdbapi.dev response into IMDBMovie object
+        /// Parse an IMDb-compatible API response into IMDBMovie object
         /// </summary>
         private static IMDBMovie ParseImdbApiResponse(JObject json)
         {
@@ -671,7 +787,7 @@ namespace RaceTrader
                 Plot = json["plot"]?.ToString(),
                 Poster = json["primaryImage"]?["url"]?.ToString() ?? json["primaryImage"]?.ToString(),
                 Type = json["type"]?.ToString() ?? "movie",
-                DataSource = "imdbapi.dev"
+                DataSource = "IMDb-compatible API"
             };
 
             // Parse rating

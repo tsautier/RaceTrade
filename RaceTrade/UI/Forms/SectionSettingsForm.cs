@@ -1037,6 +1037,7 @@ namespace RaceTrader
             {
                 // Race filtering uses title search, so test that live path instead
                 // of proving only that a fixed IMDb ID exists in cache.
+                var providerName = IMDBHelper.GetMovieProviderDisplayName(IMDBHelper.GetSelectedMovieProvider());
                 var result = await IMDBHelper.SearchMovieDetailed("Back to the Future", 1985, 0);
                 var testMovie = result.Movie;
 
@@ -1047,7 +1048,7 @@ namespace RaceTrader
                         ? testMovie.ImdbRating.Value.ToString("F1")
                         : "N/A";
 
-                    var message = $"IMDbAPI OK\n\n" +
+                    var message = $"{providerName} OK\n\n" +
                                   $"Title-search test: {testMovie.Title} ({testMovie.Year})\n" +
                                   $"Source: {result.Source}\n" +
                                   $"Rating: {ratingText}\n" +
@@ -1056,15 +1057,15 @@ namespace RaceTrader
                                   $"Language: {testMovie.Language}\n" +
                                   $"Country: {testMovie.Country}";
 
-                    MessageBox.Show(message, "IMDbAPI Successful",
+                    MessageBox.Show(message, "Movie API Successful",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    LogManager.Success("IMDbAPI test successful");
+                    LogManager.Success($"{providerName} test successful");
                 }
-                else if (testMovie != null)
-                {
-                    MessageBox.Show(
-                        $"TMDb fallback found the movie, but no IMDb rating was available.\n\n" +
-                        $"Movie: {testMovie.Title} ({testMovie.Year})\n" +
+                  else if (testMovie != null)
+                  {
+                      MessageBox.Show(
+                          $"{result.Source ?? providerName} found the movie, but no IMDb rating was available.\n\n" +
+                          $"Movie: {testMovie.Title} ({testMovie.Year})\n" +
                         $"IMDb ID: {testMovie.ImdbID ?? "N/A"}\n" +
                         $"Source: {result.Source}\n\n" +
                         $"{result.Message}\n\n" +
@@ -1076,9 +1077,9 @@ namespace RaceTrader
                 }
                 else
                 {
-                    MessageBox.Show($"Live title-search failed.\n\n{result.Message}\n\nRace filters use title search, so cached IMDb ID tests are not enough. Check internet/DNS, imdbapi.dev availability, and the TMDb key.",
+                    MessageBox.Show($"Live title-search failed.\n\n{result.Message}\n\nRace filters use title search, so cached IMDb ID tests are not enough. Check internet/DNS, selected provider availability, and the TMDb key.",
                         "Test Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    LogManager.Warning("IMDbAPI title-search test failed - check internet/DNS or imdbapi.dev");
+                    LogManager.Warning($"{providerName} title-search test failed - check internet/DNS or provider status");
                 }
             }
             catch (Exception ex)

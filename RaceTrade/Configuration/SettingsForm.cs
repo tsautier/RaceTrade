@@ -19,6 +19,7 @@ namespace RaceTrader
         public bool DisableCbftpLog { get; private set; }
         public bool DisableAppLog { get; private set; }
         public bool DisableIrcLog { get; private set; }
+        public string MovieApiProvider { get; private set; }
         public string TmdbApiKey { get; private set; }
 
         public SettingsForm()
@@ -38,6 +39,8 @@ namespace RaceTrader
                     Directory.CreateDirectory(settingsDir);
                 }
 
+                SetMovieProviderSelection(IMDBHelper.ProviderTiffara);
+
                 if (File.Exists(SETTINGS_FILE))
                 {
                     var json = File.ReadAllText(SETTINGS_FILE);
@@ -47,22 +50,26 @@ namespace RaceTrader
                                           ?? "RaceTrader";
                     debugCheckBox.Checked = settings["debug_enabled"]?.ToObject<bool>() ?? false;
                     insecureSslCheckBox.Checked = settings["allow_insecure_ssl"]?.ToObject<bool>() ?? false;
+                    SetMovieProviderSelection(settings["movie_api_provider"]?.ToString()
+                                              ?? settings["imdb_api_provider"]?.ToString());
                     tmdbApiKeyTextBox.Text = ReadSecretSetting(settings, "tmdb_api_key", "tmdb_key", "tmdb_bearer_token");
 
                     disableRaceLogCheckBox.Checked = settings["disable_race_log"]?.ToObject<bool>() ?? false;
                     disableCbftpLogCheckBox.Checked = settings["disable_cbftp_log"]?.ToObject<bool>() ?? false;
                     disableAppLogCheckBox.Checked = settings["disable_app_log"]?.ToObject<bool>() ?? false;
 
-                    // keep properties in sync, in case caller reads them after closing
-                    AppName = appNameTextBox.Text;
-                    DebugEnabled = debugCheckBox.Checked;
-                    AllowInsecureSsl = insecureSslCheckBox.Checked;
-                    TmdbApiKey = tmdbApiKeyTextBox.Text;
-
-                    DisableRaceLog = disableRaceLogCheckBox.Checked;
-                    DisableCbftpLog = disableCbftpLogCheckBox.Checked;
-                    DisableAppLog = disableAppLogCheckBox.Checked;
                 }
+
+                // keep properties in sync, in case caller reads them after closing
+                AppName = appNameTextBox.Text;
+                DebugEnabled = debugCheckBox.Checked;
+                AllowInsecureSsl = insecureSslCheckBox.Checked;
+                MovieApiProvider = GetSelectedMovieProvider();
+                TmdbApiKey = tmdbApiKeyTextBox.Text;
+
+                DisableRaceLog = disableRaceLogCheckBox.Checked;
+                DisableCbftpLog = disableCbftpLogCheckBox.Checked;
+                DisableAppLog = disableAppLogCheckBox.Checked;
             }
             catch (Exception ex)
             {
@@ -74,7 +81,8 @@ namespace RaceTrader
         {
             testButton.Enabled = false;
             testButton.Text = "Testing...";
-            statusLabel.Text = "Testing imdbapi.dev live + TMDb fallback...";
+            var providerName = IMDBHelper.GetMovieProviderDisplayName(GetSelectedMovieProvider());
+            statusLabel.Text = $"Testing {providerName} live...";
             statusLabel.ForeColor = Color.Yellow;
 
             try
@@ -96,17 +104,17 @@ namespace RaceTrader
                         $"Source: {result.Source}\n" +
                         $"Rating: {ratingText}/10\n" +
                         $"Votes: {testMovie.ImdbVotes:N0}\n\n" +
-                        $"imdbapi.dev is working.",
+                        $"{providerName} is working.",
                         "Test Successful",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
                 }
                 else if (testMovie != null)
                 {
-                    statusLabel.Text = "TMDb fallback found movie, IMDb rating unavailable";
+                    statusLabel.Text = $"{result.Source ?? providerName} found movie, IMDb rating unavailable";
                     statusLabel.ForeColor = Color.Orange;
                     MessageBox.Show(
-                        $"TMDb fallback found the movie, but no IMDb rating was available.\n\n" +
+                        $"{result.Source ?? providerName} found the movie, but no IMDb rating was available.\n\n" +
                         $"Movie: {testMovie.Title} ({testMovie.Year})\n" +
                         $"IMDb ID: {testMovie.ImdbID ?? "N/A"}\n" +
                         $"Source: {result.Source}\n\n" +
@@ -118,12 +126,12 @@ namespace RaceTrader
                 }
                 else
                 {
-                    statusLabel.Text = "Failed - Could not connect to imdbapi.dev";
+                    statusLabel.Text = $"Failed - Could not connect to {providerName}";
                     statusLabel.ForeColor = Color.Red;
                     MessageBox.Show(
                         $"Live title-search failed.\n\n{result.Message}\n\n" +
                         $"Race filters use title search, so cached IMDb ID tests are not enough. " +
-                        $"Check internet/DNS, imdbapi.dev availability, and the TMDb key.",
+                        $"Check internet/DNS, selected provider availability, and the TMDb key.",
                         "Test Failed",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
@@ -180,6 +188,7 @@ namespace RaceTrader
                 settings["app_name"] = appName;
                 settings["debug_enabled"] = debugCheckBox.Checked;
                 settings["allow_insecure_ssl"] = insecureSslCheckBox.Checked;
+                settings["movie_api_provider"] = GetSelectedMovieProvider();
                 settings["tmdb_api_key"] = WriteSecretSetting(tmdbApiKeyTextBox.Text.Trim());
                 settings["disable_race_log"] = disableRaceLogCheckBox.Checked;
                 settings["disable_cbftp_log"] = disableCbftpLogCheckBox.Checked;
@@ -190,6 +199,7 @@ namespace RaceTrader
                 AppName = appName;
                 DebugEnabled = debugCheckBox.Checked;
                 AllowInsecureSsl = insecureSslCheckBox.Checked;
+                MovieApiProvider = GetSelectedMovieProvider();
                 TmdbApiKey = tmdbApiKeyTextBox.Text.Trim();
                 DisableRaceLog = disableRaceLogCheckBox.Checked;
                 DisableCbftpLog = disableCbftpLogCheckBox.Checked;
@@ -219,6 +229,22 @@ namespace RaceTrader
         private void cancelButton_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void SetMovieProviderSelection(string provider)
+        {
+            var normalized = IMDBHelper.NormalizeMovieProvider(provider);
+            movieProviderComboBox.SelectedItem = normalized == IMDBHelper.ProviderTmdb
+                ? "TMDb"
+                : "Tiffara";
+        }
+
+        private string GetSelectedMovieProvider()
+        {
+            var selected = movieProviderComboBox.SelectedItem?.ToString();
+            return string.Equals(selected, "TMDb", StringComparison.OrdinalIgnoreCase)
+                ? IMDBHelper.ProviderTmdb
+                : IMDBHelper.ProviderTiffara;
         }
 
         private static string ReadSecretSetting(JObject settings, params string[] keys)

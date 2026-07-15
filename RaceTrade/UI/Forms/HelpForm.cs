@@ -111,8 +111,9 @@ BUG FIXES & THEMING:
   - Fixed IMDb title search so stale not-found cache entries no longer block new lookups
   - Added IMDb search query variants and support for alternate API response shapes
   - Changed IMDb API test buttons to verify live title-search instead of cached fixed-ID lookup
-  - Added encrypted TMDb API key setting for IMDb title-search fallback
-  - Added TMDb fallback lookup that finds the movie and IMDb ID when imdbapi.dev search is unavailable
+  - Added selectable movie lookup provider: Tiffara or TMDb
+  - Added encrypted TMDb API key setting for TMDb lookup mode/fallback
+  - Added TMDb fallback lookup that finds the movie and IMDb ID when Tiffara is unavailable
   - Kept IMDb rating strict: TMDb ratings are never used as IMDb ratings
   - Made API tests report TMDb fallback/no IMDb rating instead of passing on cached data
   - Enforced IMDb quick filters for No Documentary, No Music, No Comedy, and Movies Only
@@ -323,16 +324,15 @@ NEW FEATURES:
   - Add and edit CBFTP sites directly from GUI
   - Complete site configuration interface
   
-- IMDb Integration Migration - OMDB → imdbapi.dev
-  - ✅ NO API KEY REQUIRED - Completely free, unlimited access!
-  - ✅ NO COST - OMDB required paid subscription, imdbapi.dev is 100% free
+- IMDb Integration Migration - OMDB -> IMDb-compatible providers
+  - Tiffara is the current IMDb-compatible provider option
+  - TMDb can be selected for metadata lookup when configured
   - ✅ Better data quality with native array support for genres, languages, countries
   - ✅ More reliable - no API key expiration or rate limit issues
   - ✅ Automatic rating precision fixes (Math.Round to 1 decimal)
   - ✅ Better response structure with detailed metadata
-  - API Documentation: https://imdbapi.dev/
   - Uses Swagger API: /titles/{id} and /search/titles
-  - Base URL: https://api.imdbapi.dev
+  - Tiffara base URL: https://api.tiffara.com
 
 BUG FIXES & EXCEPTION HANDLING:
 
@@ -368,14 +368,14 @@ IMPROVEMENTS:
 - Improved logging clarity across all log windows (Race, IRC, CBFTP, Application)
 - Performance optimizations for user tracking and list operations
 - Enhanced rules engine logging in debug mode
-- Removed API key validation since imdbapi.dev doesn't require keys
+- Removed legacy OMDB API key validation
 - Updated Settings form to remove obsolete OMDB API key field
 - Cleaner IMDb test functionality showing accurate data
 
 TECHNICAL CHANGES:
 
-- IMDBHelper.cs completely rewritten for imdbapi.dev API
-  - Changed base URL to https://api.imdbapi.dev
+- IMDBHelper.cs updated for IMDb-compatible APIs
+  - Supports Tiffara and TMDb provider selection
   - Updated endpoints: GET /titles/{titleId} and GET /search/titles
   - Rewrote JSON parsing for new response structure
   - Removed API key requirement (kept property for backwards compatibility)
@@ -387,7 +387,7 @@ TECHNICAL CHANGES:
   - Removed ""Get API Key"" link
   - Simplified settings management
 
-- Response field mapping (OMDB → imdbapi.dev):
+- Response field mapping (OMDB -> IMDb-compatible API):
   - Title → primaryTitle
   - Year → startYear
   - imdbRating → rating.aggregateRating
@@ -517,7 +517,7 @@ NEW FEATURES:
   - Add/Edit/Remove tag-specific rules directly in GUI
   - Visual distinction between Section Rules and Tag Rules
   
-- IMDb Integration (now using FREE imdbapi.dev)
+- IMDb Integration (Tiffara/TMDb provider selection)
   - Filter movies by rating, votes, genres
   - Language and country filtering
   - Quick filters: No Documentary, No Music, No Comedy, No Shows
@@ -1251,11 +1251,12 @@ Problem: Hard to see what matched
 Problem: IMDb API not working
 -----------------------------
 
-- IMDb now uses FREE imdbapi.dev - no API key needed!
+- Choose Settings -> Movie APIs -> Provider: Tiffara or TMDb.
+- Tiffara provides IMDb-compatible ratings; TMDb is lookup metadata only.
 - Test the API from Section Settings (Test IMDb button)
 - Check Application log for error messages
 - Verify internet connection
-- API status: https://imdbapi.dev/
+- Tiffara endpoint: https://api.tiffara.com/
 
 Problem: Rating shows weird decimals
 ------------------------------------
@@ -1307,11 +1308,11 @@ and X264-FOREIGN on SiteBeta) into a single CBFTP section (TV-DE):
 IMDB FILTERING TIPS:
 -------------------
 
-Since version 1.0.5b, RaceTrader uses the FREE imdbapi.dev API:
+RaceTrader can use Tiffara or TMDb for movie lookup:
 
-- No API key required - completely free!
+- Tiffara provides IMDb-compatible ratings with no key configured here
+- TMDb requires the TMDb key in Settings and does not provide IMDb ratings
 - Better data with native arrays for genres, languages, countries
-- More reliable than OMDB (no rate limits, no key expiration)
 - Test connection from Section Settings → IMDb tab → Test IMDb button
 
 Example IMDb filters in Section Settings:
