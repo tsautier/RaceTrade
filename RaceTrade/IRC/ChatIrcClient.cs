@@ -18,7 +18,8 @@ public class ChatIrcClient
     private readonly string host;
     private readonly int port;
     private readonly string username;
-    private readonly string password;
+    private readonly string ircNick;
+    private readonly string zncPassword;
     private readonly string botName;
     private readonly string siteName;
     private List<string> channels;
@@ -84,12 +85,14 @@ public class ChatIrcClient
         if (string.IsNullOrEmpty(config.Server.Username))
             throw new ArgumentException("Username cannot be null or empty.");
 
-        this.username = config.Server.Username;
+        this.username = config.Server.Username.Trim();
+        this.ircNick = BuildIrcNick(this.username);
 
         if (string.IsNullOrEmpty(config.Server.Password))
             throw new ArgumentException("Password cannot be null or empty.");
 
-        this.password = SecureConfig.Decrypt(config.Server.Password);
+        var decryptedPassword = SecureConfig.Decrypt(config.Server.Password);
+        this.zncPassword = BuildZncPassword(this.username, decryptedPassword);
 
         if (string.IsNullOrEmpty(config.SiteSettings?.BotName))
             throw new ArgumentException("Bot name cannot be null or empty.");
@@ -123,6 +126,37 @@ public class ChatIrcClient
         {
             logOutput.AppendLog(message, color);
         }
+    }
+
+    private static string BuildIrcNick(string configuredUsername)
+    {
+        var nick = (configuredUsername ?? string.Empty).Trim();
+
+        var slashIndex = nick.IndexOf('/');
+        if (slashIndex > 0)
+            nick = nick.Substring(0, slashIndex);
+
+        var atIndex = nick.IndexOf('@');
+        if (atIndex > 0)
+            nick = nick.Substring(0, atIndex);
+
+        nick = Regex.Replace(nick, @"[^A-Za-z0-9_\-\[\]\\`^{}|]", "_").Trim('_');
+        return string.IsNullOrWhiteSpace(nick) ? "RaceTrade" : nick;
+    }
+
+    private static string BuildZncPassword(string configuredUsername, string decryptedPassword)
+    {
+        if (string.IsNullOrWhiteSpace(configuredUsername) || string.IsNullOrEmpty(decryptedPassword))
+            return decryptedPassword;
+
+        var user = configuredUsername.Trim();
+        if (!user.Contains("/") && !user.Contains("@"))
+            return decryptedPassword;
+
+        if (decryptedPassword.StartsWith(user + ":", StringComparison.OrdinalIgnoreCase))
+            return decryptedPassword;
+
+        return $"{user}:{decryptedPassword}";
     }
 
     /// <summary>
@@ -586,9 +620,9 @@ public class ChatIrcClient
 
             // PASS must be sent BEFORE NICK/USER (RFC 1459 / ZNC) — after registration
             // completes the server rejects it with 462 ERR_ALREADYREGISTRED.
-            await SendMessageAsync(sslStream, $"PASS {password}");
-            await SendMessageAsync(sslStream, $"NICK {username}");
-            await SendMessageAsync(sslStream, $"USER {username} 0 * :{username}");
+            await SendMessageAsync(sslStream, $"PASS {zncPassword}");
+            await SendMessageAsync(sslStream, $"NICK {ircNick}");
+            await SendMessageAsync(sslStream, $"USER {ircNick} 0 * :{ircNick}");
 
             foreach (var channel in channels)
             {
@@ -720,7 +754,7 @@ public class ChatIrcClient
                 string rawUsername = joinMatch.Groups[1].Value;
                 string username = NormalizeNick(rawUsername);
                 string channel = joinMatch.Groups[2].Value;
-                string thisNick = NormalizeNick(this.username);
+                string thisNick = NormalizeNick(this.ircNick);
 
                 if (username.Equals(thisNick, StringComparison.OrdinalIgnoreCase))
                     return;
@@ -954,7 +988,7 @@ public class ChatIrcClient
                     // CBC-mode FiSH clients send "DH1080_INIT <pubkey> CBC" — keep only the key
                     string theirPublicKeyRaw = dhMatch.Groups[4].Value.Trim().Split(' ')[0];
 
-                    string thisNick = NormalizeNick(this.username);
+                    string thisNick = NormalizeNick(this.ircNick);
                     if (username.Equals(thisNick, StringComparison.OrdinalIgnoreCase))
                         return;
 
@@ -998,7 +1032,7 @@ public class ChatIrcClient
                     // CBC-mode FiSH clients append " CBC" — keep only the key
                     string theirPublicKeyRaw = dhMatch.Groups[4].Value.Trim().Split(' ')[0];
 
-                    string thisNick = NormalizeNick(this.username);
+                    string thisNick = NormalizeNick(this.ircNick);
                     if (username.Equals(thisNick, StringComparison.OrdinalIgnoreCase))
                         return;
 
@@ -1046,7 +1080,7 @@ public class ChatIrcClient
                 string target = privmsgMatch.Groups[2].Value;
                 string message = privmsgMatch.Groups[3].Value;
 
-                string thisNick = NormalizeNick(this.username);
+                string thisNick = NormalizeNick(this.ircNick);
                 if (username.Equals(thisNick, StringComparison.OrdinalIgnoreCase))
                     return;
 
