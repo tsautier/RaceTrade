@@ -1859,6 +1859,7 @@ namespace RaceTrade
                         // Serialize and save
                         var updatedJsonContent = JsonConvert.SerializeObject(existingSiteConfig, Formatting.Indented);
                         AtomicFile.WriteAllText(currentSiteFilePath, updatedJsonContent);
+                        RaceHelper.LoadAllSiteConfigs();
 
                         LogManager.Success("Site configuration saved");
                     }
@@ -1872,6 +1873,7 @@ namespace RaceTrade
                     // If no existing file, save the currentSite as new
                     var newJsonContent = JsonConvert.SerializeObject(currentSite, Formatting.Indented);
                     AtomicFile.WriteAllText(currentSiteFilePath, newJsonContent);
+                    RaceHelper.LoadAllSiteConfigs();
                     MessageBox.Show("Site configuration saved as new!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
