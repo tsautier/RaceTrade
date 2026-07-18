@@ -1,4 +1,4 @@
-﻿namespace RaceTrade
+namespace RaceTrade
 {
     partial class AddSite
     {
@@ -32,6 +32,8 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label4 = new System.Windows.Forms.Label();
             this.textBox4 = new System.Windows.Forms.TextBox();
+            this.networkLabel = new System.Windows.Forms.Label();
+            this.networkTextBox = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -94,7 +96,9 @@
             this.comboBox_announce = new System.Windows.Forms.ComboBox();
             this.textBox8 = new System.Windows.Forms.TextBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.Add_affil_textbox = new System.Windows.Forms.TextBox();
             this.label28 = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             this.label18 = new System.Windows.Forms.Label();
             this.TagRulelistBox = new System.Windows.Forms.ListBox();
             this.RuleTxtField = new System.Windows.Forms.TextBox();
@@ -150,8 +154,6 @@
             this.ListboxChannels = new System.Windows.Forms.ListBox();
             this.label41 = new System.Windows.Forms.Label();
             this.LoadEditSites_Combobox = new System.Windows.Forms.ComboBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.Add_affil_textbox = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -164,11 +166,13 @@
             this.groupBox7.SuspendLayout();
             this.groupBox8.SuspendLayout();
             this.SuspendLayout();
-            // 
+            //
             // groupBox1
-            // 
+            //
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.textBox4);
+            this.groupBox1.Controls.Add(this.networkLabel);
+            this.groupBox1.Controls.Add(this.networkTextBox);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.textBox3);
             this.groupBox1.Controls.Add(this.label2);
@@ -177,110 +181,126 @@
             this.groupBox1.Controls.Add(this.textBox1);
             this.groupBox1.Location = new System.Drawing.Point(15, 23);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(374, 148);
+            this.groupBox1.Size = new System.Drawing.Size(374, 162);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "ZNC server";
-            // 
+            this.groupBox1.Text = "ZNC server (user/network)";
+            //
             // label4
-            // 
+            //
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(7, 106);
+            this.label4.Location = new System.Drawing.Point(7, 127);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(80, 17);
+            this.label4.Size = new System.Drawing.Size(61, 15);
             this.label4.TabIndex = 7;
             this.label4.Text = "Password:";
-            // 
+            //
             // textBox4
-            // 
-            this.textBox4.Location = new System.Drawing.Point(102, 110);
+            //
+            this.textBox4.Location = new System.Drawing.Point(102, 124);
             this.textBox4.Name = "textBox4";
             this.textBox4.PasswordChar = '*';
-            this.textBox4.Size = new System.Drawing.Size(256, 24);
+            this.textBox4.Size = new System.Drawing.Size(256, 20);
             this.textBox4.TabIndex = 6;
-            // 
+            //
+            // networkLabel
+            //
+            this.networkLabel.AutoSize = true;
+            this.networkLabel.Location = new System.Drawing.Point(7, 101);
+            this.networkLabel.Name = "networkLabel";
+            this.networkLabel.Size = new System.Drawing.Size(55, 15);
+            this.networkLabel.TabIndex = 9;
+            this.networkLabel.Text = "Network:";
+            //
+            // networkTextBox
+            //
+            this.networkTextBox.Location = new System.Drawing.Point(102, 98);
+            this.networkTextBox.Name = "networkTextBox";
+            this.networkTextBox.Size = new System.Drawing.Size(256, 20);
+            this.networkTextBox.TabIndex = 5;
+            //
             // label3
-            // 
+            //
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(7, 80);
+            this.label3.Location = new System.Drawing.Point(7, 75);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(80, 17);
+            this.label3.Size = new System.Drawing.Size(61, 15);
             this.label3.TabIndex = 5;
             this.label3.Text = "Username:";
-            // 
+            //
             // textBox3
-            // 
-            this.textBox3.Location = new System.Drawing.Point(102, 80);
+            //
+            this.textBox3.Location = new System.Drawing.Point(102, 72);
             this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(256, 24);
+            this.textBox3.Size = new System.Drawing.Size(256, 20);
             this.textBox3.TabIndex = 4;
-            // 
+            //
             // label2
-            // 
+            //
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(7, 54);
+            this.label2.Location = new System.Drawing.Point(7, 49);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(48, 17);
+            this.label2.Size = new System.Drawing.Size(37, 15);
             this.label2.TabIndex = 3;
             this.label2.Text = "Port:";
-            // 
+            //
             // textBox2
-            // 
-            this.textBox2.Location = new System.Drawing.Point(102, 51);
+            //
+            this.textBox2.Location = new System.Drawing.Point(102, 46);
             this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(256, 24);
+            this.textBox2.Size = new System.Drawing.Size(256, 20);
             this.textBox2.TabIndex = 8;
-            // 
+            //
             // label1
-            // 
+            //
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 28);
+            this.label1.Location = new System.Drawing.Point(7, 23);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(48, 17);
+            this.label1.Size = new System.Drawing.Size(37, 15);
             this.label1.TabIndex = 1;
             this.label1.Text = "Host:";
-            // 
+            //
             // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(102, 21);
+            //
+            this.textBox1.Location = new System.Drawing.Point(102, 20);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(256, 24);
+            this.textBox1.Size = new System.Drawing.Size(256, 20);
             this.textBox1.TabIndex = 0;
-            // 
+            //
             // label5
-            // 
+            //
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(7, 33);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(80, 17);
+            this.label5.Size = new System.Drawing.Size(61, 15);
             this.label5.TabIndex = 10;
             this.label5.Text = "Bot Name:";
-            // 
+            //
             // textBox5
-            // 
+            //
             this.textBox5.Location = new System.Drawing.Point(132, 31);
             this.textBox5.Name = "textBox5";
-            this.textBox5.Size = new System.Drawing.Size(226, 24);
+            this.textBox5.Size = new System.Drawing.Size(226, 20);
             this.textBox5.TabIndex = 8;
-            // 
+            //
             // label14
-            // 
+            //
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(7, 63);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(88, 17);
+            this.label14.Size = new System.Drawing.Size(67, 15);
             this.label14.TabIndex = 1;
             this.label14.Text = "NEW Regex:";
-            // 
+            //
             // New_Field_regex
-            // 
+            //
             this.New_Field_regex.Location = new System.Drawing.Point(132, 60);
             this.New_Field_regex.Name = "New_Field_regex";
-            this.New_Field_regex.Size = new System.Drawing.Size(226, 24);
+            this.New_Field_regex.Size = new System.Drawing.Size(226, 20);
             this.New_Field_regex.TabIndex = 0;
-            // 
+            //
             // Exit_button
-            // 
+            //
             this.Exit_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.Exit_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Exit_button.Location = new System.Drawing.Point(1420, 843);
@@ -290,9 +310,9 @@
             this.Exit_button.Text = "Close";
             this.Exit_button.UseVisualStyleBackColor = false;
             this.Exit_button.Click += new System.EventHandler(this.Exit_button_Click_1);
-            // 
+            //
             // save_site_button
-            // 
+            //
             this.save_site_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.save_site_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.save_site_button.Location = new System.Drawing.Point(631, 843);
@@ -302,9 +322,9 @@
             this.save_site_button.Text = "Save";
             this.save_site_button.UseVisualStyleBackColor = false;
             this.save_site_button.Click += new System.EventHandler(this.Save_site_button_Click);
-            // 
+            //
             // groupBox3
-            // 
+            //
             this.groupBox3.BackColor = System.Drawing.Color.Transparent;
             this.groupBox3.Controls.Add(this.Edit_Cbftp_Site);
             this.groupBox3.Controls.Add(this.Exit_button);
@@ -328,9 +348,9 @@
             this.groupBox3.TabIndex = 14;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Site Settings";
-            // 
+            //
             // Edit_Cbftp_Site
-            // 
+            //
             this.Edit_Cbftp_Site.BackColor = System.Drawing.Color.Teal;
             this.Edit_Cbftp_Site.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Edit_Cbftp_Site.Location = new System.Drawing.Point(632, 807);
@@ -340,19 +360,19 @@
             this.Edit_Cbftp_Site.Text = "Edit CBFTP Site";
             this.Edit_Cbftp_Site.UseVisualStyleBackColor = false;
             this.Edit_Cbftp_Site.Click += new System.EventHandler(this.Edit_Cbftp_Site_Click);
-            // 
+            //
             // label39
-            // 
+            //
             this.label39.AutoSize = true;
             this.label39.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label39.Location = new System.Drawing.Point(850, 585);
             this.label39.Name = "label39";
-            this.label39.Size = new System.Drawing.Size(637, 255);
+            this.label39.Size = new System.Drawing.Size(547, 221);
             this.label39.TabIndex = 74;
             this.label39.Text = resources.GetString("label39.Text");
-            // 
+            //
             // groupBox2
-            // 
+            //
             this.groupBox2.Controls.Add(this.Pre_field_regex);
             this.groupBox2.Controls.Add(this.Test_pre_regex_button);
             this.groupBox2.Controls.Add(this.label15);
@@ -367,22 +387,22 @@
             this.groupBox2.Controls.Add(this.Section_pre_field);
             this.groupBox2.Controls.Add(this.label23);
             this.groupBox2.Controls.Add(this.label24);
-            this.groupBox2.Location = new System.Drawing.Point(395, 309);
+            this.groupBox2.Location = new System.Drawing.Point(395, 322);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(353, 260);
+            this.groupBox2.Size = new System.Drawing.Size(353, 247);
             this.groupBox2.TabIndex = 73;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Pre Regex";
-            // 
+            //
             // Pre_field_regex
-            // 
+            //
             this.Pre_field_regex.Location = new System.Drawing.Point(131, 32);
             this.Pre_field_regex.Name = "Pre_field_regex";
-            this.Pre_field_regex.Size = new System.Drawing.Size(216, 24);
+            this.Pre_field_regex.Size = new System.Drawing.Size(216, 20);
             this.Pre_field_regex.TabIndex = 58;
-            // 
+            //
             // Test_pre_regex_button
-            // 
+            //
             this.Test_pre_regex_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.Test_pre_regex_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Test_pre_regex_button.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
@@ -393,109 +413,109 @@
             this.Test_pre_regex_button.Text = "Test";
             this.Test_pre_regex_button.UseVisualStyleBackColor = false;
             this.Test_pre_regex_button.Click += new System.EventHandler(this.Test_pre_regex_button_Click);
-            // 
+            //
             // label15
-            // 
+            //
             this.label15.AutoSize = true;
             this.label15.Location = new System.Drawing.Point(6, 32);
             this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(88, 17);
+            this.label15.Size = new System.Drawing.Size(67, 15);
             this.label15.TabIndex = 57;
             this.label15.Text = "PRE Regex:";
-            // 
+            //
             // label22
-            // 
+            //
             this.label22.AutoSize = true;
             this.label22.Location = new System.Drawing.Point(216, 93);
             this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(64, 17);
+            this.label22.Size = new System.Drawing.Size(49, 15);
             this.label22.TabIndex = 62;
             this.label22.Text = "Suffix:";
-            // 
+            //
             // label7
-            // 
+            //
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(5, 151);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(48, 17);
+            this.label7.Size = new System.Drawing.Size(37, 15);
             this.label7.TabIndex = 70;
             this.label7.Text = "Test:";
-            // 
+            //
             // Section_pre_suffix_field
-            // 
+            //
             this.Section_pre_suffix_field.Location = new System.Drawing.Point(287, 90);
             this.Section_pre_suffix_field.Name = "Section_pre_suffix_field";
-            this.Section_pre_suffix_field.Size = new System.Drawing.Size(60, 24);
+            this.Section_pre_suffix_field.Size = new System.Drawing.Size(60, 20);
             this.Section_pre_suffix_field.TabIndex = 63;
             this.Section_pre_suffix_field.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
+            //
             // Section_pre_prefix_field
-            // 
+            //
             this.Section_pre_prefix_field.Location = new System.Drawing.Point(131, 90);
             this.Section_pre_prefix_field.Name = "Section_pre_prefix_field";
-            this.Section_pre_prefix_field.Size = new System.Drawing.Size(60, 24);
+            this.Section_pre_prefix_field.Size = new System.Drawing.Size(60, 20);
             this.Section_pre_prefix_field.TabIndex = 61;
             this.Section_pre_prefix_field.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
+            //
             // txtBox_test_pre_regex
-            // 
+            //
             this.txtBox_test_pre_regex.Location = new System.Drawing.Point(131, 148);
             this.txtBox_test_pre_regex.Name = "txtBox_test_pre_regex";
-            this.txtBox_test_pre_regex.Size = new System.Drawing.Size(216, 24);
+            this.txtBox_test_pre_regex.Size = new System.Drawing.Size(216, 20);
             this.txtBox_test_pre_regex.TabIndex = 71;
-            // 
+            //
             // label21
-            // 
+            //
             this.label21.AutoSize = true;
             this.label21.Location = new System.Drawing.Point(66, 93);
             this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(64, 17);
+            this.label21.Size = new System.Drawing.Size(49, 15);
             this.label21.TabIndex = 60;
             this.label21.Text = "Prefix:";
-            // 
+            //
             // label19
-            // 
+            //
             this.label19.AutoSize = true;
             this.label19.Location = new System.Drawing.Point(6, 93);
             this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(64, 17);
+            this.label19.Size = new System.Drawing.Size(49, 15);
             this.label19.TabIndex = 64;
             this.label19.Text = "Section";
-            // 
+            //
             // Release_Pre_field
-            // 
+            //
             this.Release_Pre_field.Location = new System.Drawing.Point(131, 119);
             this.Release_Pre_field.Name = "Release_Pre_field";
-            this.Release_Pre_field.Size = new System.Drawing.Size(216, 24);
+            this.Release_Pre_field.Size = new System.Drawing.Size(216, 20);
             this.Release_Pre_field.TabIndex = 68;
-            // 
+            //
             // Section_pre_field
-            // 
+            //
             this.Section_pre_field.Location = new System.Drawing.Point(131, 61);
             this.Section_pre_field.Name = "Section_pre_field";
-            this.Section_pre_field.Size = new System.Drawing.Size(216, 24);
+            this.Section_pre_field.Size = new System.Drawing.Size(216, 20);
             this.Section_pre_field.TabIndex = 66;
-            // 
+            //
             // label23
-            // 
+            //
             this.label23.AutoSize = true;
             this.label23.Location = new System.Drawing.Point(5, 62);
             this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(120, 17);
+            this.label23.Size = new System.Drawing.Size(91, 15);
             this.label23.TabIndex = 65;
             this.label23.Text = "Section Regex:";
-            // 
+            //
             // label24
-            // 
+            //
             this.label24.AutoSize = true;
             this.label24.Location = new System.Drawing.Point(6, 122);
             this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(120, 17);
+            this.label24.Size = new System.Drawing.Size(91, 15);
             this.label24.TabIndex = 67;
             this.label24.Text = "Release Regex:";
-            // 
+            //
             // site_rules_button
-            // 
+            //
             this.site_rules_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.site_rules_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.site_rules_button.Location = new System.Drawing.Point(631, 736);
@@ -504,9 +524,9 @@
             this.site_rules_button.TabIndex = 58;
             this.site_rules_button.Text = "Get Site Rules";
             this.site_rules_button.UseVisualStyleBackColor = false;
-            // 
+            //
             // Help_button
-            // 
+            //
             this.Help_button.BackColor = System.Drawing.Color.Coral;
             this.Help_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Help_button.Location = new System.Drawing.Point(631, 772);
@@ -516,9 +536,9 @@
             this.Help_button.Text = "Help";
             this.Help_button.UseVisualStyleBackColor = false;
             this.Help_button.Click += new System.EventHandler(this.Help_button_Click);
-            // 
+            //
             // groupBox5
-            // 
+            //
             this.groupBox5.Controls.Add(this.chkRequestCanFillSource);
             this.groupBox5.Controls.Add(this.label38);
             this.groupBox5.Controls.Add(this.numRequestPollSeconds);
@@ -542,28 +562,28 @@
             this.groupBox5.TabIndex = 17;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Requests";
-            // 
+            //
             // chkRequestCanFillSource
-            // 
+            //
             this.chkRequestCanFillSource.AutoSize = true;
             this.chkRequestCanFillSource.Location = new System.Drawing.Point(309, 23);
             this.chkRequestCanFillSource.Name = "chkRequestCanFillSource";
-            this.chkRequestCanFillSource.Size = new System.Drawing.Size(286, 21);
+            this.chkRequestCanFillSource.Size = new System.Drawing.Size(218, 19);
             this.chkRequestCanFillSource.TabIndex = 48;
             this.chkRequestCanFillSource.Text = "Can be used for filling requests";
             this.chkRequestCanFillSource.UseVisualStyleBackColor = true;
-            // 
+            //
             // label38
-            // 
+            //
             this.label38.AutoSize = true;
             this.label38.Location = new System.Drawing.Point(7, 254);
             this.label38.Name = "label38";
-            this.label38.Size = new System.Drawing.Size(152, 17);
+            this.label38.Size = new System.Drawing.Size(115, 15);
             this.label38.TabIndex = 47;
             this.label38.Text = "Poll interval (s):";
-            // 
+            //
             // numRequestPollSeconds
-            // 
+            //
             this.numRequestPollSeconds.Location = new System.Drawing.Point(197, 252);
             this.numRequestPollSeconds.Maximum = new decimal(new int[] {
             3600,
@@ -576,139 +596,139 @@
             0,
             0});
             this.numRequestPollSeconds.Name = "numRequestPollSeconds";
-            this.numRequestPollSeconds.Size = new System.Drawing.Size(84, 24);
+            this.numRequestPollSeconds.Size = new System.Drawing.Size(84, 20);
             this.numRequestPollSeconds.TabIndex = 46;
             this.numRequestPollSeconds.Value = new decimal(new int[] {
             300,
             0,
             0,
             0});
-            // 
+            //
             // label37
-            // 
+            //
             this.label37.AutoSize = true;
             this.label37.Location = new System.Drawing.Point(7, 225);
             this.label37.Name = "label37";
-            this.label37.Size = new System.Drawing.Size(144, 17);
+            this.label37.Size = new System.Drawing.Size(109, 15);
             this.label37.TabIndex = 45;
             this.label37.Text = "Complete pattern:";
-            // 
+            //
             // txtRequestCompletePattern
-            // 
+            //
             this.txtRequestCompletePattern.Location = new System.Drawing.Point(197, 222);
             this.txtRequestCompletePattern.Name = "txtRequestCompletePattern";
-            this.txtRequestCompletePattern.Size = new System.Drawing.Size(368, 24);
+            this.txtRequestCompletePattern.Size = new System.Drawing.Size(368, 20);
             this.txtRequestCompletePattern.TabIndex = 44;
-            // 
+            //
             // label36
-            // 
+            //
             this.label36.AutoSize = true;
             this.label36.Location = new System.Drawing.Point(7, 195);
             this.label36.Name = "label36";
-            this.label36.Size = new System.Drawing.Size(152, 17);
+            this.label36.Size = new System.Drawing.Size(115, 15);
             this.label36.TabIndex = 43;
             this.label36.Text = "Dst path template:";
-            // 
+            //
             // txtRequestDstPathTemplate
-            // 
+            //
             this.txtRequestDstPathTemplate.Location = new System.Drawing.Point(197, 192);
             this.txtRequestDstPathTemplate.Name = "txtRequestDstPathTemplate";
-            this.txtRequestDstPathTemplate.Size = new System.Drawing.Size(368, 24);
+            this.txtRequestDstPathTemplate.Size = new System.Drawing.Size(368, 20);
             this.txtRequestDstPathTemplate.TabIndex = 42;
             this.txtRequestDstPathTemplate.Text = "/REQUESTS/REQ-{release}";
-            // 
+            //
             // label35
-            // 
+            //
             this.label35.AutoSize = true;
             this.label35.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
             this.label35.Location = new System.Drawing.Point(194, 176);
             this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(403, 13);
+            this.label35.Size = new System.Drawing.Size(335, 12);
             this.label35.TabIndex = 41;
             this.label35.Text = "Supported placeholders {id}, {name}, {user}, {release}, {sitename}";
-            // 
+            //
             // label34
-            // 
+            //
             this.label34.AutoSize = true;
             this.label34.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
             this.label34.Location = new System.Drawing.Point(194, 133);
             this.label34.Name = "label34";
-            this.label34.Size = new System.Drawing.Size(217, 13);
+            this.label34.Size = new System.Drawing.Size(180, 12);
             this.label34.TabIndex = 40;
             this.label34.Text = "Supported placeholders {id}, {name}\r\n";
-            // 
+            //
             // label32
-            // 
+            //
             this.label32.AutoSize = true;
             this.label32.Location = new System.Drawing.Point(7, 152);
             this.label32.Name = "label32";
-            this.label32.Size = new System.Drawing.Size(184, 17);
+            this.label32.Size = new System.Drawing.Size(139, 15);
             this.label32.TabIndex = 39;
             this.label32.Text = "Fill command template:";
-            // 
+            //
             // txtRequestFillTemplate
-            // 
+            //
             this.txtRequestFillTemplate.Location = new System.Drawing.Point(197, 149);
             this.txtRequestFillTemplate.Name = "txtRequestFillTemplate";
-            this.txtRequestFillTemplate.Size = new System.Drawing.Size(368, 24);
+            this.txtRequestFillTemplate.Size = new System.Drawing.Size(368, 20);
             this.txtRequestFillTemplate.TabIndex = 38;
             this.txtRequestFillTemplate.Text = "SITE REQFILLED {id}";
-            // 
+            //
             // label30
-            // 
+            //
             this.label30.AutoSize = true;
             this.label30.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
             this.label30.Location = new System.Drawing.Point(194, 90);
             this.label30.Name = "label30";
-            this.label30.Size = new System.Drawing.Size(409, 13);
+            this.label30.Size = new System.Drawing.Size(340, 12);
             this.label30.TabIndex = 37;
             this.label30.Text = "For regex ,use named groups: (?<id>), (?<name>), optional (?<user>)";
-            // 
+            //
             // txtRequestLinePattern
-            // 
+            //
             this.txtRequestLinePattern.Location = new System.Drawing.Point(197, 106);
             this.txtRequestLinePattern.Name = "txtRequestLinePattern";
-            this.txtRequestLinePattern.Size = new System.Drawing.Size(368, 24);
+            this.txtRequestLinePattern.Size = new System.Drawing.Size(368, 20);
             this.txtRequestLinePattern.TabIndex = 36;
-            // 
+            //
             // label29
-            // 
+            //
             this.label29.AutoSize = true;
             this.label29.Location = new System.Drawing.Point(7, 109);
             this.label29.Name = "label29";
-            this.label29.Size = new System.Drawing.Size(160, 17);
+            this.label29.Size = new System.Drawing.Size(121, 15);
             this.label29.TabIndex = 35;
             this.label29.Text = "Request line regex:";
-            // 
+            //
             // txtRequestListCommand
-            // 
+            //
             this.txtRequestListCommand.Location = new System.Drawing.Point(197, 63);
             this.txtRequestListCommand.Name = "txtRequestListCommand";
-            this.txtRequestListCommand.Size = new System.Drawing.Size(368, 24);
+            this.txtRequestListCommand.Size = new System.Drawing.Size(368, 20);
             this.txtRequestListCommand.TabIndex = 33;
             this.txtRequestListCommand.Text = "SITE REQUESTS";
-            // 
+            //
             // chkRequestAutoFillEnabled
-            // 
+            //
             this.chkRequestAutoFillEnabled.AutoSize = true;
             this.chkRequestAutoFillEnabled.Location = new System.Drawing.Point(9, 23);
             this.chkRequestAutoFillEnabled.Name = "chkRequestAutoFillEnabled";
-            this.chkRequestAutoFillEnabled.Size = new System.Drawing.Size(254, 21);
+            this.chkRequestAutoFillEnabled.Size = new System.Drawing.Size(194, 19);
             this.chkRequestAutoFillEnabled.TabIndex = 31;
             this.chkRequestAutoFillEnabled.Text = "Enable auto-fill of requests";
             this.chkRequestAutoFillEnabled.UseVisualStyleBackColor = true;
-            // 
+            //
             // label20
-            // 
+            //
             this.label20.AutoSize = true;
             this.label20.Location = new System.Drawing.Point(7, 63);
             this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(112, 17);
+            this.label20.Size = new System.Drawing.Size(85, 15);
             this.label20.TabIndex = 34;
             this.label20.Text = "List command:";
-            // 
+            //
             // groupBox6
-            // 
+            //
             this.groupBox6.Controls.Add(this.checkBox3);
             this.groupBox6.Controls.Add(this.Dl_Only_CheckBox);
             this.groupBox6.Controls.Add(this.Disable_site_checkbox);
@@ -718,55 +738,55 @@
             this.groupBox6.TabIndex = 51;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Options";
-            // 
+            //
             // checkBox3
-            // 
+            //
             this.checkBox3.AutoSize = true;
             this.checkBox3.Enabled = false;
             this.checkBox3.Location = new System.Drawing.Point(14, 50);
             this.checkBox3.Name = "checkBox3";
-            this.checkBox3.Size = new System.Drawing.Size(174, 21);
+            this.checkBox3.Size = new System.Drawing.Size(134, 19);
             this.checkBox3.TabIndex = 32;
             this.checkBox3.Text = "Finish Incompletes";
             this.checkBox3.UseVisualStyleBackColor = true;
-            // 
+            //
             // Dl_Only_CheckBox
-            // 
+            //
             this.Dl_Only_CheckBox.AutoSize = true;
             this.Dl_Only_CheckBox.Location = new System.Drawing.Point(14, 77);
             this.Dl_Only_CheckBox.Name = "Dl_Only_CheckBox";
-            this.Dl_Only_CheckBox.Size = new System.Drawing.Size(174, 21);
+            this.Dl_Only_CheckBox.Size = new System.Drawing.Size(134, 19);
             this.Dl_Only_CheckBox.TabIndex = 30;
             this.Dl_Only_CheckBox.Text = "Download Only Site";
             this.Dl_Only_CheckBox.UseVisualStyleBackColor = true;
-            // 
+            //
             // Disable_site_checkbox
-            // 
+            //
             this.Disable_site_checkbox.AutoSize = true;
             this.Disable_site_checkbox.Location = new System.Drawing.Point(14, 23);
             this.Disable_site_checkbox.Name = "Disable_site_checkbox";
-            this.Disable_site_checkbox.Size = new System.Drawing.Size(126, 21);
+            this.Disable_site_checkbox.Size = new System.Drawing.Size(98, 19);
             this.Disable_site_checkbox.TabIndex = 50;
             this.Disable_site_checkbox.Text = "Disable Site";
             this.Disable_site_checkbox.UseVisualStyleBackColor = true;
-            // 
+            //
             // groupBox9
-            // 
+            //
             this.groupBox9.Controls.Add(this.numericUpDown_pretime);
             this.groupBox9.Controls.Add(this.label40);
             this.groupBox9.Controls.Add(this.label8);
             this.groupBox9.Controls.Add(this.label33);
             this.groupBox9.Controls.Add(this.comboBox_announce);
             this.groupBox9.Controls.Add(this.textBox8);
-            this.groupBox9.Location = new System.Drawing.Point(15, 177);
+            this.groupBox9.Location = new System.Drawing.Point(15, 191);
             this.groupBox9.Name = "groupBox9";
             this.groupBox9.Size = new System.Drawing.Size(374, 125);
             this.groupBox9.TabIndex = 56;
             this.groupBox9.TabStop = false;
             this.groupBox9.Text = "General";
-            // 
+            //
             // numericUpDown_pretime
-            // 
+            //
             this.numericUpDown_pretime.Increment = new decimal(new int[] {
             30,
             0,
@@ -779,38 +799,38 @@
             0,
             0});
             this.numericUpDown_pretime.Name = "numericUpDown_pretime";
-            this.numericUpDown_pretime.Size = new System.Drawing.Size(84, 24);
+            this.numericUpDown_pretime.Size = new System.Drawing.Size(84, 20);
             this.numericUpDown_pretime.TabIndex = 51;
-            // 
+            //
             // label40
-            // 
+            //
             this.label40.AutoSize = true;
             this.label40.Location = new System.Drawing.Point(6, 92);
             this.label40.Name = "label40";
-            this.label40.Size = new System.Drawing.Size(120, 17);
+            this.label40.Size = new System.Drawing.Size(91, 15);
             this.label40.TabIndex = 52;
             this.label40.Text = "Max Pretime(s)";
-            // 
+            //
             // label8
-            // 
+            //
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(6, 26);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(80, 17);
+            this.label8.Size = new System.Drawing.Size(61, 15);
             this.label8.TabIndex = 13;
             this.label8.Text = "Sitename:";
-            // 
+            //
             // label33
-            // 
+            //
             this.label33.AutoSize = true;
             this.label33.Location = new System.Drawing.Point(6, 59);
             this.label33.Name = "label33";
-            this.label33.Size = new System.Drawing.Size(80, 17);
+            this.label33.Size = new System.Drawing.Size(61, 15);
             this.label33.TabIndex = 54;
             this.label33.Text = "Announce:";
-            // 
+            //
             // comboBox_announce
-            // 
+            //
             this.comboBox_announce.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.comboBox_announce.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBox_announce.FormattingEnabled = true;
@@ -819,18 +839,18 @@
             "SiteBot"});
             this.comboBox_announce.Location = new System.Drawing.Point(98, 56);
             this.comboBox_announce.Name = "comboBox_announce";
-            this.comboBox_announce.Size = new System.Drawing.Size(260, 25);
+            this.comboBox_announce.Size = new System.Drawing.Size(260, 23);
             this.comboBox_announce.TabIndex = 53;
-            // 
+            //
             // textBox8
-            // 
+            //
             this.textBox8.Location = new System.Drawing.Point(98, 23);
             this.textBox8.Name = "textBox8";
-            this.textBox8.Size = new System.Drawing.Size(260, 24);
+            this.textBox8.Size = new System.Drawing.Size(260, 20);
             this.textBox8.TabIndex = 55;
-            // 
+            //
             // groupBox4
-            // 
+            //
             this.groupBox4.BackColor = System.Drawing.Color.Transparent;
             this.groupBox4.Controls.Add(this.Add_affil_textbox);
             this.groupBox4.Controls.Add(this.label28);
@@ -873,46 +893,65 @@
             this.groupBox4.TabIndex = 16;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Race Sections and Mapping";
-            // 
+            //
+            // Add_affil_textbox
+            //
+            this.Add_affil_textbox.Location = new System.Drawing.Point(159, 445);
+            this.Add_affil_textbox.Name = "Add_affil_textbox";
+            this.Add_affil_textbox.Size = new System.Drawing.Size(136, 20);
+            this.Add_affil_textbox.TabIndex = 60;
+            //
             // label28
-            // 
+            //
             this.label28.AutoSize = true;
             this.label28.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label28.Location = new System.Drawing.Point(300, 261);
             this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(343, 15);
+            this.label28.Size = new System.Drawing.Size(295, 13);
             this.label28.TabIndex = 59;
             this.label28.Text = "CBFTP Mapping Rules: DROP run before ALLOW rules";
-            // 
+            //
+            // button1
+            //
+            this.button1.BackColor = System.Drawing.SystemColors.ButtonShadow;
+            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button1.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
+            this.button1.Location = new System.Drawing.Point(158, 506);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(137, 24);
+            this.button1.TabIndex = 53;
+            this.button1.Text = "Skiplist";
+            this.button1.UseVisualStyleBackColor = false;
+            //
             // label18
-            // 
+            //
             this.label18.AutoSize = true;
             this.label18.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label18.Location = new System.Drawing.Point(301, 396);
             this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(322, 15);
+            this.label18.Size = new System.Drawing.Size(277, 13);
             this.label18.TabIndex = 58;
             this.label18.Text = "Section Rules: DROP takes priority over ALLOW";
-            // 
+            //
             // TagRulelistBox
-            // 
+            //
             this.TagRulelistBox.BackColor = System.Drawing.Color.Silver;
             this.TagRulelistBox.FormattingEnabled = true;
-            this.TagRulelistBox.ItemHeight = 17;
+            this.TagRulelistBox.ItemHeight = 15;
             this.TagRulelistBox.Location = new System.Drawing.Point(303, 277);
             this.TagRulelistBox.Name = "TagRulelistBox";
-            this.TagRulelistBox.Size = new System.Drawing.Size(418, 89);
+            this.TagRulelistBox.Size = new System.Drawing.Size(418, 79);
             this.TagRulelistBox.TabIndex = 40;
-            // 
+            //
             // RuleTxtField
-            // 
+            //
             this.RuleTxtField.Location = new System.Drawing.Point(303, 371);
             this.RuleTxtField.Name = "RuleTxtField";
-            this.RuleTxtField.Size = new System.Drawing.Size(301, 24);
+            this.RuleTxtField.Size = new System.Drawing.Size(301, 20);
             this.RuleTxtField.TabIndex = 41;
-            // 
+            //
             // remove_affil_button
-            // 
+            //
             this.remove_affil_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.remove_affil_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.remove_affil_button.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -922,9 +961,9 @@
             this.remove_affil_button.TabIndex = 51;
             this.remove_affil_button.Text = "Remove";
             this.remove_affil_button.UseVisualStyleBackColor = false;
-            // 
+            //
             // AddTagRuleButton
-            // 
+            //
             this.AddTagRuleButton.BackColor = System.Drawing.Color.SteelBlue;
             this.AddTagRuleButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.AddTagRuleButton.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -934,9 +973,9 @@
             this.AddTagRuleButton.TabIndex = 42;
             this.AddTagRuleButton.Text = "Add";
             this.AddTagRuleButton.UseVisualStyleBackColor = false;
-            // 
+            //
             // add_affil_button
-            // 
+            //
             this.add_affil_button.BackColor = System.Drawing.Color.SteelBlue;
             this.add_affil_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.add_affil_button.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -946,9 +985,9 @@
             this.add_affil_button.TabIndex = 50;
             this.add_affil_button.Text = "Add";
             this.add_affil_button.UseVisualStyleBackColor = false;
-            // 
+            //
             // RemoveTagRuleButton
-            // 
+            //
             this.RemoveTagRuleButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.RemoveTagRuleButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.RemoveTagRuleButton.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -958,35 +997,35 @@
             this.RemoveTagRuleButton.TabIndex = 43;
             this.RemoveTagRuleButton.Text = "Remove";
             this.RemoveTagRuleButton.UseVisualStyleBackColor = false;
-            // 
+            //
             // label6
-            // 
+            //
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label6.Location = new System.Drawing.Point(156, 260);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(49, 15);
+            this.label6.Size = new System.Drawing.Size(43, 13);
             this.label6.TabIndex = 49;
             this.label6.Text = "Affils";
-            // 
+            //
             // listBox_affils_sites
-            // 
+            //
             this.listBox_affils_sites.BackColor = System.Drawing.Color.Silver;
-            this.listBox_affils_sites.ItemHeight = 17;
+            this.listBox_affils_sites.ItemHeight = 15;
             this.listBox_affils_sites.Location = new System.Drawing.Point(158, 277);
             this.listBox_affils_sites.Name = "listBox_affils_sites";
-            this.listBox_affils_sites.Size = new System.Drawing.Size(137, 157);
+            this.listBox_affils_sites.Size = new System.Drawing.Size(137, 154);
             this.listBox_affils_sites.TabIndex = 52;
-            // 
+            //
             // AddIrcTextbox
-            // 
+            //
             this.AddIrcTextbox.Location = new System.Drawing.Point(8, 202);
             this.AddIrcTextbox.Name = "AddIrcTextbox";
-            this.AddIrcTextbox.Size = new System.Drawing.Size(137, 24);
+            this.AddIrcTextbox.Size = new System.Drawing.Size(137, 20);
             this.AddIrcTextbox.TabIndex = 29;
-            // 
+            //
             // btnDisableRaceSection
-            // 
+            //
             this.btnDisableRaceSection.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.btnDisableRaceSection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnDisableRaceSection.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -996,16 +1035,16 @@
             this.btnDisableRaceSection.TabIndex = 46;
             this.btnDisableRaceSection.Text = "Disable";
             this.btnDisableRaceSection.UseVisualStyleBackColor = false;
-            // 
+            //
             // txtRegex_Trigger
-            // 
+            //
             this.txtRegex_Trigger.Location = new System.Drawing.Point(370, 204);
             this.txtRegex_Trigger.Name = "txtRegex_Trigger";
-            this.txtRegex_Trigger.Size = new System.Drawing.Size(300, 24);
+            this.txtRegex_Trigger.Size = new System.Drawing.Size(300, 20);
             this.txtRegex_Trigger.TabIndex = 22;
-            // 
+            //
             // TVMazeSettingsButton
-            // 
+            //
             this.TVMazeSettingsButton.BackColor = System.Drawing.Color.CadetBlue;
             this.TVMazeSettingsButton.DialogResult = System.Windows.Forms.DialogResult.Abort;
             this.TVMazeSettingsButton.FlatAppearance.BorderColor = System.Drawing.Color.White;
@@ -1019,9 +1058,9 @@
             this.TVMazeSettingsButton.Text = "TVMaze/IMDB";
             this.TVMazeSettingsButton.UseVisualStyleBackColor = false;
             this.TVMazeSettingsButton.Click += new System.EventHandler(this.TVMazeSettingsButton_Click);
-            // 
+            //
             // btnEnableRaceSection
-            // 
+            //
             this.btnEnableRaceSection.BackColor = System.Drawing.Color.SteelBlue;
             this.btnEnableRaceSection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEnableRaceSection.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1031,9 +1070,9 @@
             this.btnEnableRaceSection.TabIndex = 45;
             this.btnEnableRaceSection.Text = "Enable";
             this.btnEnableRaceSection.UseVisualStyleBackColor = false;
-            // 
+            //
             // btnSaveRegexRules
-            // 
+            //
             this.btnSaveRegexRules.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.btnSaveRegexRules.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSaveRegexRules.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1044,19 +1083,19 @@
             this.btnSaveRegexRules.Text = "Save";
             this.btnSaveRegexRules.UseVisualStyleBackColor = false;
             this.btnSaveRegexRules.Click += new System.EventHandler(this.btnSaveRegexRules_Click);
-            // 
+            //
             // label13
-            // 
+            //
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label13.Location = new System.Drawing.Point(219, 20);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(105, 15);
+            this.label13.Size = new System.Drawing.Size(91, 13);
             this.label13.TabIndex = 20;
             this.label13.Text = "Cbftp Sections";
-            // 
+            //
             // btnUnmap
-            // 
+            //
             this.btnUnmap.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.btnUnmap.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnUnmap.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1067,9 +1106,9 @@
             this.btnUnmap.Text = "Unmap Section";
             this.btnUnmap.UseVisualStyleBackColor = false;
             this.btnUnmap.Click += new System.EventHandler(this.btnUnmap_Click);
-            // 
+            //
             // btnMap
-            // 
+            //
             this.btnMap.BackColor = System.Drawing.Color.SteelBlue;
             this.btnMap.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnMap.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1080,50 +1119,50 @@
             this.btnMap.Text = "Map Section";
             this.btnMap.UseVisualStyleBackColor = false;
             this.btnMap.Click += new System.EventHandler(this.btnMap_Click);
-            // 
+            //
             // ListBox5
-            // 
+            //
             this.ListBox5.BackColor = System.Drawing.Color.Silver;
             this.ListBox5.FormattingEnabled = true;
-            this.ListBox5.ItemHeight = 17;
+            this.ListBox5.ItemHeight = 15;
             this.ListBox5.Location = new System.Drawing.Point(370, 37);
             this.ListBox5.Name = "ListBox5";
-            this.ListBox5.Size = new System.Drawing.Size(351, 140);
+            this.ListBox5.Size = new System.Drawing.Size(351, 139);
             this.ListBox5.TabIndex = 21;
-            // 
+            //
             // ListBox1
-            // 
+            //
             this.ListBox1.BackColor = System.Drawing.Color.Silver;
             this.ListBox1.FormattingEnabled = true;
-            this.ListBox1.ItemHeight = 17;
+            this.ListBox1.ItemHeight = 15;
             this.ListBox1.Location = new System.Drawing.Point(8, 37);
             this.ListBox1.Name = "ListBox1";
-            this.ListBox1.Size = new System.Drawing.Size(137, 157);
+            this.ListBox1.Size = new System.Drawing.Size(137, 154);
             this.ListBox1.TabIndex = 0;
             this.ListBox1.SelectedIndexChanged += new System.EventHandler(this.ListBox1_SelectedIndexChanged);
-            // 
+            //
             // lstCbftpSections
-            // 
+            //
             this.lstCbftpSections.BackColor = System.Drawing.Color.Silver;
             this.lstCbftpSections.FormattingEnabled = true;
-            this.lstCbftpSections.ItemHeight = 17;
+            this.lstCbftpSections.ItemHeight = 15;
             this.lstCbftpSections.Location = new System.Drawing.Point(222, 37);
             this.lstCbftpSections.Name = "lstCbftpSections";
-            this.lstCbftpSections.Size = new System.Drawing.Size(137, 191);
+            this.lstCbftpSections.Size = new System.Drawing.Size(137, 184);
             this.lstCbftpSections.TabIndex = 17;
-            // 
+            //
             // label26
-            // 
+            //
             this.label26.AutoSize = true;
             this.label26.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label26.Location = new System.Drawing.Point(367, 20);
             this.label26.Name = "label26";
-            this.label26.Size = new System.Drawing.Size(147, 15);
+            this.label26.Size = new System.Drawing.Size(127, 13);
             this.label26.TabIndex = 26;
             this.label26.Text = "Mapped CBFTP Section";
-            // 
+            //
             // btnRemoveGlobalRule
-            // 
+            //
             this.btnRemoveGlobalRule.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.btnRemoveGlobalRule.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRemoveGlobalRule.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1133,29 +1172,29 @@
             this.btnRemoveGlobalRule.TabIndex = 33;
             this.btnRemoveGlobalRule.Text = "Remove";
             this.btnRemoveGlobalRule.UseVisualStyleBackColor = false;
-            // 
+            //
             // label27
-            // 
+            //
             this.label27.AutoSize = true;
             this.label27.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label27.Location = new System.Drawing.Point(367, 184);
             this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(168, 15);
+            this.label27.Size = new System.Drawing.Size(145, 13);
             this.label27.TabIndex = 27;
             this.label27.Text = "Mapping trigger (regex)";
-            // 
+            //
             // label17
-            // 
+            //
             this.label17.AutoSize = true;
             this.label17.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label17.Location = new System.Drawing.Point(6, 20);
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(91, 15);
+            this.label17.Size = new System.Drawing.Size(79, 13);
             this.label17.TabIndex = 5;
             this.label17.Text = "IRC Sections";
-            // 
+            //
             // btnRemoveIrcSection
-            // 
+            //
             this.btnRemoveIrcSection.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.btnRemoveIrcSection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRemoveIrcSection.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1166,9 +1205,9 @@
             this.btnRemoveIrcSection.Text = "Remove";
             this.btnRemoveIrcSection.UseVisualStyleBackColor = false;
             this.btnRemoveIrcSection.Click += new System.EventHandler(this.btnRemoveIrcSection_Click);
-            // 
+            //
             // btnAddIrcSection
-            // 
+            //
             this.btnAddIrcSection.BackColor = System.Drawing.Color.SteelBlue;
             this.btnAddIrcSection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAddIrcSection.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1179,9 +1218,9 @@
             this.btnAddIrcSection.Text = "Add";
             this.btnAddIrcSection.UseVisualStyleBackColor = false;
             this.btnAddIrcSection.Click += new System.EventHandler(this.btnAddIrcSection_Click);
-            // 
+            //
             // btnAddGlobalRule
-            // 
+            //
             this.btnAddGlobalRule.BackColor = System.Drawing.Color.SteelBlue;
             this.btnAddGlobalRule.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAddGlobalRule.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1191,45 +1230,45 @@
             this.btnAddGlobalRule.TabIndex = 32;
             this.btnAddGlobalRule.Text = "Add";
             this.btnAddGlobalRule.UseVisualStyleBackColor = false;
-            // 
+            //
             // ListBox2
-            // 
+            //
             this.ListBox2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.ListBox2.FormattingEnabled = true;
-            this.ListBox2.ItemHeight = 17;
+            this.ListBox2.ItemHeight = 15;
             this.ListBox2.Location = new System.Drawing.Point(10, 277);
             this.ListBox2.Name = "ListBox2";
-            this.ListBox2.Size = new System.Drawing.Size(137, 191);
+            this.ListBox2.Size = new System.Drawing.Size(137, 184);
             this.ListBox2.TabIndex = 1;
-            // 
+            //
             // label16
-            // 
+            //
             this.label16.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
             this.label16.Location = new System.Drawing.Point(8, 260);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(145, 23);
             this.label16.TabIndex = 47;
             this.label16.Text = "Race Sections (irc)";
-            // 
+            //
             // txtGlobalRule
-            // 
+            //
             this.txtGlobalRule.Location = new System.Drawing.Point(304, 507);
             this.txtGlobalRule.Name = "txtGlobalRule";
-            this.txtGlobalRule.Size = new System.Drawing.Size(300, 24);
+            this.txtGlobalRule.Size = new System.Drawing.Size(300, 20);
             this.txtGlobalRule.TabIndex = 31;
-            // 
+            //
             // ListBox6
-            // 
+            //
             this.ListBox6.BackColor = System.Drawing.Color.Silver;
             this.ListBox6.FormattingEnabled = true;
-            this.ListBox6.ItemHeight = 17;
+            this.ListBox6.ItemHeight = 15;
             this.ListBox6.Location = new System.Drawing.Point(304, 411);
             this.ListBox6.Name = "ListBox6";
-            this.ListBox6.Size = new System.Drawing.Size(418, 89);
+            this.ListBox6.Size = new System.Drawing.Size(418, 79);
             this.ListBox6.TabIndex = 29;
-            // 
+            //
             // groupBox7
-            // 
+            //
             this.groupBox7.Controls.Add(this.New_Field_regex);
             this.groupBox7.Controls.Add(this.textBox5);
             this.groupBox7.Controls.Add(this.label14);
@@ -1248,31 +1287,31 @@
             this.groupBox7.Controls.Add(this.label11);
             this.groupBox7.Controls.Add(this.Name_Field_regex);
             this.groupBox7.Controls.Add(this.Name_label);
-            this.groupBox7.Location = new System.Drawing.Point(15, 308);
+            this.groupBox7.Location = new System.Drawing.Point(15, 322);
             this.groupBox7.Name = "groupBox7";
-            this.groupBox7.Size = new System.Drawing.Size(373, 261);
+            this.groupBox7.Size = new System.Drawing.Size(373, 247);
             this.groupBox7.TabIndex = 0;
             this.groupBox7.TabStop = false;
             this.groupBox7.Text = "New Regex";
-            // 
+            //
             // Ignore_Word_regex
-            // 
+            //
             this.Ignore_Word_regex.Location = new System.Drawing.Point(132, 89);
             this.Ignore_Word_regex.Name = "Ignore_Word_regex";
-            this.Ignore_Word_regex.Size = new System.Drawing.Size(226, 24);
+            this.Ignore_Word_regex.Size = new System.Drawing.Size(226, 20);
             this.Ignore_Word_regex.TabIndex = 48;
-            // 
+            //
             // label12
-            // 
+            //
             this.label12.AutoSize = true;
             this.label12.Location = new System.Drawing.Point(6, 93);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(112, 17);
+            this.label12.Size = new System.Drawing.Size(85, 15);
             this.label12.TabIndex = 47;
             this.label12.Text = "Ignore Words:";
-            // 
+            //
             // Test_regex_button
-            // 
+            //
             this.Test_regex_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(77)))), ((int)(((byte)(166)))), ((int)(((byte)(112)))));
             this.Test_regex_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Test_regex_button.Font = new System.Drawing.Font("Cascadia Mono", 6.25F);
@@ -1283,100 +1322,100 @@
             this.Test_regex_button.Text = "Test";
             this.Test_regex_button.UseVisualStyleBackColor = false;
             this.Test_regex_button.Click += new System.EventHandler(this.Test_regex_button_Click);
-            // 
+            //
             // label25
-            // 
+            //
             this.label25.AutoSize = true;
             this.label25.Location = new System.Drawing.Point(6, 121);
             this.label25.Name = "label25";
-            this.label25.Size = new System.Drawing.Size(120, 17);
+            this.label25.Size = new System.Drawing.Size(91, 15);
             this.label25.TabIndex = 43;
             this.label25.Text = "Section Regex:";
-            // 
+            //
             // Section_Field_regex
-            // 
+            //
             this.Section_Field_regex.Location = new System.Drawing.Point(132, 118);
             this.Section_Field_regex.Name = "Section_Field_regex";
-            this.Section_Field_regex.Size = new System.Drawing.Size(226, 24);
+            this.Section_Field_regex.Size = new System.Drawing.Size(226, 20);
             this.Section_Field_regex.TabIndex = 44;
-            // 
+            //
             // label9
-            // 
+            //
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(6, 149);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(64, 17);
+            this.label9.Size = new System.Drawing.Size(49, 15);
             this.label9.TabIndex = 27;
             this.label9.Text = "Section";
-            // 
+            //
             // label31
-            // 
+            //
             this.label31.AutoSize = true;
             this.label31.Location = new System.Drawing.Point(6, 207);
             this.label31.Name = "label31";
-            this.label31.Size = new System.Drawing.Size(48, 17);
+            this.label31.Size = new System.Drawing.Size(37, 15);
             this.label31.TabIndex = 51;
             this.label31.Text = "Test:";
-            // 
+            //
             // label10
-            // 
+            //
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(66, 149);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(64, 17);
+            this.label10.Size = new System.Drawing.Size(49, 15);
             this.label10.TabIndex = 21;
             this.label10.Text = "Prefix:";
-            // 
+            //
             // txtBox_test_regex
-            // 
+            //
             this.txtBox_test_regex.Location = new System.Drawing.Point(132, 205);
             this.txtBox_test_regex.Name = "txtBox_test_regex";
-            this.txtBox_test_regex.Size = new System.Drawing.Size(226, 24);
+            this.txtBox_test_regex.Size = new System.Drawing.Size(226, 20);
             this.txtBox_test_regex.TabIndex = 52;
-            // 
+            //
             // Section_Prefix
-            // 
+            //
             this.Section_Prefix.Location = new System.Drawing.Point(132, 147);
             this.Section_Prefix.Name = "Section_Prefix";
-            this.Section_Prefix.Size = new System.Drawing.Size(70, 24);
+            this.Section_Prefix.Size = new System.Drawing.Size(70, 20);
             this.Section_Prefix.TabIndex = 22;
             this.Section_Prefix.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
+            //
             // Section_Suffix
-            // 
+            //
             this.Section_Suffix.Location = new System.Drawing.Point(288, 147);
             this.Section_Suffix.Name = "Section_Suffix";
-            this.Section_Suffix.Size = new System.Drawing.Size(70, 24);
+            this.Section_Suffix.Size = new System.Drawing.Size(70, 20);
             this.Section_Suffix.TabIndex = 24;
             this.Section_Suffix.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
+            //
             // label11
-            // 
+            //
             this.label11.AutoSize = true;
             this.label11.Location = new System.Drawing.Point(217, 149);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(64, 17);
+            this.label11.Size = new System.Drawing.Size(49, 15);
             this.label11.TabIndex = 23;
             this.label11.Text = "Suffix:";
-            // 
+            //
             // Name_Field_regex
-            // 
+            //
             this.Name_Field_regex.Location = new System.Drawing.Point(132, 176);
             this.Name_Field_regex.Name = "Name_Field_regex";
-            this.Name_Field_regex.Size = new System.Drawing.Size(226, 24);
+            this.Name_Field_regex.Size = new System.Drawing.Size(226, 20);
             this.Name_Field_regex.TabIndex = 46;
-            // 
+            //
             // Name_label
-            // 
+            //
             this.Name_label.AutoSize = true;
             this.Name_label.Location = new System.Drawing.Point(6, 177);
             this.Name_label.Name = "Name_label";
-            this.Name_label.Size = new System.Drawing.Size(120, 17);
+            this.Name_label.Size = new System.Drawing.Size(91, 15);
             this.Name_label.TabIndex = 45;
             this.Name_label.Text = "Release Regex:";
-            // 
+            //
             // Delete_site_button
-            // 
+            //
             this.Delete_site_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.Delete_site_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Delete_site_button.Location = new System.Drawing.Point(1294, 843);
@@ -1387,29 +1426,29 @@
             this.Delete_site_button.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
             this.Delete_site_button.UseVisualStyleBackColor = false;
             this.Delete_site_button.Click += new System.EventHandler(this.Delete_site_button_Click);
-            // 
+            //
             // groupBox8
-            // 
+            //
             this.groupBox8.Controls.Add(this.textBox_Channel_Key);
             this.groupBox8.Controls.Add(this.Remove_channel_button);
             this.groupBox8.Controls.Add(this.Add_channel_button);
             this.groupBox8.Controls.Add(this.ListboxChannels);
             this.groupBox8.Location = new System.Drawing.Point(395, 22);
             this.groupBox8.Name = "groupBox8";
-            this.groupBox8.Size = new System.Drawing.Size(353, 280);
+            this.groupBox8.Size = new System.Drawing.Size(353, 294);
             this.groupBox8.TabIndex = 55;
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "Channels";
-            // 
+            //
             // textBox_Channel_Key
-            // 
+            //
             this.textBox_Channel_Key.Location = new System.Drawing.Point(9, 188);
             this.textBox_Channel_Key.Name = "textBox_Channel_Key";
-            this.textBox_Channel_Key.Size = new System.Drawing.Size(338, 24);
+            this.textBox_Channel_Key.Size = new System.Drawing.Size(338, 20);
             this.textBox_Channel_Key.TabIndex = 0;
-            // 
+            //
             // Remove_channel_button
-            // 
+            //
             this.Remove_channel_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(168)))), ((int)(((byte)(75)))), ((int)(((byte)(76)))));
             this.Remove_channel_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Remove_channel_button.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1419,9 +1458,9 @@
             this.Remove_channel_button.TabIndex = 17;
             this.Remove_channel_button.Text = "Remove Channel";
             this.Remove_channel_button.UseVisualStyleBackColor = false;
-            // 
+            //
             // Add_channel_button
-            // 
+            //
             this.Add_channel_button.BackColor = System.Drawing.Color.SteelBlue;
             this.Add_channel_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.Add_channel_button.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
@@ -1431,57 +1470,38 @@
             this.Add_channel_button.TabIndex = 16;
             this.Add_channel_button.Text = "Add Channel";
             this.Add_channel_button.UseVisualStyleBackColor = false;
-            // 
+            //
             // ListboxChannels
-            // 
+            //
             this.ListboxChannels.BackColor = System.Drawing.Color.Silver;
             this.ListboxChannels.FormattingEnabled = true;
-            this.ListboxChannels.ItemHeight = 17;
+            this.ListboxChannels.ItemHeight = 15;
             this.ListboxChannels.Location = new System.Drawing.Point(9, 23);
             this.ListboxChannels.Name = "ListboxChannels";
-            this.ListboxChannels.Size = new System.Drawing.Size(338, 157);
+            this.ListboxChannels.Size = new System.Drawing.Size(338, 154);
             this.ListboxChannels.TabIndex = 15;
-            // 
+            //
             // label41
-            // 
+            //
             this.label41.AutoSize = true;
             this.label41.ForeColor = System.Drawing.Color.White;
             this.label41.Location = new System.Drawing.Point(24, 19);
             this.label41.Name = "label41";
-            this.label41.Size = new System.Drawing.Size(88, 17);
+            this.label41.Size = new System.Drawing.Size(67, 15);
             this.label41.TabIndex = 15;
             this.label41.Text = "Edit Site:";
-            // 
+            //
             // LoadEditSites_Combobox
-            // 
+            //
             this.LoadEditSites_Combobox.FormattingEnabled = true;
             this.LoadEditSites_Combobox.Location = new System.Drawing.Point(118, 16);
             this.LoadEditSites_Combobox.Name = "LoadEditSites_Combobox";
-            this.LoadEditSites_Combobox.Size = new System.Drawing.Size(121, 25);
+            this.LoadEditSites_Combobox.Size = new System.Drawing.Size(121, 23);
             this.LoadEditSites_Combobox.TabIndex = 16;
-            // 
-            // button1
-            // 
-            this.button1.BackColor = System.Drawing.SystemColors.ButtonShadow;
-            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button1.Font = new System.Drawing.Font("Cascadia Mono", 7.25F);
-            this.button1.Location = new System.Drawing.Point(158, 506);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(137, 24);
-            this.button1.TabIndex = 53;
-            this.button1.Text = "Skiplist";
-            this.button1.UseVisualStyleBackColor = false;
-            // 
-            // Add_affil_textbox
-            // 
-            this.Add_affil_textbox.Location = new System.Drawing.Point(159, 445);
-            this.Add_affil_textbox.Name = "Add_affil_textbox";
-            this.Add_affil_textbox.Size = new System.Drawing.Size(136, 24);
-            this.Add_affil_textbox.TabIndex = 60;
-            // 
+            //
             // AddSite
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
+            //
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(26)))), ((int)(((byte)(36)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -1536,6 +1556,8 @@
         private System.Windows.Forms.TextBox textBox4;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.Label networkLabel;
+        private System.Windows.Forms.TextBox networkTextBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Label label5;

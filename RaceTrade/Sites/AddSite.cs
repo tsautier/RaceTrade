@@ -31,10 +31,79 @@ namespace RaceTrade
 
         // Constructor for editing an existing site
         private HelpForm helpForm;
+        private const string PlaceholderHost = "znc.myhost.net";
+        private const string PlaceholderPort = "6697";
+        private const string PlaceholderUser = "ZNC user (e.g. racer)";
+        private const string PlaceholderNetwork = "ZNC network name (as configured in ZNC, e.g. EFNet)";
+
+        // Grey placeholder hint that clears on focus and returns when left empty,
+        // matching the existing Add_affil_textbox style used on this form.
+        private void SetPlaceholder(TextBox box, string hint)
+        {
+            if (box == null)
+                return;
+
+            if (string.IsNullOrEmpty(box.Text))
+            {
+                box.Text = hint;
+                box.ForeColor = Color.Gray;
+            }
+
+            box.Enter += (s, e) =>
+            {
+                if (box.Text == hint)
+                {
+                    box.Text = "";
+                    box.ForeColor = ThemeManager.Colors.Foreground;
+                }
+            };
+
+            box.Leave += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(box.Text))
+                {
+                    box.Text = hint;
+                    box.ForeColor = Color.Gray;
+                }
+            };
+        }
+
+        // Sets the box to either the real value colour or the grey hint, based on
+        // whether it currently holds a real value.
+        private void ApplyPlaceholderState(TextBox box, string hint)
+        {
+            if (box == null)
+                return;
+            if (string.IsNullOrWhiteSpace(box.Text) || box.Text == hint)
+            {
+                box.Text = hint;
+                box.ForeColor = Color.Gray;
+            }
+            else
+            {
+                box.ForeColor = ThemeManager.Colors.Foreground;
+            }
+        }
+
+        // Returns the real value of a placeholder-backed box, treating the hint
+        // text as empty so the placeholder is never saved as data.
+        private static string PlaceholderValue(TextBox box, string hint)
+        {
+            var t = (box?.Text ?? string.Empty).Trim();
+            return t == hint ? string.Empty : t;
+        }
+
         public AddSite(string siteFileName)
         {
             InitializeComponent();
             RaceTrade.ThemeManager.ApplyTheme(this);
+
+            // Placeholder hints for the ZNC fields, same style as Add_affil_textbox.
+            // Password box is skipped (PasswordChar would mask the hint).
+            SetPlaceholder(textBox1, PlaceholderHost);
+            SetPlaceholder(textBox2, PlaceholderPort);
+            SetPlaceholder(textBox3, PlaceholderUser);
+            SetPlaceholder(networkTextBox, PlaceholderNetwork);
 
             Add_affil_textbox.BackColor = ThemeManager.Colors.BackgroundDark;
             Add_affil_textbox.ForeColor = Color.Gray;
@@ -563,6 +632,26 @@ namespace RaceTrade
                         textBox2.Text = currentSite.Server?.Port.ToString() ?? string.Empty;
                         textBox3.Text = currentSite.Server?.Username ?? string.Empty;
                         textBox4.Text = SecureConfig.Decrypt(currentSite.Server?.Password ?? string.Empty);
+
+                        // Network: prefer the explicit field; otherwise show the
+                        // "/network" parsed from a legacy "user/network" Username.
+                        var loadedNetwork = currentSite.Server?.Network;
+                        if (string.IsNullOrWhiteSpace(loadedNetwork))
+                        {
+                            var u = currentSite.Server?.Username ?? string.Empty;
+                            var si = u.IndexOf('/');
+                            if (si >= 0 && si < u.Length - 1)
+                                loadedNetwork = u.Substring(si + 1).Trim();
+                        }
+                        networkTextBox.Text = loadedNetwork ?? string.Empty;
+
+                        // Re-apply placeholder state after loading real values so
+                        // empty fields show the grey hint and filled fields use the
+                        // normal colour.
+                        ApplyPlaceholderState(textBox1, PlaceholderHost);
+                        ApplyPlaceholderState(textBox2, PlaceholderPort);
+                        ApplyPlaceholderState(textBox3, PlaceholderUser);
+                        ApplyPlaceholderState(networkTextBox, PlaceholderNetwork);
 
                         textBox8.Text = currentSite.SiteSettings?.Sitename ?? string.Empty;
                         textBox5.Text = currentSite.SiteSettings?.BotName ?? string.Empty;
@@ -1122,13 +1211,49 @@ namespace RaceTrade
                     };
                 }
 
-                // Save server settings
+                // Save server settings.
+                // The ZNC network is what routes JOINs to the correct network. We
+                // derive it from a "user/network" Username and store it explicitly
+                // so the config is self-documenting and unambiguous at connect time.
+                // Read placeholder-backed fields via PlaceholderValue so the grey
+                // hint text is never persisted as a real value.
+                var enteredUser = PlaceholderValue(textBox3, PlaceholderUser);
+
+                // The dedicated Network field is authoritative. Fall back to a
+                // "/network" typed into the Username, then to any previously saved
+                // network, so nothing regresses for existing sites.
+                var effectiveNetwork = PlaceholderValue(networkTextBox, PlaceholderNetwork);
+                if (string.IsNullOrWhiteSpace(effectiveNetwork))
+                {
+                    var slashIdx = enteredUser.IndexOf('/');
+                    if (slashIdx >= 0 && slashIdx < enteredUser.Length - 1)
+                        effectiveNetwork = enteredUser.Substring(slashIdx + 1).Trim();
+                }
+                if (string.IsNullOrWhiteSpace(effectiveNetwork))
+                    effectiveNetwork = currentSite?.Server?.Network ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(effectiveNetwork))
+                {
+                    var proceed = MessageBox.Show(
+                        "No ZNC network is set for this site.\r\n\r\n" +
+                        "Fill in the Network field (for example: EFNet) so RaceTrade connects " +
+                        "this site to the right ZNC network. Without it, ZNC attaches to its " +
+                        "default network and channels can appear on the wrong one.\r\n\r\n" +
+                        "Save anyway?",
+                        "ZNC network missing",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+                    if (proceed != DialogResult.Yes)
+                        return;
+                }
+
                 currentSite.Server = new ServerSettings
                 {
-                    Host = textBox1.Text.Trim(),
-                    Port = int.TryParse(textBox2.Text.Trim(), out var port) ? port : 0,
-                    Username = textBox3.Text.Trim(),
-                    Password = SecureConfig.Encrypt(textBox4.Text.Trim())
+                    Host = PlaceholderValue(textBox1, PlaceholderHost),
+                    Port = int.TryParse(PlaceholderValue(textBox2, PlaceholderPort), out var port) ? port : 0,
+                    Username = enteredUser,
+                    Password = SecureConfig.Encrypt(textBox4.Text.Trim()),
+                    Network = string.IsNullOrWhiteSpace(effectiveNetwork) ? null : effectiveNetwork
                 };
 
                 // Preserve existing chat keys so we don't lose chat-only channels

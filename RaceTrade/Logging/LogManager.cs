@@ -596,7 +596,6 @@ namespace RaceTrade
         private static MainApp mainApp;
         private static IrcLog ircLog;
         private static CBFTPIntegrationLog cbftpLog;
-        private static bool initialized = false;
         public static bool DebugEnabled { get; set; } = false;
         private static RaceLog raceLog;
         private static LogManagerCore Core => LogManagerCore.Instance;
@@ -615,7 +614,6 @@ namespace RaceTrade
             raceLog = race; 
 
             Core.LogEntryAdded += OnLogEntryAdded;
-            initialized = true;
 
             Core.LogApplication("LogManager initialized successfully", LogLevel.Info);
         }

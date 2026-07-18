@@ -18,6 +18,8 @@ public class ChatIrcClient
     private readonly string host;
     private readonly int port;
     private readonly string username;
+    private readonly string expectedNetwork; // ZNC network this site must attach to ("" if unknown)
+    private string detectedNetwork;          // network ZNC actually attached us to (from 005 NETWORK=)
     private readonly string ircNick;
     private readonly string zncPassword;
     private readonly string botName;
@@ -86,13 +88,18 @@ public class ChatIrcClient
             throw new ArgumentException("Username cannot be null or empty.");
 
         this.username = config.Server.Username.Trim();
+
+        // Resolve the ZNC network: explicit Server.Network wins; otherwise fall
+        // back to a "user/network" style Username. This is what guarantees each
+        // site's JOINs land on the correct network instead of ZNC's default.
+        this.expectedNetwork = ResolveNetwork(config.Server.Network, this.username);
         this.ircNick = BuildIrcNick(this.username);
 
         if (string.IsNullOrEmpty(config.Server.Password))
             throw new ArgumentException("Password cannot be null or empty.");
 
         var decryptedPassword = SecureConfig.Decrypt(config.Server.Password);
-        this.zncPassword = BuildZncPassword(this.username, decryptedPassword);
+        this.zncPassword = BuildZncPassword(this.username, this.expectedNetwork, decryptedPassword);
 
         if (string.IsNullOrEmpty(config.SiteSettings?.BotName))
             throw new ArgumentException("Bot name cannot be null or empty.");
@@ -144,19 +151,56 @@ public class ChatIrcClient
         return string.IsNullOrWhiteSpace(nick) ? "RaceTrade" : nick;
     }
 
-    private static string BuildZncPassword(string configuredUsername, string decryptedPassword)
+    // ResolveNetwork returns the ZNC network name this connection must attach to.
+    // Precedence: explicit configured network > the "/network" suffix on the
+    // username. Returns "" when neither is available (legacy single-network setup).
+    private static string ResolveNetwork(string configuredNetwork, string configuredUsername)
     {
-        if (string.IsNullOrWhiteSpace(configuredUsername) || string.IsNullOrEmpty(decryptedPassword))
+        if (!string.IsNullOrWhiteSpace(configuredNetwork))
+            return configuredNetwork.Trim();
+
+        var user = (configuredUsername ?? string.Empty).Trim();
+        var slashIndex = user.IndexOf('/');
+        if (slashIndex >= 0 && slashIndex < user.Length - 1)
+            return user.Substring(slashIndex + 1).Trim();
+
+        return string.Empty;
+    }
+
+    // AccountName strips any "/network" (and "@identifier") suffix, leaving the
+    // bare ZNC account name.
+    private static string AccountName(string configuredUsername)
+    {
+        var user = (configuredUsername ?? string.Empty).Trim();
+        var slash = user.IndexOf('/');
+        if (slash >= 0) user = user.Substring(0, slash);
+        var at = user.IndexOf('@');
+        if (at >= 0) user = user.Substring(0, at);
+        return user.Trim();
+    }
+
+    // BuildZncPassword builds the PASS payload ZNC uses to both authenticate and
+    // select the network: "account/network:password". When no network is known,
+    // keep the raw password to preserve legacy single-network setups.
+    private static string BuildZncPassword(string configuredUsername, string network, string decryptedPassword)
+    {
+        if (string.IsNullOrEmpty(decryptedPassword))
             return decryptedPassword;
 
-        var user = configuredUsername.Trim();
-        if (!user.Contains("/") && !user.Contains("@"))
+        if (string.IsNullOrWhiteSpace(network))
             return decryptedPassword;
 
-        if (decryptedPassword.StartsWith(user + ":", StringComparison.OrdinalIgnoreCase))
+        var account = AccountName(configuredUsername);
+        if (string.IsNullOrWhiteSpace(account))
             return decryptedPassword;
 
-        return $"{user}:{decryptedPassword}";
+        var login = $"{account}/{network}";
+
+        // Already prefixed (user pasted "user/network:password" into the field).
+        if (decryptedPassword.StartsWith(login + ":", StringComparison.OrdinalIgnoreCase))
+            return decryptedPassword;
+
+        return $"{login}:{decryptedPassword}";
     }
 
     /// <summary>
@@ -624,17 +668,37 @@ public class ChatIrcClient
             await SendMessageAsync(sslStream, $"NICK {ircNick}");
             await SendMessageAsync(sslStream, $"USER {ircNick} 0 * :{ircNick}");
 
-            foreach (var channel in channels)
+            var isRegistered = await WaitForRegistrationOrTimeoutAsync(sslStream, tcpClient, TimeSpan.FromSeconds(10));
+            if (!isRegistered)
             {
-                await SendMessageAsync(sslStream, $"JOIN {channel}");
+                AppendOutput("[WARN] IRC/ZNC registration was not confirmed; skipping channel JOINs to avoid joining the wrong network.", Color.Orange);
+            }
+            else if (!NetworkVerificationPasses())
+            {
+                AppendOutput(
+                    $"[ERROR] {siteName}: expected ZNC network '{expectedNetwork}' but ZNC reports '" +
+                    (string.IsNullOrEmpty(detectedNetwork) ? "unknown" : detectedNetwork) +
+                    "'. Skipping channel JOINs so channels are not created on the wrong network. " +
+                    "Fix the site's Network field or the ZNC network setup.",
+                    Color.Red);
+            }
+            else
+            {
+                foreach (var channel in channels)
+                {
+                    if (string.IsNullOrWhiteSpace(channel))
+                        continue;
 
-                if (chatOnlyMode)
-                {
-                    AppendOutput($"[INFO] Joined channel for chat: {channel}", Color.Green);
-                }
-                else
-                {
-                    AppendOutput($"[INFO] Monitoring channel for chat: {channel}", Color.Cyan);
+                    await SendMessageAsync(sslStream, $"JOIN {channel}");
+
+                    if (chatOnlyMode)
+                    {
+                        AppendOutput($"[INFO] Joined channel for chat: {channel}", Color.Green);
+                    }
+                    else
+                    {
+                        AppendOutput($"[INFO] Monitoring channel for chat: {channel}", Color.Cyan);
+                    }
                 }
             }
 
@@ -665,6 +729,159 @@ public class ChatIrcClient
 
             listeningTask = null;
         }
+    }
+
+    private async Task<bool> WaitForRegistrationOrTimeoutAsync(
+        SslStream sslStream,
+        TcpClient tcpClient,
+        TimeSpan timeout)
+    {
+        var buffer = new byte[4096];
+        var start = DateTime.UtcNow;
+        bool registered = false;
+        DateTime registeredAt = DateTime.UtcNow;
+        detectedNetwork = null;
+
+        while (!localCancellationTokenSource.Token.IsCancellationRequested &&
+               DateTime.UtcNow - start < timeout)
+        {
+            if (!sslStream.CanRead || !tcpClient.Connected)
+                break;
+
+            if (tcpClient.Available == 0)
+            {
+                await Task.Delay(100, localCancellationTokenSource.Token);
+                continue;
+            }
+
+            int bytesRead;
+            try
+            {
+                bytesRead = await sslStream.ReadAsync(buffer, 0, buffer.Length, localCancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch (Exception ex)
+            {
+                AppendOutput($"[WARN] Error while waiting for registration: {ex.Message}", Color.Orange);
+                return false;
+            }
+
+            if (bytesRead <= 0)
+                return false;
+
+            string text = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var rawLine in lines)
+            {
+                var line = rawLine.TrimEnd('\r', '\n');
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                if (line.StartsWith("PING", StringComparison.OrdinalIgnoreCase))
+                {
+                    var payload = line.Substring(4).TrimStart(':', ' ');
+                    await SendMessageAsync(sslStream, $"PONG :{payload}");
+                    continue;
+                }
+
+                // ZNC reports an unknown/invalid network via a *status notice. If the
+                // configured network doesn't exist, ZNC would otherwise silently drop
+                // us on the default network and we'd JOIN the wrong channels there.
+                // Treat this as a failed registration so JOINs are skipped.
+                if (IsZncBadNetworkNotice(line))
+                {
+                    AppendOutput(
+                        $"[ERROR] ZNC rejected network '{expectedNetwork}' for {siteName}: {line}. " +
+                        "Check the site's Username (user/network) or Network field. Skipping channel JOINs.",
+                        Color.Red);
+                    return false;
+                }
+
+                // Capture the real network from the 005 ISUPPORT NETWORK= token so
+                // we can verify ZNC actually attached us to the expected network.
+                var net = ExtractNetworkToken(line);
+                if (!string.IsNullOrEmpty(net))
+                    detectedNetwork = net;
+
+                if (line.Contains(" 001 ") || line.Contains(" 376 ") || line.Contains(" 422 "))
+                {
+                    registered = true;
+                    registeredAt = DateTime.UtcNow;
+                }
+            }
+
+            // Once registered, keep reading briefly so the 005 NETWORK= token can
+            // arrive, then stop. Return as soon as we know the network.
+            if (registered && (detectedNetwork != null ||
+                DateTime.UtcNow - registeredAt > TimeSpan.FromMilliseconds(1500)))
+            {
+                return true;
+            }
+        }
+
+        return registered;
+    }
+
+    // Decides whether channel JOINs are safe: only when ZNC confirmed we are on
+    // the expected network. Fails open (with a warning) only when the network
+    // genuinely could not be determined, so odd servers aren't broken; a positive
+    // mismatch always blocks JOINs.
+    private bool NetworkVerificationPasses()
+    {
+        if (string.IsNullOrWhiteSpace(expectedNetwork))
+            return true; // legacy / single-network setup, nothing to verify
+
+        if (string.IsNullOrEmpty(detectedNetwork))
+        {
+            AppendOutput(
+                $"[WARN] {siteName}: could not read the ZNC network from the server (no 005 NETWORK=); " +
+                $"proceeding to JOIN assuming '{expectedNetwork}'.",
+                Color.Orange);
+            return true;
+        }
+
+        return string.Equals(detectedNetwork, expectedNetwork, StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Pulls the network name from an IRC 005 ISUPPORT line's "NETWORK=" token.
+    private static string ExtractNetworkToken(string line)
+    {
+        if (string.IsNullOrEmpty(line) || line.IndexOf(" 005 ", StringComparison.Ordinal) < 0)
+            return null;
+
+        foreach (var tok in line.Split(' '))
+        {
+            if (tok.StartsWith("NETWORK=", StringComparison.OrdinalIgnoreCase))
+            {
+                var val = tok.Substring("NETWORK=".Length).Trim();
+                return string.IsNullOrWhiteSpace(val) ? null : val;
+            }
+        }
+        return null;
+    }
+
+    // Recognizes the ZNC *status notices emitted when the requested network is
+    // missing or not selected. Kept broad but anchored to ZNC's *status source so
+    // ordinary channel traffic can't trip it.
+    private static bool IsZncBadNetworkNotice(string line)
+    {
+        if (string.IsNullOrWhiteSpace(line))
+            return false;
+
+        var fromStatus = line.IndexOf("*status", StringComparison.OrdinalIgnoreCase) >= 0;
+        if (!fromStatus)
+            return false;
+
+        var lower = line.ToLowerInvariant();
+        return lower.Contains("network")
+            && (lower.Contains("doesn't exist")
+                || lower.Contains("does not exist")
+                || lower.Contains("unknown network")
+                || lower.Contains("no such network"));
     }
 
     private async Task ListenForMessagesAsync(SslStream sslStream)

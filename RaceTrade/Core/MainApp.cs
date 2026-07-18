@@ -3419,6 +3419,13 @@ namespace RaceTrade
 
         [JsonProperty("password")]
         public string Password { get; set; }
+
+        // Optional explicit ZNC network name. When set it is authoritative and the
+        // app connects with login "username/network", guaranteeing the JOINs land
+        // on the right network. When empty, the network is parsed from a
+        // "user/network" style Username for backward compatibility.
+        [JsonProperty("network", NullValueHandling = NullValueHandling.Ignore)]
+        public string Network { get; set; }
     }
 
     public class SiteSettings

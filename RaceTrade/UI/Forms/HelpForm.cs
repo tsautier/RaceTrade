@@ -47,7 +47,7 @@ TABLE OF CONTENTS
 Version 1.0.8b (Current - Beta)
 --------------------------------
 Released: July 9, 2026
-Updated: July 10, 2026
+Updated: July 17, 2026
 
 BUG FIXES & THEMING:
 
@@ -78,6 +78,17 @@ BUG FIXES & THEMING:
   - Fixed Blowfish key dialog to prefill existing keys
   - Improved Blowfish dialog OK/Cancel button visibility
 
+- ZNC multi-network fixes
+  - Added a dedicated Network field to Edit/Add Site for ZNC network selection
+  - Added ZNC placeholder hints for Host, Port, Username, and Network fields
+  - Saved the explicit server.network value and kept fallback support for legacy user/network usernames
+  - Fixed ChatBox ZNC auth so configured channels join the selected ZNC network instead of the default network
+  - Fixed race IRC ZNC auth to use account/network:password when a network is configured
+  - Kept NICK/USER as the bare account name so user tracking and FiSH nick matching stay clean
+  - Made ChatBox wait for IRC/ZNC registration before sending JOIN commands
+  - Skipped ChatBox JOINs when ZNC rejects or cannot confirm the requested network
+  - Prevented channels from other ZNC networks from being joined under LINKNET/default network
+
 - Help and manager form fixes
   - Restored readable formatting in the Help window
   - Fixed Affil Spread & Pre Manager button spacing
@@ -92,6 +103,7 @@ BUG FIXES & THEMING:
   - Fixed TVMaze/IMDB section settings being lost after saving the Site Editor
   - Preserved section-level imdb/tvmaze config in the site model
   - Aligned TVMaze/IMDB settings file path with the Site Editor sites folder
+  - Preserved and displayed the ZNC network setting when editing existing sites
 
 - Save/persistence audit fixes
   - Added atomic config writes with temp-file replacement and .bak backup support
@@ -126,7 +138,7 @@ BUG FIXES & THEMING:
   - Unified FiSH and PM key dictionary locking to prevent runtime dictionary races
   - Made FiSH key dictionaries case-insensitive for IRC nick/channel matching
   - Fixed DH1080 key decode to choose the valid Base64 variant by key length
-  - Kept existing ZNC-compatible PASS/NICK/USER ordering unchanged
+  - Kept ZNC-compatible PASS/NICK/USER ordering while adding explicit network selection
 
 - Rules and matching fixes
   - Fixed trigger regex parsing so patterns ending in i are not mangled
