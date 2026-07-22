@@ -419,13 +419,22 @@ namespace RaceTrader
                 {
                     case FilterStatus.Success:
                         AppendResult($"SUCCESS: {filterResult.AllowedSites.Count} site(s) will race:", Color.Green);
+                        var dlOnly = filterResult.DlOnlySites ?? new List<string>();
                         foreach (var site in filterResult.AllowedSites.Take(10))
                         {
-                            AppendResult($"  - {site}", Color.White);
+                            bool isDlOnly = dlOnly.Contains(site, StringComparer.OrdinalIgnoreCase);
+                            if (isDlOnly)
+                                AppendResult($"  - {site}  [DL-Only: affil]", Color.Orange);
+                            else
+                                AppendResult($"  - {site}", Color.White);
                         }
                         if (filterResult.AllowedSites.Count > 10)
                         {
                             AppendResult($"  ... and {filterResult.AllowedSites.Count - 10} more", Color.Gray);
+                        }
+                        if (dlOnly.Any())
+                        {
+                            AppendResult($"  ({dlOnly.Count} site(s) download-only because the group is an affil)", Color.Orange);
                         }
                         break;
 

@@ -21,7 +21,6 @@ public class IRCClient
     private readonly string username;
     private readonly string password;
     private readonly string expectedNetwork; // ZNC network to attach to ("" = legacy/plain IRC)
-    private string detectedNetwork;          // network ZNC actually attached us to (005 NETWORK=)
     private readonly string zncLoginUser;    // NICK/USER value (bare account when a network is set)
     private readonly string zncPass;         // PASS payload (account/network:password when a network is set)
     private readonly string botName;
@@ -560,27 +559,16 @@ public class IRCClient
 
             if (!isRegistered)
             {
-                AppendOutput("[WARN] Registration not confirmed; skipping JOINs to avoid joining the wrong network.", Color.Orange);
+                AppendOutput("[WARN] Registration not confirmed; joining channels anyway.", Color.Yellow);
             }
-            else if (!NetworkVerificationPasses())
-            {
-                AppendOutput(
-                    $"[ERROR] {siteName}: expected ZNC network '{expectedNetwork}' but ZNC reports '" +
-                    (string.IsNullOrEmpty(detectedNetwork) ? "unknown" : detectedNetwork) +
-                    "'. Skipping JOINs so channels are not created on the wrong network. " +
-                    "Fix the site's Network field or the ZNC network setup.",
-                    Color.Red);
-            }
-            else
-            {
-                foreach (var channel in channels)
-                {
-                    if (string.IsNullOrWhiteSpace(channel))
-                        continue;
 
-                    await SendMessageAsync(sslStream, $"JOIN {channel}");
-                    AppendOutput($"[INFO] Sent JOIN for channel: {channel}", Color.Cyan);
-                }
+            foreach (var channel in channels)
+            {
+                if (string.IsNullOrWhiteSpace(channel))
+                    continue;
+
+                await SendMessageAsync(sslStream, $"JOIN {channel}");
+                AppendOutput($"[INFO] Sent JOIN for channel: {channel}", Color.Cyan);
             }
 
             listeningTask = ListenForMessagesAsync(sslStream);
@@ -641,43 +629,6 @@ public class IRCClient
         return user.Trim();
     }
 
-    // Pulls the network name from an IRC 005 ISUPPORT line's "NETWORK=" token.
-    private static string ExtractNetworkToken(string line)
-    {
-        if (string.IsNullOrEmpty(line) || line.IndexOf(" 005 ", StringComparison.Ordinal) < 0)
-            return null;
-
-        foreach (var tok in line.Split(' '))
-        {
-            if (tok.StartsWith("NETWORK=", StringComparison.OrdinalIgnoreCase))
-            {
-                var val = tok.Substring("NETWORK=".Length).Trim();
-                return string.IsNullOrWhiteSpace(val) ? null : val;
-            }
-        }
-        return null;
-    }
-
-    // JOINs are only safe when ZNC confirmed the expected network. Fails open
-    // (warning) only when the network could not be determined; a positive
-    // mismatch always blocks JOINs.
-    private bool NetworkVerificationPasses()
-    {
-        if (string.IsNullOrWhiteSpace(expectedNetwork))
-            return true;
-
-        if (string.IsNullOrEmpty(detectedNetwork))
-        {
-            AppendOutput(
-                $"[WARN] {siteName}: could not read the ZNC network (no 005 NETWORK=); " +
-                $"proceeding assuming '{expectedNetwork}'.",
-                Color.Orange);
-            return true;
-        }
-
-        return string.Equals(detectedNetwork, expectedNetwork, StringComparison.OrdinalIgnoreCase);
-    }
-
     // Builds the ZNC PASS payload "account/network:password" used to both
     // authenticate and select the network.
     private static string BuildZncPassword(string configuredUsername, string network, string decryptedPassword)
@@ -703,9 +654,6 @@ public class IRCClient
     {
         var buffer = new byte[4096];
         var start = DateTime.UtcNow;
-        bool registered = false;
-        DateTime registeredAt = DateTime.UtcNow;
-        detectedNetwork = null;
 
         while (!cancellationToken.IsCancellationRequested &&
                DateTime.UtcNow - start < timeout)
@@ -726,16 +674,16 @@ public class IRCClient
             }
             catch (OperationCanceledException)
             {
-                return registered;
+                return false;
             }
             catch (Exception ex)
             {
                 AppendOutput($"[WARN] Error while waiting for registration: {ex.Message}", Color.Orange);
-                return registered;
+                return false;
             }
 
             if (bytesRead <= 0)
-                return registered;
+                return false;
 
             string text = System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
             var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -754,27 +702,16 @@ public class IRCClient
                     await SendMessageAsync(sslStream, $"PONG :{payload}");
                 }
 
-                // Capture the real network from the 005 ISUPPORT NETWORK= token.
-                var net = ExtractNetworkToken(line);
-                if (!string.IsNullOrEmpty(net))
-                    detectedNetwork = net;
-
                 if (line.Contains(" 001 ") || line.Contains(" 376 ") || line.Contains(" 422 "))
                 {
-                    registered = true;
-                    registeredAt = DateTime.UtcNow;
+                    AppendOutput("[INFO] Registration complete, proceeding to JOIN.", Color.Green);
+                    return true;
                 }
-            }
-
-            // Once registered, keep reading briefly for the 005 NETWORK= token.
-            if (registered && (detectedNetwork != null ||
-                DateTime.UtcNow - registeredAt > TimeSpan.FromMilliseconds(1500)))
-            {
-                return true;
             }
         }
 
-        return registered;
+        AppendOutput("[WARN] No registration numeric (001/376/422) seen, joining channels anyway.", Color.Yellow);
+        return false;
     }
 
 

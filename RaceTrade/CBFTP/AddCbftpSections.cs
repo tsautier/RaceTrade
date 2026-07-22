@@ -104,8 +104,14 @@ namespace RaceTrade
 
             try
             {
-                // Generate a unique key for the new section
-                string newKey = $"cbftp_section{cbftpSections.Count + 1}";
+                // Generate a unique key for the new section. Keying off Count alone
+                // collides with an existing key after any Delete (e.g. keys 1..5,7 →
+                // Count+1 = 7 → overwrites section7), silently dropping a section.
+                // Probe upward until the key is free, like CbftpSyncForm does.
+                int nextId = cbftpSections.Count + 1;
+                string newKey = $"cbftp_section{nextId}";
+                while (cbftpSections.ContainsKey(newKey))
+                    newKey = $"cbftp_section{++nextId}";
 
                 // Add the new section
                 cbftpSections[newKey] = newSection;

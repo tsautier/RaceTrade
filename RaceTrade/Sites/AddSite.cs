@@ -1137,6 +1137,7 @@ namespace RaceTrade
 
                 // Save the updated configuration back to the JSON file
                 AtomicFile.WriteAllText(currentSiteFilePath, JsonConvert.SerializeObject(siteData, Formatting.Indented));
+                SiteConfigManager.Invalidate();
                 MessageBox.Show("Mappings saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
@@ -1325,6 +1326,7 @@ namespace RaceTrade
                 // Write to JSON file
                 string jsonContent = JsonConvert.SerializeObject(currentSite, Formatting.Indented);
                 AtomicFile.WriteAllText(currentSiteFilePath, jsonContent);
+                SiteConfigManager.Invalidate();
                 LogManager.Success($"Site saved! Passwords encrypted automatically");
                 //MessageBox.Show("Site saved! Passwords encrypted automatically.", "Success");
 
@@ -1985,6 +1987,9 @@ namespace RaceTrade
                         var updatedJsonContent = JsonConvert.SerializeObject(existingSiteConfig, Formatting.Indented);
                         AtomicFile.WriteAllText(currentSiteFilePath, updatedJsonContent);
                         RaceHelper.LoadAllSiteConfigs();
+                        // Drop the racer's separate SiteConfigManager cache too, or
+                        // edits (affils, sections, ...) are ignored until app restart.
+                        SiteConfigManager.Invalidate();
 
                         LogManager.Success("Site configuration saved");
                     }
@@ -1999,6 +2004,7 @@ namespace RaceTrade
                     var newJsonContent = JsonConvert.SerializeObject(currentSite, Formatting.Indented);
                     AtomicFile.WriteAllText(currentSiteFilePath, newJsonContent);
                     RaceHelper.LoadAllSiteConfigs();
+                    SiteConfigManager.Invalidate();
                     MessageBox.Show("Site configuration saved as new!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }

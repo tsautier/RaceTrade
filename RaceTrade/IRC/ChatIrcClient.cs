@@ -19,7 +19,6 @@ public class ChatIrcClient
     private readonly int port;
     private readonly string username;
     private readonly string expectedNetwork; // ZNC network this site must attach to ("" if unknown)
-    private string detectedNetwork;          // network ZNC actually attached us to (from 005 NETWORK=)
     private readonly string ircNick;
     private readonly string zncPassword;
     private readonly string botName;
@@ -378,6 +377,12 @@ public class ChatIrcClient
                     if (string.IsNullOrWhiteSpace(channel) || string.IsNullOrWhiteSpace(encKey))
                         continue;
 
+                    // Normalize exactly like section 1 / SetChannelKey so a chat_keys
+                    // entry stored without a leading '#' still matches the channel the
+                    // message arrives on. Without this, such channels show up encrypted
+                    // after every reconnect until the key is re-applied by hand.
+                    channel = NormalizeKeyName(channel);
+
                     try
                     {
                         var plainKey = SecureConfig.Decrypt(encKey);
@@ -673,15 +678,6 @@ public class ChatIrcClient
             {
                 AppendOutput("[WARN] IRC/ZNC registration was not confirmed; skipping channel JOINs to avoid joining the wrong network.", Color.Orange);
             }
-            else if (!NetworkVerificationPasses())
-            {
-                AppendOutput(
-                    $"[ERROR] {siteName}: expected ZNC network '{expectedNetwork}' but ZNC reports '" +
-                    (string.IsNullOrEmpty(detectedNetwork) ? "unknown" : detectedNetwork) +
-                    "'. Skipping channel JOINs so channels are not created on the wrong network. " +
-                    "Fix the site's Network field or the ZNC network setup.",
-                    Color.Red);
-            }
             else
             {
                 foreach (var channel in channels)
@@ -738,9 +734,6 @@ public class ChatIrcClient
     {
         var buffer = new byte[4096];
         var start = DateTime.UtcNow;
-        bool registered = false;
-        DateTime registeredAt = DateTime.UtcNow;
-        detectedNetwork = null;
 
         while (!localCancellationTokenSource.Token.IsCancellationRequested &&
                DateTime.UtcNow - start < timeout)
@@ -801,67 +794,27 @@ public class ChatIrcClient
                     return false;
                 }
 
-                // Capture the real network from the 005 ISUPPORT NETWORK= token so
-                // we can verify ZNC actually attached us to the expected network.
-                var net = ExtractNetworkToken(line);
-                if (!string.IsNullOrEmpty(net))
-                    detectedNetwork = net;
-
                 if (line.Contains(" 001 ") || line.Contains(" 376 ") || line.Contains(" 422 "))
                 {
-                    registered = true;
-                    registeredAt = DateTime.UtcNow;
+                    if (string.IsNullOrWhiteSpace(expectedNetwork))
+                    {
+                        AppendOutput(
+                            $"[WARN] No ZNC network configured for {siteName}; connecting to ZNC's default network. " +
+                            "If channels appear on the wrong network, set the Network field or use 'user/network'.",
+                            Color.Orange);
+                    }
+                    else
+                    {
+                        AppendOutput(
+                            $"[INFO] IRC/ZNC registration complete for {siteName} (network '{expectedNetwork}'), joining configured chat channels.",
+                            Color.Green);
+                    }
+                    return true;
                 }
             }
-
-            // Once registered, keep reading briefly so the 005 NETWORK= token can
-            // arrive, then stop. Return as soon as we know the network.
-            if (registered && (detectedNetwork != null ||
-                DateTime.UtcNow - registeredAt > TimeSpan.FromMilliseconds(1500)))
-            {
-                return true;
-            }
         }
 
-        return registered;
-    }
-
-    // Decides whether channel JOINs are safe: only when ZNC confirmed we are on
-    // the expected network. Fails open (with a warning) only when the network
-    // genuinely could not be determined, so odd servers aren't broken; a positive
-    // mismatch always blocks JOINs.
-    private bool NetworkVerificationPasses()
-    {
-        if (string.IsNullOrWhiteSpace(expectedNetwork))
-            return true; // legacy / single-network setup, nothing to verify
-
-        if (string.IsNullOrEmpty(detectedNetwork))
-        {
-            AppendOutput(
-                $"[WARN] {siteName}: could not read the ZNC network from the server (no 005 NETWORK=); " +
-                $"proceeding to JOIN assuming '{expectedNetwork}'.",
-                Color.Orange);
-            return true;
-        }
-
-        return string.Equals(detectedNetwork, expectedNetwork, StringComparison.OrdinalIgnoreCase);
-    }
-
-    // Pulls the network name from an IRC 005 ISUPPORT line's "NETWORK=" token.
-    private static string ExtractNetworkToken(string line)
-    {
-        if (string.IsNullOrEmpty(line) || line.IndexOf(" 005 ", StringComparison.Ordinal) < 0)
-            return null;
-
-        foreach (var tok in line.Split(' '))
-        {
-            if (tok.StartsWith("NETWORK=", StringComparison.OrdinalIgnoreCase))
-            {
-                var val = tok.Substring("NETWORK=".Length).Trim();
-                return string.IsNullOrWhiteSpace(val) ? null : val;
-            }
-        }
-        return null;
+        return false;
     }
 
     // Recognizes the ZNC *status notices emitted when the requested network is

@@ -364,6 +364,11 @@ public static class RaceHelper
 
             var allowedSites = new List<string>();
 
+            // Sites where the release group is affiliated: they still race but only
+            // as download-only (mirrors the racer's affil handling in CbftpRacer).
+            var dlOnlySites = new List<string>();
+            var releaseGroup = ExtractGroupFromRelease(releaseName);
+
             // Per-call engine: rules are (re)loaded per site immediately before Evaluate.
             var rulesEngine = new RulesEngine();
 
@@ -607,6 +612,18 @@ public static class RaceHelper
 
                     allowedSites.Add(siteName);
 
+                    // Affil = download-only: if the release group is affiliated with
+                    // this site, mark it DL-Only so the UI/test reflects reality.
+                    if (!string.IsNullOrEmpty(releaseGroup))
+                    {
+                        var affils = siteConfig["affils"]?.ToObject<List<string>>();
+                        if (affils != null &&
+                            affils.Contains(releaseGroup, StringComparer.OrdinalIgnoreCase))
+                        {
+                            dlOnlySites.Add(siteName);
+                        }
+                    }
+
                 }
                 catch (Exception ex)
                 {
@@ -626,7 +643,7 @@ public static class RaceHelper
             }
 
             LogManager.LogCBFTP(CBFTPEventType.Info, $"{allowedSites.Count} site(s) allowed for release [{LogColors.Orange(releaseName)}]: [{LogColors.Magenta(string.Join(", ", allowedSites))}]");
-            return FilterResult.Success(releaseName, cbftpSection, allowedSites);
+            return FilterResult.Success(releaseName, cbftpSection, allowedSites, dlOnlySites);
         }
         catch (Exception ex)
         {

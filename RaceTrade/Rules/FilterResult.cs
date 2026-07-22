@@ -19,6 +19,13 @@ namespace RaceTrade
         public List<string> AllowedSites { get; set; }
 
         /// <summary>
+        /// Subset of AllowedSites that are download-only for this release because
+        /// the release group is in the site's affils list. These sites still race
+        /// (download side) but are not upload targets. Never null.
+        /// </summary>
+        public List<string> DlOnlySites { get; set; } = new List<string>();
+
+        /// <summary>
         /// Status of the filter operation.
         /// </summary>
         public FilterStatus Status { get; set; }
@@ -41,12 +48,13 @@ namespace RaceTrade
         /// <summary>
         /// Creates a successful result.
         /// </summary>
-        public static FilterResult Success(string releaseName, string cbftpSection, List<string> allowedSites)
+        public static FilterResult Success(string releaseName, string cbftpSection, List<string> allowedSites, List<string> dlOnlySites = null)
         {
             return new FilterResult
             {
                 Status = FilterStatus.Success,
                 AllowedSites = allowedSites,
+                DlOnlySites = dlOnlySites ?? new List<string>(),
                 ReleaseName = releaseName,
                 CbftpSection = cbftpSection,
                 Message = $"Found [{allowedSites.Count}] allowed site(s)"

@@ -114,6 +114,22 @@ public static class SiteConfigManager
     }
 
     /// <summary>
+    /// Drops a site (or all sites) from the cache so the next GetSiteConfig
+    /// re-reads from disk. Must be called after a site's JSON is edited/saved,
+    /// otherwise stale config (e.g. affils) is served until app restart.
+    /// </summary>
+    public static void Invalidate(string siteName = null)
+    {
+        lock (cacheLock)
+        {
+            if (string.IsNullOrWhiteSpace(siteName))
+                ConfigCache.Clear();
+            else
+                ConfigCache.TryRemove(siteName, out _);
+        }
+    }
+
+    /// <summary>
     /// Tries to get a site config, returning false if it doesn't exist.
     /// Non-throwing version of GetSiteConfig.
     /// </summary>
